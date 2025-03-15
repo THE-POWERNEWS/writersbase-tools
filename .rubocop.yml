@@ -1,6 +1,5 @@
 plugins:
   - rubocop-performance
-  - rubocop-minitest
 
 AllCops:
   AllowSymlinksInCacheRootDirectory: true
@@ -95,12 +94,6 @@ Metrics/PerceivedComplexity:
     - test/*
     - '**/contract/*'
   Max: 10
-Minitest/MultipleAssertions:
-  Enabled: false
-Minitest/ReturnInTestMethod:
-  Enabled: false
-Minitest/TestFileName:
-  Enabled: false
 Naming/RescuedExceptionsVariableName:
   PreferredName: e
 Style/AsciiComments:
