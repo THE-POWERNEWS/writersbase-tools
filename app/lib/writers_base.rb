@@ -24,7 +24,7 @@ module WritersBase
     Ricecream.include_context = true
     Ricecream.colorize = true
     Ricecream.prefix = "#{Package.name} | "
-    Ricecream.define_singleton_method(:arg_to_s, proc {|v| PP.pp(v)})
+    Ricecream.define_singleton_method(:arg_to_s, proc {|v| pp(v)})
   end
 
   def self.load_tasks

@@ -4,8 +4,8 @@ module WritersBase
       return Tool.all.map(&:help).flatten.join("\n")
     end
 
-    def help
-      return ['bin/wb.rb help - ヘルプ']
+    def description
+      return 'このヘルプ'
     end
   end
 end

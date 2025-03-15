@@ -17,8 +17,16 @@ module WritersBase
       return contents.join("\n")
     end
 
+    def underscore
+      return self.class.to_s.underscore.split('/').last.sub(/_tool$/, '')
+    end
+
+    def description
+      return "#{underscore} のヘルプは未定義"
+    end
+
     def help
-      return ["-- #{self.class} のヘルプは未定義 --"]
+      return ["bin/wb.rb #{underscore}", "  #{description}", '']
     end
 
     def self.create(name)
