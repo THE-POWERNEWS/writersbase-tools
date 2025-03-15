@@ -1,6 +1,9 @@
 require 'bundler/setup'
+require 'writers_base/refines'
 
 module WritersBase
+  using Refines
+
   def self.dir
     return File.expand_path('../..', __dir__)
   end

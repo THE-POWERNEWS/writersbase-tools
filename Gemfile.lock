@@ -208,6 +208,7 @@ PLATFORMS
 
 DEPENDENCIES
   ginseng-core!
+  optparse
   ricecream
   rubocop
   rubocop-performance
