@@ -1,5 +1,7 @@
 plugins:
   - rubocop-performance
+  - rubocop-minitest
+  - rubocop-rake
 
 AllCops:
   AllowSymlinksInCacheRootDirectory: true
@@ -94,8 +96,21 @@ Metrics/PerceivedComplexity:
     - test/*
     - '**/contract/*'
   Max: 10
+Minitest/MultipleAssertions:
+  Enabled: false
+Minitest/ReturnInTestMethod:
+  Enabled: false
+Minitest/TestFileName:
+  Enabled: false
 Naming/RescuedExceptionsVariableName:
   PreferredName: e
+Rake:
+  Exclude:
+    - '*'
+  Include:
+    - Rakefile
+    - '*.rake'
+    - app/task/**/*.rb
 Style/AsciiComments:
   Enabled: false
 Style/ConditionalAssignment:
