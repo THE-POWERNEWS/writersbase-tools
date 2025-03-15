@@ -1,0 +1,19 @@
+crypt:
+  encoder: base64
+  password: null
+environment: development
+http:
+  retry:
+    limit: 3
+    seconds: 1
+package:
+  authors:
+    - Tatsuya Koishi
+  description: VPS上で実行する雑多なユーティリティ。
+  email:
+    - tkoishi@b-shock.co.jp
+  license: MIT
+  url: https://github.com/pooza/tomato-shrieker
+  version: 1.0.0
+ruby:
+  jit: false

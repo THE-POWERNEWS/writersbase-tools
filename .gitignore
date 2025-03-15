@@ -1,0 +1,11 @@
+.bundle
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+*.log
+*.bak
+*.swp
+test*
+dist
+.vscode

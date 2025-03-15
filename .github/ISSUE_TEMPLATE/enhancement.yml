@@ -1,0 +1,32 @@
+# @link https://tech-blog.rakus.co.jp/entry/20240208/issue_forms
+name: 改善提案
+description: 改善提案はこちら。
+labels: ["提案"]
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景
+      description: どのような課題を抱えてissueを立てたのか、経緯や前提を記載してください。
+    validations:
+      required: true
+  - type: textarea
+    id: merit
+    attributes:
+      label: メリット
+      description: 改善することでどのようなメリットがあるのかを記載してください。
+    validations:
+      required: true
+  - type: textarea
+    id: do
+    attributes:
+      label: やること
+      description: このissueで取り組むより具体的な項目を、「背景」より高い粒度で記載してください。
+      value: |
+        -
+        -
+        -
+  - type: textarea
+    id: supplement
+    attributes:
+      label: 補足

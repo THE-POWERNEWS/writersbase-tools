@@ -1,0 +1,240 @@
+GIT
+  remote: https://github.com/pooza/ginseng-core.git
+  revision: 9fc72cd64c6948faef2e41d9f625e33217e4e2c7
+  specs:
+    ginseng-core (1.14.7)
+      activesupport (>= 7.0.7.1)
+      addressable (>= 2.8.0)
+      bundler (~> 2.0)
+      cgi (>= 0.4.2)
+      csv
+      daemon-spawn
+      date (>= 3.2.1)
+      erb
+      etc
+      facets
+      fileutils (~> 1.7.0)
+      find
+      httparty (>= 0.21.0)
+      json-schema
+      mail
+      multi_json
+      net-protocol
+      net-smtp
+      nokogiri (>= 1.18.3)
+      optparse
+      rake
+      rest-client
+      sanitize (>= 6.0.2)
+      securerandom
+      set
+      syslog
+      time (>= 0.2.2)
+      yajl-ruby (>= 1.4.3)
+      zeitwerk (>= 2.4.0)
+      zlib
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (8.0.2)
+      base64
+      benchmark (>= 0.3)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
+    ansi (1.5.0)
+    ast (2.4.2)
+    base64 (0.2.0)
+    bcrypt_pbkdf (1.1.1)
+    benchmark (0.4.0)
+    bigdecimal (3.1.9)
+    cgi (0.4.2)
+    concurrent-ruby (1.3.5)
+    connection_pool (2.5.0)
+    crass (1.0.6)
+    csv (3.3.2)
+    daemon-spawn (0.4.2)
+    date (3.4.1)
+    domain_name (0.6.20240107)
+    drb (2.2.1)
+    ed25519 (1.3.0)
+    erb (4.0.4)
+      cgi (>= 0.3.3)
+    etc (1.4.5)
+    facets (3.1.0)
+    fileutils (1.7.3)
+    find (0.2.0)
+    hashie (5.0.0)
+    highline (3.1.2)
+      reline
+    http-accept (1.7.0)
+    http-cookie (1.0.8)
+      domain_name (~> 0.5)
+    httparty (0.22.0)
+      csv
+      mini_mime (>= 1.0.0)
+      multi_xml (>= 0.5.2)
+    i18n (1.14.7)
+      concurrent-ruby (~> 1.0)
+    io-console (0.8.0)
+    itamae (1.14.1)
+      ansi
+      hashie
+      schash (~> 0.1.0)
+      specinfra (>= 2.64.0, < 3.0.0)
+      thor (>= 1.0.0)
+    json (2.10.2)
+    json-schema (5.1.1)
+      addressable (~> 2.8)
+      bigdecimal (~> 3.1)
+    language_server-protocol (3.17.0.4)
+    lint_roller (1.1.0)
+    logger (1.6.6)
+    mail (2.8.1)
+      mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
+    mime-types (3.6.0)
+      logger
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2025.0304)
+    mini_mime (1.1.5)
+    minitest (5.25.5)
+    multi_json (1.15.0)
+    multi_xml (0.7.1)
+      bigdecimal (~> 3.1)
+    net-imap (0.5.6)
+      date
+      net-protocol
+    net-pop (0.1.2)
+      net-protocol
+    net-protocol (0.2.2)
+      timeout
+    net-scp (4.1.0)
+      net-ssh (>= 2.6.5, < 8.0.0)
+    net-smtp (0.5.1)
+      net-protocol
+    net-ssh (7.3.0)
+    net-telnet (0.2.0)
+    netrc (0.11.0)
+    nokogiri (1.18.4-aarch64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.4-aarch64-linux-musl)
+      racc (~> 1.4)
+    nokogiri (1.18.4-arm-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.4-arm-linux-musl)
+      racc (~> 1.4)
+    nokogiri (1.18.4-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.4-x86_64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.4-x86_64-linux-musl)
+      racc (~> 1.4)
+    optparse (0.6.0)
+    parallel (1.26.3)
+    parser (3.3.7.1)
+      ast (~> 2.4.1)
+      racc
+    prism (1.3.0)
+    public_suffix (6.0.1)
+    racc (1.8.1)
+    rainbow (3.1.1)
+    rake (13.2.1)
+    rbs (3.8.1)
+      logger
+    regexp_parser (2.10.0)
+    reline (0.6.0)
+      io-console (~> 0.5)
+    rest-client (2.1.0)
+      http-accept (>= 1.7.0, < 2.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    ricecream (0.2.1)
+    rubocop (1.74.0)
+      json (~> 2.3)
+      language_server-protocol (~> 3.17.0.2)
+      lint_roller (~> 1.1.0)
+      parallel (~> 1.10)
+      parser (>= 3.3.0.2)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 2.9.3, < 3.0)
+      rubocop-ast (>= 1.38.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 2.4.0, < 4.0)
+    rubocop-ast (1.38.1)
+      parser (>= 3.3.1.0)
+    rubocop-performance (1.24.0)
+      lint_roller (~> 1.1)
+      rubocop (>= 1.72.1, < 2.0)
+      rubocop-ast (>= 1.38.0, < 2.0)
+    ruby-lsp (0.23.11)
+      language_server-protocol (~> 3.17.0)
+      prism (>= 1.2, < 2.0)
+      rbs (>= 3, < 4)
+      sorbet-runtime (>= 0.5.10782)
+    ruby-progressbar (1.13.0)
+    sanitize (7.0.0)
+      crass (~> 1.0.2)
+      nokogiri (>= 1.16.8)
+    schash (0.1.2)
+    securerandom (0.4.1)
+    set (1.1.1)
+    sfl (2.3)
+    sorbet-runtime (0.5.11933)
+    specinfra (2.92.0)
+      base64
+      net-scp
+      net-ssh (>= 2.7)
+      net-telnet
+      sfl
+    syslog (0.3.0)
+      logger
+    thor (1.3.2)
+    time (0.4.1)
+      date
+    timeout (0.4.3)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
+    unicode-display_width (3.1.4)
+      unicode-emoji (~> 4.0, >= 4.0.4)
+    unicode-emoji (4.0.4)
+    uri (1.0.3)
+    yajl-ruby (1.4.3)
+    zeitwerk (2.7.2)
+    zlib (3.2.1)
+
+PLATFORMS
+  aarch64-linux-gnu
+  aarch64-linux-musl
+  arm-linux-gnu
+  arm-linux-musl
+  arm64-darwin-24
+  x86_64-linux-gnu
+  x86_64-linux-musl
+
+DEPENDENCIES
+  bcrypt_pbkdf (~> 1.0)
+  ed25519 (~> 1.2)
+  ginseng-core!
+  highline
+  itamae
+  ricecream
+  rubocop
+  rubocop-performance
+  ruby-lsp
+
+BUNDLED WITH
+   2.6.6
