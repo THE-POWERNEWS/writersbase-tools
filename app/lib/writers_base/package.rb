@@ -30,7 +30,7 @@ module WritersBase
     end
 
     def self.name
-      return 'tomato-shrieker'
+      return 'writersbase-tools'
     end
 
     def self.version
