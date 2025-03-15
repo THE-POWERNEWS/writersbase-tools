@@ -5,7 +5,7 @@ module WritersBase
     end
 
     def help
-      return ['bin/cure.rb help - ヘルプ']
+      return ['bin/wb.rb help - ヘルプ']
     end
   end
 end
