@@ -13,9 +13,15 @@ module WritersBase
       return result
     end
 
+    def description
+      return "#{dir}の#{days}日経過したログファイルを、gzip圧縮します。"
+    end
+
+    private
+
     def compress(path)
       command = Ginseng::CommandLine.new(['gzip', '-f', path])
-      command.exec
+      command.exec unless Environment.test?
       raise command.stderr unless command.status.zero?
     end
 
@@ -35,10 +41,6 @@ module WritersBase
 
     def days
       return config["/#{underscore}/days"]
-    end
-
-    def description
-      return "#{dir}の#{days}日経過したログファイルを、gzip圧縮します。"
     end
   end
 end
