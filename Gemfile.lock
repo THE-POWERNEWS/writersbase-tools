@@ -213,6 +213,7 @@ PLATFORMS
 DEPENDENCIES
   ginseng-core!
   optparse
+  parallel
   ricecream
   rubocop
   rubocop-minitest
