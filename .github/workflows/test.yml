@@ -22,5 +22,4 @@ jobs:
           bundle exec rake bundle:update
           git diff
           bundle exec rake bundle:check
-      - run: bundle exec rake migration:run
       - run: bundle exec rubocop
