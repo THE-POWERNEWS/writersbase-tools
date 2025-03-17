@@ -1,7 +1,9 @@
 source 'https://rubygems.org'
-ruby '~>3.2.7'
+ruby '~>3.2.0'
 gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
+gem 'fileutils'
 gem 'optparse'
+gem 'parallel'
 gem 'ruby-lsp'
 
 group :development do

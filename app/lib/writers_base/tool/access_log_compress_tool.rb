@@ -2,14 +2,12 @@ module WritersBase
   class AccessLogCompressTool < Tool
     def exec(args = {})
       result = {success: [], failure: []}
-      finder.execute.map do |file|
-        Thread.new do
-          compress(file)
-          result[:success].push(file)
-        rescue => e
-          result[:failure].push({file:, error: e.message.strip})
-        end
-      end.each(&:join)
+      Parallel.each(finder.execute, in_threads: Parallel.processor_count) do |file|
+        compress(file)
+        result[:success].push(file)
+      rescue => e
+        result[:failure].push(file:, error: e.message.strip)
+      end
       return result
     end
 

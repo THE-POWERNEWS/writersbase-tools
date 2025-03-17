@@ -17,6 +17,10 @@ package:
   version: 1.0.0
 ruby:
   jit: false
+hourly: []
+daily: []
+weekly: []
+monthly: []
 access_log_compress:
   dir: /var/log/nginx
   days: 1
