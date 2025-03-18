@@ -27,11 +27,10 @@ module WritersBase
           File.write(path, contents(tool))
           FileUtils.chmod(0o755, path)
           logger.info(action: 'install', path:)
+        rescue => e
+          logger.error(error: e)
         end
       end
-    rescue => e
-      logger.error(error: e)
-      exit 1
     end
 
     def periods
@@ -45,7 +44,8 @@ module WritersBase
     def contents(tool)
       return [
         '#!/bin/sh',
-        "#{File.join(Environment.dir, 'bin/wb.rb')} #{tool}",
+        "cd #{Environment.dir}",
+        "bin/wb.rb #{tool}",
         '',
       ].join("\n")
     end
