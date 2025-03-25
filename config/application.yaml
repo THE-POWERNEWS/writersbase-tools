@@ -17,6 +17,7 @@ package:
   version: 1.0.0
 ruby:
   jit: false
+  bin: /usr/bin/ruby3.2
 hourly: []
 daily: []
 weekly: []
