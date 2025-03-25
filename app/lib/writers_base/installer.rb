@@ -45,25 +45,25 @@ module WritersBase
       return [
         '#!/bin/sh',
         "cd #{Environment.dir}",
-        "bin/wb.rb #{tool}",
+        "#{config['/ruby/bin']} bin/wb.rb #{tool}",
         '',
       ].join("\n")
     end
 
     def dest(period, tool)
       case Environment.platform
-      when 'FreeBSD'
+      when :freebsd
         return File.join(destroot(period), "900.#{Package.name}-#{tool}.rb")
-      when 'Debian'
+      when :debian
         return File.join(destroot(period), "#{Package.name}-#{tool}.rb")
       end
     end
 
     def destroot(period)
       case Environment.platform
-      when 'FreeBSD'
+      when :freebsd
         return File.join('/usr/local/etc/periodic', period)
-      when 'Debian'
+      when :debian
         return "/etc/cron.#{period}"
       end
     end
