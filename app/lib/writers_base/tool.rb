@@ -8,6 +8,7 @@ module WritersBase
 
     def body(args = {})
       result = exec(args)
+      logger.info(tool: underscore, result:)
       contents = []
       if result.is_a?(String)
         contents.push(result)
