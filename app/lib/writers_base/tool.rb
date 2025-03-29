@@ -1,6 +1,6 @@
 module WritersBase
   class Tool
-    include Package
+    attr_reader :logger, :config
 
     def exec(args = {})
       raise Ginseng::ImplementError, "'#{__method__}' not implemented"
@@ -39,6 +39,13 @@ module WritersBase
       Dir.glob(File.join(Environment.dir, 'app/lib/writers_base/tool/*.rb')).each do |path|
         yield create(File.basename(path, '.rb').sub('_tool', ''))
       end
+    end
+
+    private
+
+    def initialize
+      @logger = Logger.new
+      @config = Config.instance
     end
   end
 end
