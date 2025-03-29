@@ -45,6 +45,7 @@ module WritersBase
       return [
         '#!/bin/sh',
         "cd #{Environment.dir}",
+        'bundle install',
         "#{config['/ruby/bin']} bin/wb.rb #{tool}",
         '',
       ].join("\n")
