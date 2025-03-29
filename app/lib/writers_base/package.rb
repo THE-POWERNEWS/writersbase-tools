@@ -21,7 +21,7 @@ module WritersBase
     end
 
     def logger
-      @logger ||= Logger.new
+      @logger ||= logger_class.new
       return @logger
     end
 
