@@ -52,11 +52,12 @@ module WritersBase
     end
 
     def dest(period, tool)
+      basename = "#{Package.name}-#{tool}".gsub('_', '-')
       case Environment.platform
       when :freebsd
-        return File.join(destroot(period), "900.#{Package.name}-#{tool}.rb")
+        return File.join(destroot(period), "900.#{basename}.rb")
       when :debian
-        return File.join(destroot(period), "#{Package.name}-#{tool}.rb")
+        return File.join(destroot(period), basename)
       end
     end
 
