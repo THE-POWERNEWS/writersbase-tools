@@ -25,3 +25,13 @@ monthly: []
 access_log_compress:
   dir: /var/log/nginx
   days: 1
+mysql_dump:
+  host: localhost
+  user: root
+  password: null
+  databases: []
+  port: 3306
+  days: 7
+  dest:
+    dir: /var/backup/db
+

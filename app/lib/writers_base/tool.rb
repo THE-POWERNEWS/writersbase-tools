@@ -47,5 +47,21 @@ module WritersBase
       @logger = Logger.new
       @config = Config.instance
     end
+
+    def compress(path)
+      command = Ginseng::CommandLine.new(['gzip', '-f', path])
+      command.exec unless Environment.test?
+      raise command.stderr unless command.status.zero?
+    end
+
+    def method_missing(method, *args)
+      return config["/#{underscore}/#{method}"] if args.empty?
+      return super
+    end
+
+    def respond_to_missing?(method, *args)
+      return args.empty? if args.is_a?(Array)
+      return super
+    end
   end
 end

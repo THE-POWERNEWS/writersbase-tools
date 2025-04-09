@@ -17,12 +17,6 @@ module WritersBase
 
     private
 
-    def compress(path)
-      command = Ginseng::CommandLine.new(['gzip', '-f', path])
-      command.exec unless Environment.test?
-      raise command.stderr unless command.status.zero?
-    end
-
     def finder
       unless @finder
         @finder = Ginseng::FileFinder.new
@@ -31,14 +25,6 @@ module WritersBase
         @finder.mtime = days
       end
       return @finder
-    end
-
-    def dir
-      return config["/#{underscore}/dir"]
-    end
-
-    def days
-      return config["/#{underscore}/days"]
     end
   end
 end
