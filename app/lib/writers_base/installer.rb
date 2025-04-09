@@ -47,7 +47,7 @@ module WritersBase
         "cd #{Environment.dir}",
         'bundle config silence_root_warning true',
         'bundle install',
-        "bin/wb.rb #{tool}",
+        "bin/wb #{tool}",
         '',
       ].join("\n")
     end
