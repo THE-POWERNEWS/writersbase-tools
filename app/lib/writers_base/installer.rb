@@ -45,6 +45,7 @@ module WritersBase
       return [
         '#!/bin/sh',
         "cd #{Environment.dir}",
+        'bundle config silence_root_warning true'
         'bundle install',
         "bin/wb.rb #{tool}",
         '',
