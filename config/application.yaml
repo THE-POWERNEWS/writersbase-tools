@@ -14,7 +14,7 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.0.0
+  version: 1.1.0
 ruby:
   jit: false
   bin: /usr/bin/ruby3.2
@@ -25,3 +25,13 @@ monthly: []
 access_log_compress:
   dir: /var/log/nginx
   days: 1
+mysql_dump:
+  host: localhost
+  user: root
+  password: null
+  databases: []
+  port: 3306
+  days: 7
+  dest:
+    dir: /var/backup/db
+

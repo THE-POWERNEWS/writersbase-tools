@@ -183,7 +183,7 @@ GEM
       nokogiri (>= 1.16.8)
     securerandom (0.4.1)
     set (1.1.1)
-    sorbet-runtime (0.5.11993)
+    sorbet-runtime (0.5.11998)
     syslog (0.3.0)
       logger
     test-unit (3.6.8)
