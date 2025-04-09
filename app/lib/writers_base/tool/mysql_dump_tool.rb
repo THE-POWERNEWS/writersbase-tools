@@ -14,6 +14,7 @@ module WritersBase
       rescue => e
         result[:failure].push(path:, error: e.message.strip)
       end
+      return result
     end
 
     def description
