@@ -1,5 +1,5 @@
 module WritersBase
-  class MySQLDumpTool < Tool
+  class MysqlDumpTool < Tool
     def exec(args = {})
       databases.each do |db|
         dir = File.join(dest_dir, db)
