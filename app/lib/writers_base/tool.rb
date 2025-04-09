@@ -27,7 +27,7 @@ module WritersBase
     end
 
     def help
-      return ["bin/wb.rb #{underscore}", "  #{description}", '']
+      return ["bin/wb #{underscore}", "  #{description}", '']
     end
 
     def self.create(name)
