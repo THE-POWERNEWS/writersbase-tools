@@ -1,14 +1,18 @@
 module WritersBase
   class MysqlDumpTool < Tool
     def exec(args = {})
+      result = {success: [], delete: [], failure: []}
       databases.each do |db|
         dir = File.join(dest_dir, db)
         FileUtils.mkdir_p(dir)
         path = File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql")
-        dump(path, {host:, user:, password:, port:, db:})
+        result[:success].push(dump(path, {host:, user:, password:, port:, db:}))
         finder(dir).execute do |f|
           File.unlink(f)
+          result[:delete].push(f)
         end
+      rescue => e
+        result[:failure].push(path:, error: e.message.strip)
       end
     end
 
@@ -23,7 +27,7 @@ module WritersBase
         'mysqldump',
         '-h', params[:host],
         '-u', params[:user],
-        '-p', params[:port],
+        '--port', params[:port],
         '-r', path,
         params[:db],
         '--single-transaction',
@@ -33,7 +37,9 @@ module WritersBase
       return if Environment.test?
       command.exec
       compress(path)
-      File.chmod(0o640, dest)
+      path += '.gz'
+      File.chmod(0o640, path)
+      return path
     end
 
     def finder(dir)
@@ -42,7 +48,7 @@ module WritersBase
       finder.patterns = ['*.log']
       finder.patterns = ['*.sql.gz']
       finder.mtime = days
-      return @finder
+      return finder
     end
 
     def dest_dir
