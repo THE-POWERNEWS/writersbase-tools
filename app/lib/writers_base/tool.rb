@@ -52,6 +52,7 @@ module WritersBase
       command = Ginseng::CommandLine.new(['gzip', '-f', path])
       command.exec unless Environment.test?
       raise command.stderr unless command.status.zero?
+      return "#{path}.gz"
     end
 
     def method_missing(method, *args)
