@@ -37,9 +37,9 @@ module WritersBase
       command.env = {'MYSQL_PWD' => params[:password]}
       return if Environment.test?
       command.exec
-      compress(path)
-      path += '.gz'
-      File.chmod(0o640, path)
+      path = compress(path)
+      FileUtils.chmod(0o640, path)
+      FileUtils.chown('root', 'adm', path)
       return path
     end
 
