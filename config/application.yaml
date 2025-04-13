@@ -33,5 +33,5 @@ mysql_dump:
   port: 3306
   days: 7
   dest:
-    dir: /var/backup/db
+    dir: /var/backups/db
 
