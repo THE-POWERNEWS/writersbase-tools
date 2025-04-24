@@ -32,7 +32,7 @@ module WritersBase
         params[:db],
         '--single-transaction',
         '--skip-dump-date',
-        :|, 'gzip'
+        :|, 'gzip',
         :>, Shellwords.escape(path)
       ])
       command.env = {'MYSQL_PWD' => params[:password]}
