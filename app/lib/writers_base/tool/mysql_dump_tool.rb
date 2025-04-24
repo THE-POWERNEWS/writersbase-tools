@@ -33,7 +33,7 @@ module WritersBase
         '--single-transaction',
         '--skip-dump-date',
         :|, 'gzip'
-        :>, path
+        :>, Shellwords.escape(path)
       ])
       command.env = {'MYSQL_PWD' => params[:password]}
       return if Environment.test?
