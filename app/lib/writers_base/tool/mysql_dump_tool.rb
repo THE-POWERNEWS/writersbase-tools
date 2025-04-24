@@ -5,7 +5,7 @@ module WritersBase
       databases.each do |db|
         dir = File.join(dest_dir, db)
         FileUtils.mkdir_p(dir)
-        path = File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql")
+        path = File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.gz")
         result[:success].push(dump(path, {host:, user:, password:, port:, db:}))
         finder(dir).execute do |f|
           File.unlink(f)
@@ -29,15 +29,15 @@ module WritersBase
         '-h', params[:host],
         '-u', params[:user],
         '--port', params[:port],
-        '-r', path,
         params[:db],
         '--single-transaction',
         '--skip-dump-date'
+        :| 'gzip'
+        :> path
       ])
       command.env = {'MYSQL_PWD' => params[:password]}
       return if Environment.test?
       command.exec
-      path = compress(path)
       FileUtils.chmod(0o640, path)
       FileUtils.chown('root', 'adm', path)
       return path
