@@ -1,5 +1,5 @@
 module WritersBase
-  class MysqlDumpTool < Tool
+  class PostgresqlDumpTool < Tool
     def exec(args = {})
       result = {success: [], delete: [], failure: []}
       databases.each do |db|
@@ -18,24 +18,22 @@ module WritersBase
     end
 
     def description
-      return 'MySQLのダンプファイルを作成します。'
+      return 'PostgreSQLのダンプファイルを作成します。'
     end
 
     private
 
     def dump(path, params = {})
       command = Ginseng::CommandLine.new([
-        'mysqldump',
-        '-h', params[:host],
-        '-u', params[:user],
-        '--port', params[:port],
-        params[:db],
-        '--single-transaction',
-        '--skip-dump-date',
+        'pg_dump',
+        '-h', Shellwords.escape(params[:host]),
+        '-U', Shellwords.escape(params[:user]),
+        '-p', Shellwords.escape(params[:port]),
+        '-d', Shellwords.escape(params[:db]),
         :|, 'gzip',
         :>, Shellwords.escape(path)
       ])
-      command.env = {'MYSQL_PWD' => params[:password]}
+      command.env = {'PGPASSWORD' => params[:password]}
       return if Environment.test?
       command.exec
       FileUtils.chmod(0o640, path)
