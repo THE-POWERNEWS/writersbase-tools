@@ -26,12 +26,12 @@ module WritersBase
     def dump(path, params = {})
       command = Ginseng::CommandLine.new([
         'pg_dump',
-        '-h', Shellwords.escape(params[:host]),
-        '-U', Shellwords.escape(params[:user]),
-        '-p', Shellwords.escape(params[:port]),
-        '-d', Shellwords.escape(params[:db]),
+        '-h', params[:host],
+        '-U', params[:user],
+        '-p', params[:port],
+        '-d', params[:db],
         :|, 'gzip',
-        :>, Shellwords.escape(path)
+        :>, path
       ])
       command.env = {'PGPASSWORD' => params[:password]}
       return if Environment.test?
