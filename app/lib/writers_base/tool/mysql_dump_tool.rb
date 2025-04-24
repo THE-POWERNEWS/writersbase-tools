@@ -31,9 +31,9 @@ module WritersBase
         '--port', params[:port],
         params[:db],
         '--single-transaction',
-        '--skip-dump-date'
-        :| 'gzip'
-        :> path
+        '--skip-dump-date',
+        :|, 'gzip'
+        :>, path
       ])
       command.env = {'MYSQL_PWD' => params[:password]}
       return if Environment.test?
