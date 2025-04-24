@@ -34,4 +34,12 @@ mysql_dump:
   days: 7
   dest:
     dir: /var/backups/db
-
+postgresql_dump:
+  host: localhost
+  user: postgres
+  password: null
+  databases: []
+  port: 5432
+  days: 7
+  dest:
+    dir: /var/backups/db

@@ -1,0 +1,58 @@
+module WritersBase
+  class PostgresqlDumpTool < Tool
+    def exec(args = {})
+      result = {success: [], delete: [], failure: []}
+      databases.each do |db|
+        dir = File.join(dest_dir, db)
+        FileUtils.mkdir_p(dir)
+        path = File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql")
+        result[:success].push(dump(path, {host:, user:, password:, port:, db:}))
+        finder(dir).execute do |f|
+          File.unlink(f)
+          result[:delete].push(f)
+        end
+      rescue => e
+        result[:failure].push(path:, error: e.message.strip)
+      end
+      return result
+    end
+
+    def description
+      return 'PostgreSQLのダンプファイルを作成します。'
+    end
+
+    private
+
+    def dump(path, params = {})
+      command = Ginseng::CommandLine.new([
+        'pg_dump',
+        '-h', Shellwords.escape(params[:host]),
+        '-u', Shellwords.escape(params[:user]),
+        '-p', Shellwords.escape(params[:port]),
+        '-d', Shellwords.escape(params[:db]),
+        '|', 'gzip',
+        '>', Shellwords.escape(path)
+      ].join(' '))
+      command.env = {'PGPASSWORD' => params[:password]}
+      return if Environment.test?
+      command.exec
+      path = compress(path)
+      FileUtils.chmod(0o640, path)
+      FileUtils.chown('root', 'adm', path)
+      return path
+    end
+
+    def finder(dir)
+      finder = Ginseng::FileFinder.new
+      finder.dir = dir
+      finder.patterns = ['*.log']
+      finder.patterns = ['*.sql.gz']
+      finder.mtime = days
+      return finder
+    end
+
+    def dest_dir
+      config["/#{underscore}/dest/dir"]
+    end
+  end
+end
