@@ -30,6 +30,10 @@ module WritersBase
       return ["bin/wb #{underscore}", "  #{description}", '']
     end
 
+    def test?
+      return Environment.test?
+    end
+
     def self.create(name)
       return "WritersBase::#{name.camelize}Tool".constantize.new
     end
