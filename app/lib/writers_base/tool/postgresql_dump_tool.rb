@@ -3,16 +3,25 @@ module WritersBase
     def exec(args = {})
       result = {success: [], delete: [], failure: []}
       databases.each do |db|
-        dir = File.join(dest_dir, db)
-        FileUtils.mkdir_p(dir)
-        path = File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.gz")
-        result[:success].push(dump(path, {host:, user:, password:, port:, db:}))
-        finder(dir).execute do |f|
-          File.unlink(f)
-          result[:delete].push(f)
+        begin
+          dir = File.join(dest_dir, db)
+          FileUtils.mkdir_p(dir)
+          path = dump_path(db, dir)
+
+          logger.info(tool: underscore, db:, message: 'ダンプ開始')
+          dump(path, host:, user:, password:, port:, db:)
+          logger.info(tool: underscore, db:, path:, message: 'ダンプ完了')
+          result[:success] << path
+
+          finder(dir).execute do |f|
+            logger.info(tool: underscore, file: f, message: 'ファイル削除')
+            File.unlink(f)
+            result[:delete] << f
+          end
+        rescue => e
+          logger.error(tool: underscore, db:, error: e.message.strip, class: e.class.to_s)
+          result[:failure] << {db:, error: e.message.strip, class: e.class.to_s}
         end
-      rescue => e
-        result[:failure].push(path:, error: e.message.strip)
       end
       return result
     end
@@ -34,20 +43,26 @@ module WritersBase
         :>, path
       ])
       command.env = {'PGPASSWORD' => params[:password]}
-      return if Environment.test?
+      return if test_mode?
       command.exec
       FileUtils.chmod(0o640, path)
       FileUtils.chown('root', 'adm', path)
-      return path
     end
 
     def finder(dir)
       finder = Ginseng::FileFinder.new
       finder.dir = dir
-      finder.patterns = ['*.log']
       finder.patterns = ['*.sql.gz']
       finder.mtime = days
       return finder
+    end
+
+    def dump_path(db, dir)
+      return File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.gz")
+    end
+
+    def test_mode?
+      return Environment.test?
     end
 
     def dest_dir
