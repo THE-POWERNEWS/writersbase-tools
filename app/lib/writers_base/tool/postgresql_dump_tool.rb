@@ -49,9 +49,7 @@ module WritersBase
         File.unlink(f)
         deleted << f
       end
-      if deleted.empty?
-        logger.warn(tool: underscore, dir:, message: '削除対象ファイルなし')
-      end
+      logger.warn(tool: underscore, dir:, message: '削除対象ファイルなし') if deleted.empty?
       deleted
     end
 
