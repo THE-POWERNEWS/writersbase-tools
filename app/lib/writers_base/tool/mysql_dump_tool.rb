@@ -34,7 +34,7 @@ module WritersBase
         :>, path
       ])
       command.env = {'MYSQL_PWD' => params[:password]}
-      return if test_mode?
+      return if test?
       command.exec
       FileUtils.chmod(0o640, path)
       FileUtils.chown('root', 'adm', path)

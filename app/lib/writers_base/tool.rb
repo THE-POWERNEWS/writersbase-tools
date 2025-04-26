@@ -30,7 +30,7 @@ module WritersBase
       return ["bin/wb #{underscore}", "  #{description}", '']
     end
 
-    def test_mode?
+    def test?
       return Environment.test?
     end
 
