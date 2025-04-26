@@ -6,15 +6,12 @@ module WritersBase
         dir = File.join(dest_dir, db)
         FileUtils.mkdir_p(dir)
         path = dump_path(db, dir)
-
-        logger.info(tool: underscore, db:, message: 'ダンプ開始')
         dump(path, host:, user:, password:, port:, db:)
-        logger.info(tool: underscore, db:, path:, message: 'ダンプ完了')
-        result[:success] << path
+        result[:success].push(path)
         result[:delete].concat(delete_old_files(dir))
       rescue => e
-        logger.error(tool: underscore, db:, error: e.message.strip, class: e.class.to_s)
-        result[:failure] << {db:, error: e.message.strip, class: e.class.to_s}
+        logger.error(tool: underscore, db:, error: e.message.strip)
+        result[:failure].push(db:, error: e.message.strip)
       end
       return result
     end
@@ -26,6 +23,7 @@ module WritersBase
     private
 
     def dump(path, params = {})
+      logger.info(tool: underscore, db: params[:db], message: 'ダンプ開始')
       command = Ginseng::CommandLine.new([
         'mysqldump',
         '-h', params[:host],
@@ -40,6 +38,8 @@ module WritersBase
       command.exec
       FileUtils.chmod(0o640, path)
       FileUtils.chown('root', 'adm', path)
+    ensure
+      logger.info(tool: underscore, db: params[:db], message: 'ダンプ完了')
     end
 
     def delete_old_files(dir)
@@ -47,10 +47,10 @@ module WritersBase
       finder(dir).execute do |f|
         logger.info(tool: underscore, file: f, message: 'ファイル削除')
         File.unlink(f)
-        deleted << f
+        deleted.push(f)
       end
       logger.warn(tool: underscore, dir:, message: '削除対象ファイルなし') if deleted.empty?
-      deleted
+      return deleted
     end
 
     def finder(dir)
@@ -66,7 +66,7 @@ module WritersBase
     end
 
     def dest_dir
-      config["/#{underscore}/dest/dir"]
+      return config["/#{underscore}/dest/dir"]
     end
   end
 end
