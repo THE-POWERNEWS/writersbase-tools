@@ -24,7 +24,7 @@ module WritersBase
 
     def dump(path, params = {})
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ開始')
-      command = Ginseng::CommandLine.new([
+      command = CommandLine.new([
         'mysqldump',
         '-h', params[:host],
         '-u', params[:user],
