@@ -24,7 +24,7 @@ module WritersBase
 
     def dump(path, params = {})
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ開始')
-      command = Ginseng::CommandLine.new([
+      command = CommandLine.new([
         'pg_dump',
         '-h', params[:host],
         '-U', params[:user],

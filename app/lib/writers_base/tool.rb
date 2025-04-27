@@ -53,7 +53,7 @@ module WritersBase
     end
 
     def compress(path)
-      command = Ginseng::CommandLine.new(['gzip', '-f', path])
+      command = CommandLine.new(['gzip', '-f', path])
       command.exec unless Environment.test?
       raise command.stderr unless command.status.zero?
       return "#{path}.gz"
