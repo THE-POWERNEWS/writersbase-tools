@@ -53,9 +53,11 @@ module WritersBase
     end
 
     def compress(path)
+      logger.info(tool: underscore, path:, message: '圧縮開始')
       command = CommandLine.new(['gzip', '-f', path])
       command.exec unless Environment.test?
       raise command.stderr unless command.status.zero?
+      logger.info(tool: underscore, path:, message: '圧縮終了')
       return "#{path}.gz"
     end
 

@@ -1,7 +1,10 @@
 module WritersBase
   class AccessLogCompressTool < Tool
     def exec(args = {})
-      result = {success: [], failure: []}
+      result = {
+        success: Concurrent::Array.new,
+        failure: Concurrent::Array.new,
+      }
       Parallel.each(finder.execute, in_threads: Parallel.processor_count) do |file|
         compress(file)
         result[:success].push(file)
