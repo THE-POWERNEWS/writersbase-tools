@@ -1,6 +1,7 @@
 module WritersBase
   class Installer
     include Singleton
+
     attr_reader :logger, :config
 
     def initialize
