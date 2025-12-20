@@ -1,5 +1,4 @@
 source 'https://rubygems.org'
-ruby '~>3.2.0'
 gem 'concurrent-ruby'
 gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
 gem 'fileutils'

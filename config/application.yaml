@@ -19,7 +19,7 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.2.3
+  version: 1.2.4
 ruby:
   jit: false
   bin: /usr/bin/ruby3.2
@@ -27,6 +27,8 @@ hourly: []
 daily: []
 weekly: []
 monthly: []
+zstd:
+  level: 19
 access_log_compress:
   dir: /var/log/nginx
   days: 1

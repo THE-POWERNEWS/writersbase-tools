@@ -1,6 +1,7 @@
 module WritersBase
   class Installer
     include Singleton
+
     attr_reader :logger, :config
 
     def initialize
@@ -55,7 +56,7 @@ module WritersBase
     def dest(period, tool)
       basename = "#{Package.name}-#{tool}".tr('_', '-')
       case Environment.platform
-      when :freebsd
+      when :free_bsd, :freebsd
         return File.join(destroot(period), "900.#{basename}.rb")
       when :debian
         return File.join(destroot(period), basename)
@@ -64,8 +65,8 @@ module WritersBase
 
     def destroot(period)
       case Environment.platform
-      when :freebsd
-        return File.join('/usr/local/etc/periodic', period)
+      when :free_bsd, :freebsd
+        return File.join('/usr/local/etc/periodic', period.to_s)
       when :debian
         return "/etc/cron.#{period}"
       end
