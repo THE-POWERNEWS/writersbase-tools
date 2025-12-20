@@ -54,11 +54,11 @@ module WritersBase
 
     def compress(path)
       logger.info(tool: underscore, path:, message: '圧縮開始')
-      command = CommandLine.new(['gzip', '-f', path])
+      command = CommandLine.new(['zstd', "-#{config['/zstd/level']}", '--rm', '-f', path])
       command.exec unless Environment.test?
       raise command.stderr unless command.status.zero?
       logger.info(tool: underscore, path:, message: '圧縮終了')
-      return "#{path}.gz"
+      return "#{path}.zst"
     end
 
     def method_missing(method, *args)
