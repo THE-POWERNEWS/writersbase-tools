@@ -33,12 +33,7 @@ module WritersBase
       result[:success].push(src)
     end
 
-    def dest
-      return config["/#{underscore}/dest"]
-    end
-
-    def excludes
-      return config["/#{underscore}/excludes"] || []
-    end
+    def dest = config["/#{underscore}/dest"]
+    def excludes = config["/#{underscore}/excludes"] || []
   end
 end

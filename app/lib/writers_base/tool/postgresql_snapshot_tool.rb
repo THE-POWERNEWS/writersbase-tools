@@ -53,12 +53,7 @@ module WritersBase
       pg&.close
     end
 
-    def target
-      return config["/#{underscore}/target"]
-    end
-
-    def dsn
-      return config["/#{underscore}/dsn"]
-    end
+    def target = config["/#{underscore}/target"]
+    def dsn = config["/#{underscore}/dsn"]
   end
 end
