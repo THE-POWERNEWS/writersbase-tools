@@ -30,7 +30,7 @@ module WritersBase
         '-U', params[:user],
         '-p', params[:port],
         '-d', params[:db],
-        :|, 'gzip',
+        :|, 'zstd', "-#{config['/zstd/level']}",
         :>, path
       ])
       command.env = {'PGPASSWORD' => params[:password]}
@@ -56,13 +56,13 @@ module WritersBase
     def finder(dir)
       finder = Ginseng::FileFinder.new
       finder.dir = dir
-      finder.patterns = ['*.sql.gz']
+      finder.patterns = ['*.sql.zst', '*.sql.gz']
       finder.mtime = days
       return finder
     end
 
     def dump_path(db, dir)
-      return File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.gz")
+      return File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.zst")
     end
 
     def dest_dir

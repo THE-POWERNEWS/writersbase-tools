@@ -15,7 +15,7 @@ module WritersBase
     end
 
     def description
-      return "#{dir}の#{days}日経過したログファイルを、gzip圧縮します。"
+      return "#{dir}の#{days}日経過したログファイルを、zstd圧縮します。"
     end
 
     private
