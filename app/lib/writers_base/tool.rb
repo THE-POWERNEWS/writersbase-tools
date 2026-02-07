@@ -70,5 +70,14 @@ module WritersBase
       return args.empty? if args.is_a?(Array)
       return super
     end
+
+    def root_group
+      case Environment.platform
+      when :free_bsd, :freebsd
+        return 'wheel'
+      when :debian
+        return 'adm'
+      end
+    end
   end
 end

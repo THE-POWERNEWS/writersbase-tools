@@ -37,7 +37,7 @@ module WritersBase
       return if test?
       command.exec
       FileUtils.chmod(0o640, path)
-      FileUtils.chown('root', 'adm', path)
+      FileUtils.chown('root', root_group, path)
     ensure
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ完了')
     end
