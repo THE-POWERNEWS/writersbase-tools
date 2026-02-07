@@ -72,3 +72,20 @@ mastodon_media_cleanup:
     - media remove-orphans
     - media remove --remote-headers
     - preview_cards remove -c 1
+rsync_backup:
+  dest: user@host:/path/to/backup
+  sources:
+    - /etc
+    - /usr/local/etc
+    - /home/mastodon/repos/mastodon
+  excludes:
+    - .git
+    - .zfs
+    - .cache
+    - node_modules
+    - vendor/bundle
+    - tmp
+    - '*.bak'
+    - '*.log'
+    - '*.swp'
+    - '*.tmp'

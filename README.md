@@ -50,6 +50,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | postgresql_dump | PostgreSQLのダンプファイルを作成します。 |
 | postgresql_snapshot | PostgreSQLのZFSスナップショットを作成・管理します。 |
 | reboot_required | システムに再起動が必要かを判定します。 |
+| rsync_backup | rsyncでファイルを外部サーバーにバックアップします。 |
 | service_restart | 設定されたサービスを再起動します。 |
 
 ## 設定
@@ -126,6 +127,14 @@ rake uninstall  # cronスクリプトをアンインストール
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
 | commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, ...] |
+
+### rsync_backup
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| dest | SSH転送先 (user@host:/path) | user@host:/path/to/backup |
+| sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
+| excludes | 除外パターンの配列 | [.git, .zfs] |
 
 ## ライセンス
 
