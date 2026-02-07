@@ -22,6 +22,7 @@ module WritersBase
     end
 
     def install
+      uninstall
       periods.each do |period|
         entries(period).each do |tool|
           path = dest(period, tool)
