@@ -25,6 +25,12 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 - テスト: `bin/wb help` で動作確認可能
 - GitHub CLI: `gh`
 
+## Mastodon関連ツールの共通パターン
+
+- `config/application.yaml`の`mastodon`セクション（user, rails_env, dir）を共通設定として参照
+- tootctlの実行は`sudo -u`＋`CommandLine`で、`RAILS_ENV`環境変数とディレクトリを設定
+- 現在FreeBSD専用（Ubuntu対応は不要）
+
 ## 注意点
 
 - 外部gemのrequireは不要（`Bundler.require`で自動ロード）

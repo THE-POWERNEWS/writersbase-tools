@@ -19,7 +19,7 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.3.1
+  version: 1.4.0
 ruby:
   jit: false
   bin: /usr/bin/ruby3.3
@@ -54,3 +54,21 @@ postgresql_snapshot:
   target: zroot/postgres
   days: 3
   dsn: postgres://postgres@localhost/mastodon
+mastodon:
+  user: mastodon
+  rails_env: production
+  dir: /home/mastodon/repos/mastodon
+service_restart:
+  services:
+    - mastodon-sidekiq
+mastodon_maintenance:
+  commands:
+    - cache recount accounts
+    - accounts cull
+mastodon_follow:
+  account: info
+mastodon_media_cleanup:
+  commands:
+    - media remove-orphans
+    - media remove --remote-headers
+    - preview_cards remove -c 1
