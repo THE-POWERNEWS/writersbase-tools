@@ -12,7 +12,20 @@ module WritersBase
     private
 
     def reboot_required?
-      return File.exist?('/var/run/reboot-required')
+      case Environment.platform
+      when :free_bsd, :freebsd
+        return freebsd_reboot_required?
+      when :debian
+        return File.exist?('/var/run/reboot-required')
+      end
+    end
+
+    def freebsd_reboot_required?
+      running = CommandLine.new(['uname', '-r'])
+      running.exec
+      installed = CommandLine.new(['freebsd-version', '-k'])
+      installed.exec
+      return running.stdout.strip != installed.stdout.strip
     end
   end
 end

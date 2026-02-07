@@ -65,8 +65,6 @@ module WritersBase
       return File.join(dir, "#{db}_#{Time.now.strftime('%Y-%m-%d')}.sql.zst")
     end
 
-    def dest_dir
-      return config["/#{underscore}/dest/dir"]
-    end
+    def dest_dir = config["/#{underscore}/dest/dir"]
   end
 end
