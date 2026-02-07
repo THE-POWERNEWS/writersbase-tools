@@ -4,7 +4,7 @@ gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
 gem 'fileutils'
 gem 'optparse'
 gem 'parallel'
-gem 'ruby-lsp'
+gem 'pg'
 
 group :development do
   gem 'ricecream'

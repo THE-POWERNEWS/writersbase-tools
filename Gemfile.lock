@@ -135,15 +135,19 @@ GEM
     parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
+    pg (1.6.3)
+    pg (1.6.3-aarch64-linux)
+    pg (1.6.3-aarch64-linux-musl)
+    pg (1.6.3-arm64-darwin)
+    pg (1.6.3-x86_64-darwin)
+    pg (1.6.3-x86_64-linux)
+    pg (1.6.3-x86_64-linux-musl)
     power_assert (3.0.1)
     prism (1.9.0)
     public_suffix (7.0.2)
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
-    rbs (3.10.3)
-      logger
-      tsort
     regexp_parser (2.11.3)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
@@ -176,10 +180,6 @@ GEM
     rubocop-rake (0.7.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1)
-    ruby-lsp (0.26.5)
-      language_server-protocol (~> 3.17.0)
-      prism (>= 1.2, < 2.0)
-      rbs (>= 3, < 5)
     ruby-progressbar (1.13.0)
     sanitize (7.0.0)
       crass (~> 1.0.2)
@@ -193,7 +193,6 @@ GEM
     time (0.4.2)
       date
     timeout (0.6.0)
-    tsort (0.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (3.2.0)
@@ -221,12 +220,12 @@ DEPENDENCIES
   ginseng-core!
   optparse
   parallel
+  pg
   ricecream
   rubocop
   rubocop-minitest
   rubocop-performance
   rubocop-rake
-  ruby-lsp
   test-unit
 
 BUNDLED WITH

@@ -19,10 +19,10 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.2.5
+  version: 1.3.0
 ruby:
   jit: false
-  bin: /usr/bin/ruby3.2
+  bin: /usr/bin/ruby3.3
 hourly: []
 daily: []
 weekly: []
@@ -50,3 +50,7 @@ postgresql_dump:
   days: 7
   dest:
     dir: /var/backups/db
+postgresql_snapshot:
+  target: zroot/postgres
+  days: 3
+  dsn: postgres://postgres@localhost/mastodon
