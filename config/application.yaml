@@ -19,7 +19,7 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.3．0
+  version: 1.3.0
 ruby:
   jit: false
   bin: /usr/bin/ruby3.3
