@@ -23,14 +23,14 @@ module WritersBase
           .map {|line| line.split(/\s+/).first}
           .select {|v| v.split('@').first == target}
           .map do |name|
-            date = Date.parse(name.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)[0]) rescue nil
-            {name:, date:}
+            time = Time.parse(name.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}/)[0].tr('_', ' ')) rescue nil
+            {name:, time:}
           end
     end
 
     def clean_snapshots(result)
       snapshots.each do |snapshot|
-        next unless snapshot[:date].nil? || snapshot[:date] < Date.today - days
+        next unless snapshot[:time].nil? || snapshot[:time] < Time.now - days * 86400
         logger.info(tool: underscore, snapshot: snapshot[:name], message: 'スナップショット削除')
         system "zfs destroy #{snapshot[:name]}" unless test?
         result[:delete].push(snapshot[:name])
