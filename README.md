@@ -29,7 +29,7 @@ bin/wb help
 
 ### cronへのインストール・アンインストール
 
-`config/application.yaml`の`hourly`、`daily`、`weekly`、`monthly`にツール名を設定し、
+`config/local.yaml`の`hourly`、`daily`、`weekly`、`monthly`にツール名を設定し、
 rakeタスクでcronスクリプトとしてインストールできます。
 
 ```sh
@@ -55,7 +55,9 @@ rake uninstall  # cronスクリプトをアンインストール
 
 ## 設定
 
-`config/application.yaml`で各ツールの動作を設定します。
+`config/application.yaml`にデフォルト値が定義されています。
+環境固有の設定は`config/local.yaml`を作成し、必要な項目のみ上書きしてください（`application.yaml`を直接編集する必要はありません）。
+`config/local.yaml`はGit管理対象外です。
 
 ### access_log_compress
 
