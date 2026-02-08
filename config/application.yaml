@@ -49,6 +49,13 @@ postgresql_dump:
   days: 7
   dest:
     dir: /var/backups/db
+mysql_snapshot:
+  target: zroot/mysql
+  days: 3
+  host: 127.0.0.1
+  user: root
+  password: null
+  port: 3306
 postgresql_snapshot:
   target: zroot/postgres
   days: 3
