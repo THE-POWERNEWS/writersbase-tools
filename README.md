@@ -47,6 +47,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | mastodon_maintenance | Mastodonのメンテナンスコマンドを実行します。 |
 | mastodon_media_cleanup | Mastodonの古いメディアファイルを削除します。 |
 | mysql_dump | MySQLのダンプファイルを作成します。 |
+| mysql_snapshot | MySQLのZFSスナップショットを作成・管理します。 |
 | postgresql_dump | PostgreSQLのダンプファイルを作成します。 |
 | postgresql_snapshot | PostgreSQLのZFSスナップショットを作成・管理します。 |
 | reboot_required | システムに再起動が必要かを判定します。 |
@@ -70,13 +71,24 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| host | 接続先ホスト | localhost |
+| host | 接続先ホスト | 127.0.0.1 |
 | user | 接続ユーザー | root |
 | password | パスワード | null |
 | databases | 対象データベース名の配列 | [] |
 | port | ポート番号 | 3306 |
 | days | ダンプファイル保管日数 | 7 |
 | dest.dir | 出力先ディレクトリ | /var/backups/db |
+
+### mysql_snapshot
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| target | 対象ZFSパーティション | zroot/mysql |
+| days | スナップショット保管日数 | 3 |
+| host | 接続先ホスト | 127.0.0.1 |
+| user | 接続ユーザー | root |
+| password | パスワード | null |
+| port | ポート番号 | 3306 |
 
 ### postgresql_dump
 
@@ -110,7 +122,7 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| services | 再起動するサービス名の配列 | [mastodon-sidekiq] |
+| services | 再起動するサービス名の配列 | [] |
 
 ### mastodon_maintenance
 

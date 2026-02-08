@@ -19,7 +19,7 @@ package:
     - tkoishi@b-shock.co.jp
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
-  version: 1.4.5
+  version: 1.4.6
 ruby:
   bin: /usr/bin/ruby3.3
 hourly: []
@@ -32,7 +32,7 @@ access_log_compress:
   dir: /var/log/nginx
   days: 1
 mysql_dump:
-  host: localhost
+  host: 127.0.0.1
   user: root
   password: null
   databases: []
@@ -49,6 +49,13 @@ postgresql_dump:
   days: 7
   dest:
     dir: /var/backups/db
+mysql_snapshot:
+  target: zroot/mysql
+  days: 3
+  host: 127.0.0.1
+  user: root
+  password: null
+  port: 3306
 postgresql_snapshot:
   target: zroot/postgres
   days: 3
@@ -58,8 +65,7 @@ mastodon:
   rails_env: production
   dir: /home/mastodon/repos/mastodon
 service_restart:
-  services:
-    - mastodon-sidekiq
+  services: []
 mastodon_maintenance:
   commands:
     - cache recount accounts

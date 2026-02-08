@@ -4,6 +4,7 @@ gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
 gem 'fileutils'
 gem 'optparse'
 gem 'parallel'
+gem 'mysql2'
 gem 'pg'
 
 group :development do
