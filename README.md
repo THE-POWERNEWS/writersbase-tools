@@ -29,7 +29,7 @@ bin/wb help
 
 ### cronへのインストール・アンインストール
 
-`config/application.yaml`の`hourly`、`daily`、`weekly`、`monthly`にツール名を設定し、
+`config/local.yaml`の`hourly`、`daily`、`weekly`、`monthly`にツール名を設定し、
 rakeタスクでcronスクリプトとしてインストールできます。
 
 ```sh
@@ -41,7 +41,7 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | ツール名 | 説明 |
 | --- | --- |
-| access_log_compress | 指定日数が経過したログファイルをgzip圧縮します。 |
+| access_log_compress | 指定日数が経過したログファイルをzstd圧縮します。 |
 | help | ツール一覧を表示します。 |
 | mastodon_follow | 全ユーザーに指定アカウントを強制フォローさせます。 |
 | mastodon_maintenance | Mastodonのメンテナンスコマンドを実行します。 |
@@ -55,7 +55,9 @@ rake uninstall  # cronスクリプトをアンインストール
 
 ## 設定
 
-`config/application.yaml`で各ツールの動作を設定します。
+`config/application.yaml`にデフォルト値が定義されています。
+環境固有の設定は`config/local.yaml`を作成し、必要な項目のみ上書きしてください（`application.yaml`を直接編集する必要はありません）。
+`config/local.yaml`はGit管理対象外です。
 
 ### access_log_compress
 
@@ -126,7 +128,7 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, ...] |
+| commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, media remove --remote-headers, preview_cards remove -c 1] |
 
 ### rsync_backup
 
@@ -134,7 +136,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | --- | --- | --- |
 | dest | SSH転送先 (user@host:/path) | user@host:/path/to/backup |
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
-| excludes | 除外パターンの配列 | [.git, .zfs] |
+| excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
 
 ## ライセンス
 

@@ -9,14 +9,15 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 - `app/lib/writers_base/tool/*.rb` - 個別ツール。`Tool`を継承し`exec`と`description`を実装
 - `app/lib/writers_base/installer.rb` - cronスクリプトのインストーラ
 - `bin/wb.rb` - ツール実行エントリポイント (`bin/wb <tool_name>`)
-- `config/application.yaml` - 全設定。ツール名をキーにして各設定を格納
+- `config/application.yaml` - デフォルト設定。ツール名をキーにして各設定を格納
+- `config/local.yaml` - 環境固有の設定（Git管理対象外）。`application.yaml`の値を上書き
 - `config/autoload.yaml` - Zeitwerk inflection設定
 
 ## ツール追加パターン
 
 1. `app/lib/writers_base/tool/<name>_tool.rb` にクラスを追加（`Tool`を継承）
 2. `exec(args = {})` と `description` を実装
-3. `config/application.yaml` に設定を追加
+3. `config/application.yaml` にデフォルト設定を追加
 4. `README.md` のツール一覧と設定セクションを更新
 
 ## 開発ツール

@@ -33,7 +33,7 @@ module WritersBase
       snapshots.each do |snapshot|
         next unless snapshot[:time].nil? || snapshot[:time] < Time.now - (days * 86_400)
         logger.info(tool: underscore, snapshot: snapshot[:name], message: 'スナップショット削除')
-        system "zfs destroy #{snapshot[:name]}" unless test?
+        CommandLine.new(['zfs', 'destroy', snapshot[:name]]).exec unless test?
         result[:delete].push(snapshot[:name])
       end
     end
@@ -44,7 +44,7 @@ module WritersBase
 
       pg = PG::Connection.new(dsn)
       pg.exec_params(%{SELECT * FROM pg_backup_start($1, false)}, [name])
-      system "zfs snapshot #{name}" unless test?
+      CommandLine.new(['zfs', 'snapshot', name]).exec unless test?
       logger.info(tool: underscore, snapshot: name, message: 'スナップショット作成完了')
       pg.exec(%{SELECT * FROM pg_backup_stop(true)})
 
