@@ -58,8 +58,7 @@ mastodon:
   rails_env: production
   dir: /home/mastodon/repos/mastodon
 service_restart:
-  services:
-    - mastodon-sidekiq
+  services: []
 mastodon_maintenance:
   commands:
     - cache recount accounts
