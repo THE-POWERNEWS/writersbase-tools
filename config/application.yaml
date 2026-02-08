@@ -32,7 +32,7 @@ access_log_compress:
   dir: /var/log/nginx
   days: 1
 mysql_dump:
-  host: localhost
+  host: 127.0.0.1
   user: root
   password: null
   databases: []
