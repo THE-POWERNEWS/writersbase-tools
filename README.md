@@ -70,7 +70,7 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| host | 接続先ホスト | localhost |
+| host | 接続先ホスト | 127.0.0.1 |
 | user | 接続ユーザー | root |
 | password | パスワード | null |
 | databases | 対象データベース名の配列 | [] |
@@ -110,7 +110,7 @@ rake uninstall  # cronスクリプトをアンインストール
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| services | 再起動するサービス名の配列 | [mastodon-sidekiq] |
+| services | 再起動するサービス名の配列 | [] |
 
 ### mastodon_maintenance
 
