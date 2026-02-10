@@ -22,8 +22,9 @@ module WritersBase
 
     def tootctl_command(args)
       command = CommandLine.new(
-        ['sudo', '-u', mastodon_user, 'bundle', 'exec', 'bin/tootctl', *args],
+        ['bundle', 'exec', 'bin/tootctl', *args],
       )
+      command.user = mastodon_user
       command.env = {'RAILS_ENV' => mastodon_rails_env}
       command.dir = mastodon_dir
       unless test?
