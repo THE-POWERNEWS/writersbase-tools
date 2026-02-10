@@ -26,7 +26,10 @@ module WritersBase
       )
       command.env = {'RAILS_ENV' => mastodon_rails_env}
       command.dir = mastodon_dir
-      command.exec unless test?
+      unless test?
+        command.exec
+        raise command.stderr if command.status.nonzero?
+      end
       return command
     end
 
