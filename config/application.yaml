@@ -75,7 +75,7 @@ mastodon_follow:
 mastodon_media_cleanup:
   commands:
     - media remove-orphans
-    - media remove --remote-headers
+    - media remove --remove-headers
     - preview_cards remove -c 1
 rsync_backup:
   dest: user@host:/path/to/backup
