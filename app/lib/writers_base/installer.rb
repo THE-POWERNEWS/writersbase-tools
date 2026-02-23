@@ -24,8 +24,10 @@ module WritersBase
     def install
       uninstall
       periods.each do |period|
+        index = 900
         entries(period).each do |tool|
-          path = dest(period, tool)
+          path = dest(period, tool, index)
+          index += 1
           File.write(path, contents(tool))
           FileUtils.chmod(0o755, path)
           logger.info(action: 'install', path:)
@@ -54,11 +56,11 @@ module WritersBase
       ].join("\n")
     end
 
-    def dest(period, tool)
+    def dest(period, tool, index = 900)
       basename = "#{Package.name}-#{tool}".tr('_', '-')
       case Environment.platform
       when :free_bsd, :freebsd
-        return File.join(destroot(period), "900.#{basename}.rb")
+        return File.join(destroot(period), "#{index}.#{basename}.rb")
       when :debian
         return File.join(destroot(period), basename)
       end
