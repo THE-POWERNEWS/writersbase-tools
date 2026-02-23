@@ -93,3 +93,20 @@ rsync_backup:
     - '*.log'
     - '*.swp'
     - '*.tmp'
+google_drive_backup:
+  remote: gdrive
+  path: /backup
+  sources:
+    - /etc
+    - /usr/local/etc
+  excludes:
+    - .git
+    - .zfs
+    - .cache
+    - node_modules
+    - vendor/bundle
+    - tmp
+    - '*.bak'
+    - '*.log'
+    - '*.swp'
+    - '*.tmp'
