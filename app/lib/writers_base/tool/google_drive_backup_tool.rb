@@ -22,7 +22,7 @@ module WritersBase
       logger.info(tool: underscore, src:, dest: remote_path, message: '同期開始')
       command = CommandLine.new([
         'rclone', 'sync', '--verbose',
-        *excludes.flat_map {|pattern| ['--exclude', pattern]},
+        *excludes.flat_map {|pattern| ['--exclude', "#{pattern}/**", '--exclude', pattern]},
         "#{src}/",
         remote_path
       ])
