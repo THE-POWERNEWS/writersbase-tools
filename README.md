@@ -51,6 +51,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | postgresql_dump | PostgreSQLのダンプファイルを作成します。 |
 | postgresql_snapshot | PostgreSQLのZFSスナップショットを作成・管理します。 |
 | reboot_required | システムに再起動が必要かを判定します。 |
+| google_drive_backup | rcloneでファイルをGoogle Driveにバックアップします。 |
 | rsync_backup | rsyncでファイルを外部サーバーにバックアップします。 |
 | service_restart | 設定されたサービスを再起動します。 |
 
@@ -141,6 +142,17 @@ rake uninstall  # cronスクリプトをアンインストール
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
 | commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, media remove --remote-headers, preview_cards remove -c 1] |
+
+### google_drive_backup
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| remote | rcloneリモート名 | gdrive |
+| path | Google Drive上のバックアップ先パス | /backup |
+| sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc] |
+| excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
+
+事前に`rclone config`でGoogle Driveリモートを設定しておく必要があります。
 
 ### rsync_backup
 
