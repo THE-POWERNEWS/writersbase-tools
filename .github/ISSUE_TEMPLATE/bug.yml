@@ -1,46 +1,69 @@
-# @link https://tech-blog.rakus.co.jp/entry/20240208/issue_forms
 name: 不具合報告
 description: 不具合報告はこちら。
 labels: ["不具合"]
 body:
-  - type: textarea
-    id: overview
+  - type: input
+    id: version
     attributes:
-      label: 概要
-      description: |
-        不具合の概要を記載してください。
-        見た目に関係する場合は、スクリーンショット等を貼り付けてください。
+      label: バージョン
+      description: 画面に表示されているバージョンを記載してください（不明な場合は空欄でOK）。
+      placeholder: "例: 1.2.0"
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起きたか
+      description: 発生した問題を記載してください。
     validations:
       required: true
-  - type: input
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+      description: 本来どうなるべきかを記載してください。
+  - type: dropdown
     id: environment
     attributes:
       label: 再現環境
-      description: |
-        再現環境を記載してください。
-        例：
-        Chrome + Windows
-        Edge + Windows
-        Chrome + macOS
-        Safari + macOS
+      options:
+        - dev1（開発）
+        - test（ステージング）
+        - 本番
+        - その他
     validations:
       required: true
+  - type: dropdown
+    id: browser-os
+    attributes:
+      label: ブラウザ / OS
+      options:
+        - Chrome / Windows
+        - Edge / Windows
+        - Chrome / macOS
+        - Safari / macOS
+        - Chrome / iOS
+        - Safari / iOS
+        - Chrome / Android
+        - その他
   - type: input
     id: date
     attributes:
       label: 発生時刻
-      description: |
-        不具合が発生した日付と時刻を、可能な限り記載してください。
-        ログとの照合を行うため、可能な限り、分単位で正しい時刻を記載してください。
+      description: ログ照合に使うため、可能な限り分単位で記載してください。
+      placeholder: "例: 2026-04-10 14:30"
   - type: textarea
-    id: process
+    id: steps
     attributes:
       label: 再現手順
-      description: 不具合を再現させる手順を記載してください。
+      description: 問題を再現させる手順がわかれば記載してください。
       value: |
         1.
         2.
         3.
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: 見た目に関する問題の場合、画像を貼り付けてください。
   - type: textarea
     id: supplement
     attributes:

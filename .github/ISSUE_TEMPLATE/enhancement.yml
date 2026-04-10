@@ -1,8 +1,13 @@
-# @link https://tech-blog.rakus.co.jp/entry/20240208/issue_forms
 name: 改善提案
 description: 改善提案はこちら。
 labels: ["提案"]
 body:
+  - type: input
+    id: version
+    attributes:
+      label: バージョン
+      description: 現在のバージョンを記載してください（不明な場合は空欄でOK）。
+      placeholder: "例: 1.2.0"
   - type: textarea
     id: background
     attributes:
@@ -21,7 +26,7 @@ body:
     id: do
     attributes:
       label: やること
-      description: このissueで取り組むより具体的な項目を、「背景」より高い粒度で記載してください。
+      description: このissueで取り組むより具体的な項目を記載してください。
       value: |
         -
         -
