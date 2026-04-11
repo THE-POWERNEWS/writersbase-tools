@@ -27,7 +27,7 @@ daily: []
 weekly: []
 monthly: []
 zstd:
-  level: 19
+  level: 3
 access_log_compress:
   dir: /var/log/nginx
   days: 1
