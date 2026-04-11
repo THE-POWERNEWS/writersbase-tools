@@ -25,13 +25,13 @@ module WritersBase
     def dump(path, params = {})
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ開始')
       command = CommandLine.new([
-        'nice', '-n', '19', 'ionice', '-c3',
+        'nice', '-n', '19',
         'pg_dump',
         '-h', params[:host],
         '-U', params[:user],
         '-p', params[:port],
         '-d', params[:db],
-        :|, 'nice', '-n', '19', 'ionice', '-c3',
+        :|, 'nice', '-n', '19',
         'zstd', "-#{config['/zstd/level']}",
         :>, path
       ])
