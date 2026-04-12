@@ -1,13 +1,12 @@
 GIT
   remote: https://github.com/pooza/ginseng-core.git
-  revision: 96815baa96349228b5517a8f10780f2381caa171
+  revision: 51ccc81cdee12ed68c2dc703c14d8e1d8cacc891
   specs:
-    ginseng-core (1.15.16)
+    ginseng-core (1.15.22)
       activesupport (>= 7.0.7.1)
-      addressable (>= 2.8.0)
+      addressable (>= 2.9.0)
       cgi (>= 0.4.2)
       csv
-      daemon-spawn
       date (>= 3.2.1)
       erb
       etc
@@ -23,7 +22,6 @@ GIT
       nokogiri (>= 1.18.9)
       optparse
       rake
-      rest-client
       sanitize (>= 6.0.2)
       securerandom
       set
@@ -59,18 +57,13 @@ GEM
     connection_pool (3.0.2)
     crass (1.0.6)
     csv (3.3.5)
-    daemon-spawn (0.4.2)
     date (3.5.1)
-    domain_name (0.6.20240107)
     drb (2.2.3)
     erb (6.0.2)
     etc (1.4.6)
     facets (3.2.0)
     fileutils (1.7.3)
     find (0.2.0)
-    http-accept (1.7.0)
-    http-cookie (1.1.4)
-      domain_name (~> 0.5)
     httparty (0.24.2)
       csv
       mini_mime (>= 1.0.0)
@@ -90,10 +83,6 @@ GEM
       net-imap
       net-pop
       net-smtp
-    mime-types (3.7.0)
-      logger
-      mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2026.0407)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (6.0.3)
@@ -113,7 +102,6 @@ GEM
       timeout
     net-smtp (0.5.1)
       net-protocol
-    netrc (0.11.0)
     nokogiri (1.19.2)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
@@ -152,11 +140,6 @@ GEM
     rainbow (3.1.1)
     rake (13.3.1)
     regexp_parser (2.12.0)
-    rest-client (2.1.0)
-      http-accept (>= 1.7.0, < 2.0)
-      http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 4.0)
-      netrc (~> 0.8)
     ricecream (0.2.1)
     rubocop (1.86.1)
       json (~> 2.3)
