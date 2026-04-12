@@ -39,7 +39,11 @@ module WritersBase
       check.dir = mastodon_dir
       check.exec
       return if check.status.zero?
-      raise "Mastodonのbundleが未充足です。`cd #{mastodon_dir} && sudo -u #{mastodon_user} bundle install` を実行してください (#{check.stderr.strip})"
+      raise [
+        'Mastodonのbundleが未充足です。',
+        "`cd #{mastodon_dir} && sudo -u #{mastodon_user} bundle install` を実行してください",
+        "(#{check.stderr.strip})",
+      ].join(' ')
     end
 
     def mastodon_user = config['/mastodon/user']
