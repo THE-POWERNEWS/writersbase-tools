@@ -31,6 +31,17 @@ GIT
       zeitwerk (>= 2.4.0)
       zlib
 
+GIT
+  remote: https://github.com/pooza/ginseng-style.git
+  revision: c3a40a1e34b10620b477e4d2e53838a34831d6c7
+  branch: main
+  specs:
+    ginseng-style (1.0.0)
+      rubocop
+      rubocop-minitest
+      rubocop-performance
+      rubocop-rake
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -204,15 +215,12 @@ DEPENDENCIES
   concurrent-ruby
   fileutils
   ginseng-core!
+  ginseng-style!
   mysql2
   optparse
   parallel
   pg
   ricecream
-  rubocop
-  rubocop-minitest
-  rubocop-performance
-  rubocop-rake
   test-unit
 
 BUNDLED WITH
