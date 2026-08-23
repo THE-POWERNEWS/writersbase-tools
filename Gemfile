@@ -9,9 +9,7 @@ gem 'pg'
 
 group :development do
   gem 'ricecream'
-  gem 'rubocop'
-  gem 'rubocop-minitest'
-  gem 'rubocop-performance'
-  gem 'rubocop-rake'
+  # ⚠ rubocop 本体とプラグインは ginseng-style が抱えている。ここに書かない。
+  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.4', require: false
   gem 'test-unit'
 end
