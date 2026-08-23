@@ -5,4 +5,8 @@ inherit_gem:
   ginseng-style: config/rubocop.yml
 
 AllCops:
-  TargetRubyVersion: 3.2
+  # ⚠⚠ **配る既定は 3.4 だが、ここは 3.3 に下げる。** このリポジトリの CI は
+  # ruby-version: 3.3.10 で回る（.github/workflows/test.yml）。⚠ 実行より高い版を
+  # 指すと、動かない構文を前提に lint することになる。
+  # ⚠ 以前は 3.2 だったが、CI が 3.3.10 なので実態に合わせて上げた。
+  TargetRubyVersion: 3.3
