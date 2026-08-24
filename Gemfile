@@ -8,10 +8,7 @@ gem 'mysql2'
 gem 'pg'
 
 group :development do
+  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.4', require: false
   gem 'ricecream'
-  gem 'rubocop'
-  gem 'rubocop-minitest'
-  gem 'rubocop-performance'
-  gem 'rubocop-rake'
   gem 'test-unit'
 end
