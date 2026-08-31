@@ -8,7 +8,7 @@ gem 'parallel'
 gem 'pg'
 
 group :development do
-  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.11', require: false
+  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.12', require: false
   gem 'ricecream'
   gem 'test-unit'
 end
