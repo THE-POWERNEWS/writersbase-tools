@@ -46,6 +46,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | mastodon_follow | 全ユーザーに指定アカウントを強制フォローさせます。 |
 | mastodon_maintenance | Mastodonのメンテナンスコマンドを実行します。 |
 | mastodon_media_cleanup | Mastodonの古いメディアファイルを削除します。 |
+| misskey_emoji_sync | 姉妹Misskeyサーバーからカスタム絵文字を取り込み、増えたぶんを告知します。 |
 | mysql_dump | MySQLのダンプファイルを作成します。 |
 | mysql_snapshot | MySQLのZFSスナップショットを作成・管理します。 |
 | postgresql_dump | PostgreSQLのダンプファイルを作成します。 |
@@ -181,6 +182,17 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
 | commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, media remove --remote-headers, preview_cards remove -c 1] |
+
+### misskey_emoji_sync
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| origin | 取り込み元のMisskeyサーバーのURL | null（未設定なら実行時にエラー） |
+| webhook | 告知先のWebhook URL | null（未設定なら告知しない） |
+
+`bin/tootctl emoji sync <origin> --no-dry-run` を実行します。`webhook`を設定すると、増えた絵文字の告知をそのURLへSlack互換のペイロードで投稿します（モロヘイヤのアカウント別Webhookを想定）。
+
+⚠ **Webhook URLはそれ自体が資格情報**なので、`config/local.yaml`側に置いてください。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
 
 ### google_drive_backup
 

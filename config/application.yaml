@@ -92,6 +92,9 @@ mastodon_media_cleanup:
     - media remove-orphans
     - media remove --remove-headers
     - preview_cards remove -c 1
+misskey_emoji_sync:
+  origin: null
+  webhook: null
 rsync_backup:
   dest: user@host:/path/to/backup
   sources:
