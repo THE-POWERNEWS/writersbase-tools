@@ -9,7 +9,7 @@ gem 'pg'
 gem 'sentry-ruby'
 
 group :development do
-  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.4', require: false
+  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.10', require: false
   gem 'ricecream'
   gem 'test-unit'
 end
