@@ -22,6 +22,21 @@ package:
   version: 1.5.2
 ruby:
   bin: /usr/bin/ruby3.3
+sentry:
+  # ⚠ 空なら Sentry は初期化されず、何も送らない。サーバでは config/local.yaml に書く。
+  # ⚠ DSN は秘密ではない（送信専用・公開情報）。
+  dsn: null
+  # 省略時は /environment の値を使う
+  environment: null
+  traces_sample_rate: 0
+  # ⚠ `\K` で**値だけ**を伏せる。キー名は残さないと、何が伏せられたのか分からない。
+  # 1つ目は URL の userinfo（`postgres://user:pass@host`）。
+  # ⚠ ginseng-core を上げれば Ginseng::Masking が同じ役を果たすが、
+  #   固定している版にはまだ無いので、ここでも拾う。
+  scrub_patterns:
+    - '(?i)\b[a-z][a-z0-9+.-]*://[^\s:/@]+:\K[^\s@]+(?=@)'
+    - '(?i)\b(?:MYSQL_PWD|PGPASSWORD)=\K\S+'
+    - '(?i)\b(?:token|auth_token|auth_key|access_token|refresh_token|password|secret|api_key)=\K\S+'
 hourly: []
 daily: []
 weekly: []

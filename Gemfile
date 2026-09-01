@@ -6,6 +6,7 @@ gem 'optparse'
 gem 'parallel'
 gem 'mysql2'
 gem 'pg'
+gem 'sentry-ruby'
 
 group :development do
   gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.4', require: false
