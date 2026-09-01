@@ -61,6 +61,45 @@ rake uninstall  # cronスクリプトをアンインストール
 環境固有の設定は`config/local.yaml`を作成し、必要な項目のみ上書きしてください（`application.yaml`を直接編集する必要はありません）。
 `config/local.yaml`はGit管理対象外です。
 
+### sentry（エラー監視）
+
+ツールの失敗を Sentry へ能動的に通知します（#37）。
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| dsn | Sentry の DSN。**空なら Sentry は起動せず、何も送らない** | null |
+| environment | Sentry 側の環境名。省略時は `/environment` の値 | null |
+| traces_sample_rate | 性能計測の採取率。`0` なら計測しない | 0 |
+| scrub_patterns | 送信前に伏せる正規表現。`\K` で値だけを伏せる | 下記 |
+
+⚠ **DSN は秘密ではありません**（送信専用・公開情報）ので、`config/local.yaml` に
+平文で構いません。
+
+#### 送るもの
+
+`bin/wb` の最終 `rescue` で拾った例外だけを送ります。ツールの例外はすべてここへ
+来るので、集約点はここ 1 か所です。fingerprint にツール名を混ぜているため、
+別のツールの失敗が同じ issue にまとめられることはありません。
+
+⚠ **bundle 未充足の早期失敗は対象外です。** SDK 自体がまだ読めていないためです。
+
+⚠ **送信後に必ず flush します。** cron から呼ばれる道具は送信直後に終了するので、
+既定の非同期送信のままではプロセスが先に消えてイベントが届きません。
+
+#### 送らないもの
+
+- URL の userinfo（`postgres://user:pass@host`）
+- コマンドラインの環境変数（`MYSQL_PWD=` / `PGPASSWORD=`）
+- `token` / `access_token` / `password` / `secret` などの `key=value`
+
+⚠ **例外メッセージだけでなく、スタックトレースに載るソースの行**
+（`context_line` / `pre_context` / `post_context`）にも同じ網を掛けています。
+Sentry は例外が起きた行の前後を丸ごと送るため、メッセージだけ伏せても足りません。
+
+⚠ マスクの正本は `Ginseng::Masking` です。ginseng-core を上げて `mask_urls_in` が
+使えるようになれば自動的にそちらを通しますが、固定している版にはまだ無いため、
+`scrub_patterns` 側にも URL の資格情報を入れてあります。
+
 ### access_log_compress
 
 | キー | 説明 | デフォルト |

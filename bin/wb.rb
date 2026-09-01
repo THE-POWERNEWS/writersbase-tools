@@ -15,6 +15,10 @@ module WritersBase
   raise 'tool undefined' unless name = ARGV.first&.underscore
   puts Tool.create(name).body(ARGV)
 rescue => e
+  # ⚠ **ここが唯一の集約点。** ツールの例外はすべてここへ来るので、
+  # Sentry へはここだけで送る（#37）。bundle 未充足の早期失敗は SDK が
+  # まだ読めていないので対象外。
+  capture_error(e, tool: ARGV.first)
   warn e.message
   exit 1
 end

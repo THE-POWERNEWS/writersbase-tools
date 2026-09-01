@@ -182,6 +182,10 @@ GEM
       crass (~> 1.0.2)
       nokogiri (>= 1.16.8)
     securerandom (0.4.1)
+    sentry-ruby (6.7.0)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      logger
     set (1.1.3)
     syslog (0.4.0)
       logger
@@ -221,6 +225,7 @@ DEPENDENCIES
   parallel
   pg
   ricecream
+  sentry-ruby
   test-unit
 
 BUNDLED WITH
