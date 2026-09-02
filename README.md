@@ -213,6 +213,14 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
 
+## ドキュメント
+
+開発の進め方・配り方・位置づけは [docs/](docs/README.md) にあります。
+
+- [docs/CLAUDE.md](docs/CLAUDE.md) — 規約の正本・ブランチ・リリース運用・進捗の同期手順
+- [docs/positioning.md](docs/positioning.md) — 位置づけと背景
+- [docs/deployment.md](docs/deployment.md) — 配り方と運用の罠
+
 ## ライセンス
 
 MIT
