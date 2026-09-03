@@ -1,15 +1,18 @@
 source 'https://rubygems.org'
 gem 'concurrent-ruby'
-gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
 gem 'fileutils'
+gem 'ginseng-core', github: 'pooza/ginseng-core', require: 'ginseng'
+gem 'mysql2'
 gem 'optparse'
 gem 'parallel'
-gem 'mysql2'
 gem 'pg'
 gem 'sentry-ruby'
 
 group :development do
-  gem 'ginseng-style', github: 'pooza/ginseng-style', tag: 'v1.1.4', require: false
+  # ⚠ 参照は SHA で固定する。タグは付け替えられるため（pooza/ginseng-style#75）。
+  # 末尾のコメントは人が読むためのもので、検査には使わない。
+  gem 'ginseng-style', github: 'pooza/ginseng-style',
+    ref: 'ed862dcf9550d704ee670f65a30a333a694b883a', require: false # v1.1.12
   gem 'ricecream'
   gem 'test-unit'
 end
