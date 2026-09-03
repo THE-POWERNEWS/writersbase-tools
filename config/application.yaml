@@ -7,10 +7,16 @@ http:
     limit: 3
     seconds: 1
 logger:
-  mask: '***'
-  keys_to_mask:
+  # ⚠ Ginseng::Masking の既定と**合成**される（減らす方向へは効かない）。
+  # 伏せた値はキーごと落ちる（`***` への置換ではない）。
+  mask_fields:
     - MYSQL_PWD
     - PGPASSWORD
+  # ⚠ URL の**パス**に埋まった資格情報。モロヘイヤの webhook URL は
+  # クエリではなくパスにダイジェストが載る（#65）。既定は
+  # `/mulukhiya/webhook/` だけなので、素の `/webhook/` も足す。
+  mask_url_paths:
+    - /webhook/
 package:
   authors:
     - Tatsuya Koishi

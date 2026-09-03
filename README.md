@@ -97,9 +97,22 @@ rake uninstall  # cronスクリプトをアンインストール
 （`context_line` / `pre_context` / `post_context`）にも同じ網を掛けています。
 Sentry は例外が起きた行の前後を丸ごと送るため、メッセージだけ伏せても足りません。
 
-⚠ マスクの正本は `Ginseng::Masking` です。ginseng-core を上げて `mask_urls_in` が
-使えるようになれば自動的にそちらを通しますが、固定している版にはまだ無いため、
-`scrub_patterns` 側にも URL の資格情報を入れてあります。
+⚠ マスクの正本は `Ginseng::Masking` です。**ログ側もそちらへ寄せてあり**（#66）、
+`--webhook` のような `scrub_patterns` は取りこぼしに対する保険として残しています。
+
+#### ログのマスク
+
+ログのマスクも `Ginseng::Masking` が行います。対象は `config/application.yaml` の
+`/logger/*` で**足します**。⚠ **既定と合成されるので、減らす方向へは効きません。**
+
+| キー | 説明 |
+| --- | --- |
+| mask_fields | 伏せる Hash のキー名。⚠ 伏せた値は**キーごと落ちます**（`***` への置換ではありません） |
+| mask_url_paths | URL の**パス**に現れたら次の 1 セグメントを伏せる接頭辞。モロヘイヤの webhook URL はクエリではなくパスにダイジェストが載ります |
+
+⚠⚠ **独自のマスクを書き足さないこと。**以前ここに置いていた `deep_mask_keys` は
+`Ginseng::Logger#mask` と名前が衝突しており、ginseng-core を上げた瞬間に
+**全ログが `_mask_error` になる**形でした（#66 で撤去）。
 
 ### access_log_compress
 
