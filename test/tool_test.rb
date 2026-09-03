@@ -19,6 +19,32 @@ module WritersBase
       assert_equal('boom', @tool.send(:command_error, command))
     end
 
+    # ⚠⚠ 道具は失敗を自分で握って result[:failure] に積み、正常に return する。
+    # 握られた失敗を拾えないと、Sentry へ飛ばず終了コードも 0 になる（#64）
+    def test_failed_with_failures
+      @tool.instance_variable_set(:@result, {
+        success: [],
+        failure: [{db: 'mastodon', error: 'pg_dump が異常終了しました (exit 1)'}],
+      })
+
+      assert_true(@tool.failed?)
+      assert_match(/mastodon/, @tool.failure_error.message)
+      assert_match(/1 件失敗/, @tool.failure_error.message)
+    end
+
+    def test_failed_without_failures
+      @tool.instance_variable_set(:@result, {success: ['/backup/mastodon.sql.zst'], failure: []})
+
+      assert_false(@tool.failed?)
+    end
+
+    # help や reboot_required のように String を返す道具もある
+    def test_failed_with_string_result
+      @tool.instance_variable_set(:@result, '再起動が必要')
+
+      assert_false(@tool.failed?)
+    end
+
     # ⚠⚠ `sh` はパイプラインの末尾の status しか返さないので、`pg_dump | zstd > path` は
     # pg_dump が落ちても 0 になる。bash の pipefail を明示して拾う（#62）
     def test_pipefail_args
