@@ -75,15 +75,23 @@ postgresql_dump:
   dest:
     dir: /var/backups/db
 mysql_snapshot:
-  target: zroot/mysql
+  # ⚠⚠ **ノードごとに必ず設定する。**ZFS のデータセット名は環境ごとに違う。
+  # 未設定なら ConfigError で落ちる（存在しないデータセットを指して
+  # 「掃除も作成も静かに空振り」を避けるため・#67）。
+  target: null
   days: 3
   host: 127.0.0.1
   user: root
   password: null
   port: 3306
 postgresql_snapshot:
-  target: zroot/postgres
+  # ⚠⚠ **ノードごとに必ず設定する。**未設定なら ConfigError で落ちる（#67）。
+  target: null
   days: 3
+  # ⚠⚠ **DB 名が埋まっている。ノードごとに必ず上書きすること。**
+  # Misskey のノードへそのまま持って行くと、存在しない DB に繋ぐ。
+  # ⚠ 既定を消すと dsn を書いていない既存ノードが落ちるので、この版では残す。
+  # #87 で次の版に消す（利用側が明示したことを確認してから）。
   dsn: postgres://postgres@localhost/mastodon
 mastodon:
   user: mastodon
@@ -106,7 +114,9 @@ misskey_emoji_sync:
   origin: null
   webhook: null
 rsync_backup:
-  dest: user@host:/path/to/backup
+  # ⚠⚠ **ダミーの既定を置かない。**`rsync --delete` を使う道具なので、
+  # それらしい既定のまま daily に載ると意味不明な失敗になる（#67）。
+  dest: null
   sources:
     - /etc
     - /usr/local/etc

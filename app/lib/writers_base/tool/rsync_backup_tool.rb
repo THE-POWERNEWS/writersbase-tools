@@ -2,6 +2,9 @@ module WritersBase
   class RsyncBackupTool < Tool
     def exec(args = {})
       result = {success: [], failure: []}
+      # ⚠⚠ `rsync --delete` を使う道具なので、宛先が無いまま走らせない。
+      # ⚠ ソースごとの失敗にはせず、設定の誤りとして 1 件で落とす（#67）
+      raise Ginseng::ConfigError, "'/#{underscore}/dest' not found" if dest.blank?
       sources.each do |src|
         sync(src, result)
       rescue => e

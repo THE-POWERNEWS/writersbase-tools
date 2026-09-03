@@ -2,6 +2,8 @@ module WritersBase
   class PostgresqlSnapshotTool < Tool
     def exec(args = {})
       result = {success: [], delete: [], failure: []}
+      # ⚠ 設定を先に読んで落とす。zfs を叩く前に「設定が無い」と分かるように（#67）
+      raise Ginseng::ConfigError, "'/#{underscore}/target' not found" if target.blank?
       clean_snapshots(result)
       create_snapshot(result)
       return result
