@@ -54,11 +54,39 @@ module WritersBase
 
     def compress(path)
       logger.info(tool: underscore, path:, message: '圧縮開始')
-      command = CommandLine.new(['zstd', "-#{config['/zstd/level']}", '--rm', '-f', path])
-      command.exec unless Environment.test?
-      raise command.stderr unless command.status.zero?
+      execute(['zstd', "-#{config['/zstd/level']}", '--rm', '-f', path])
       logger.info(tool: underscore, path:, message: '圧縮終了')
       return "#{path}.zst"
+    end
+
+    # 外部コマンドを実行し、非ゼロ終了なら例外にする。
+    # ⚠⚠ Ginseng::CommandLine#exec は status を返すだけで例外を投げないので、
+    # 呼び出し側が見なければ失敗が消える（「消していないのに消した」と記録する類）。
+    # CommandLine の直呼びを増やさず、外部コマンドは必ずここを通すこと（#63）。
+    def execute(args, env: {}, user: nil, dir: nil)
+      command = CommandLine.new(args)
+      command.env = env
+      command.user = user if user
+      command.dir = dir if dir
+      return command if test?
+      command.exec
+      raise command_error(command) unless command.status.zero?
+      return command
+    end
+
+    # ⚠ 何も言わずに落ちるコマンド（zfs destroy 等）があるので、stderr が空でも
+    # 「どのコマンドがどう落ちたか」は必ず残す。
+    def command_error(command)
+      return command.stderr.strip if command.stderr.present?
+      return "#{command.args.first} が異常終了しました (#{exit_status_text(command)})"
+    end
+
+    # ⚠ Ginseng::CommandLine#status は Process::Status#to_i の生値で、終了コードでは
+    # ない（`exit 3` は 768 = 3 << 8）。ログの数字をそのまま終了コードと読まないこと。
+    def exit_status_text(command)
+      signal = command.status & 0x7f
+      return "signal #{signal}" if signal.nonzero?
+      return "exit #{command.status >> 8}"
     end
 
     def method_missing(method, *args)

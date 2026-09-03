@@ -20,12 +20,12 @@ module WritersBase
       end
     end
 
+    # ⚠ uname / freebsd-version が失敗すると空文字どうしの比較になり、
+    # 「常に再起動不要」へ倒れていた。落ちたら黙らず例外にする（#63）。
     def freebsd_reboot_required?
-      running = CommandLine.new(['uname', '-r'])
-      running.exec
-      installed = CommandLine.new(['freebsd-version', '-k'])
-      installed.exec
-      return running.stdout.strip != installed.stdout.strip
+      running = execute(['uname', '-r']).stdout.to_s.strip
+      installed = execute(['freebsd-version', '-k']).stdout.to_s.strip
+      return running != installed
     end
   end
 end

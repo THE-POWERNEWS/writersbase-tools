@@ -4,8 +4,7 @@ module WritersBase
       result = {success: [], failure: []}
       services.each do |name|
         logger.info(tool: underscore, service: name, message: '再起動開始')
-        command = CommandLine.new(['service', name, 'restart'])
-        command.exec unless test?
+        execute(['service', name, 'restart'])
         result[:success].push(name)
       rescue => e
         logger.error(tool: underscore, service: name, error: e.message.strip)
