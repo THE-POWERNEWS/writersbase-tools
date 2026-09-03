@@ -53,6 +53,15 @@ module WritersBase
       assert_equal(['bash', '-o', 'pipefail', '-c', 'false | zstd -3 > /tmp/dump.zst'], args)
     end
 
+    # ⚠ 資格情報は stderr にも載りうるので、例外へ移すときも伏せる（#65）
+    def test_command_error_masks_secrets
+      command = CommandLine.new(['sh', '-c', 'echo https://mulukhiya.example/webhook/9f3c1b7e >&2; exit 1'])
+      command.secrets = ['https://mulukhiya.example/webhook/9f3c1b7e']
+      command.exec
+
+      assert_not_match(/9f3c1b7e/, @tool.send(:command_error, command))
+    end
+
     # ⚠ zfs destroy のように何も言わずに落ちるコマンドがあるので、stderr が空でも
     # 「どのコマンドがどう落ちたか」は残す。⚠ CommandLine#status は生値（3 なら 768）
     # なので、そのまま出さずに終了コードへ直す

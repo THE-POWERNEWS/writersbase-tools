@@ -16,7 +16,9 @@ module WritersBase
       unless test?
         bundle_check!
         command.exec
-        raise command.masked(command.stderr) if command.status.nonzero?
+        # ⚠ stderr が空のまま落ちることがあるので、Tool#command_error に寄せる
+        # （空文字を raise すると「失敗したのに理由が空」になる）。伏字化も同じ経路
+        raise command_error(command) if command.status.nonzero?
       end
       return command
     end
