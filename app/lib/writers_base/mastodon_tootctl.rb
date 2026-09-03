@@ -9,12 +9,14 @@ module WritersBase
   module MastodonTootctl
     private
 
-    def tootctl_command(args)
-      command = login_command(['bundle', 'exec', 'bin/tootctl', *args])
+    # ⚠ secrets には「引数そのものが資格情報」であるものを渡す。ログにも例外にも
+    # 出さないため（#65）。
+    def tootctl_command(args, secrets: [])
+      command = login_command(['bundle', 'exec', 'bin/tootctl', *args], secrets:)
       unless test?
         bundle_check!
         command.exec
-        raise command.stderr if command.status.nonzero?
+        raise command.masked(command.stderr) if command.status.nonzero?
       end
       return command
     end
@@ -30,8 +32,9 @@ module WritersBase
       ].join(' ')
     end
 
-    def login_command(args)
+    def login_command(args, secrets: [])
       command = CommandLine.new(['bash', '-lc', Shellwords.join(args)])
+      command.secrets = secrets
       command.user = mastodon_user
       command.env = {'RAILS_ENV' => mastodon_rails_env}
       command.dir = mastodon_dir

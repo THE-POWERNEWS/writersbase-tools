@@ -2,9 +2,11 @@ module WritersBase
   # 姉妹Misskeyサーバーからカスタム絵文字を引き取り、増えたぶんをお知らせボットへ
   # 告知する日次タスク（pooza/mastodon#950）。
   #
-  # ⚠ webhookはモロヘイヤのWebhook URLで、**URL自体が資格情報**（インスタンスURI＋
-  # アカウントのトークン＋saltのSHA256）。tootctl側が失敗の文面からも伏字化して扱うので、
-  # ここでも組み立てるだけにして、ログにも結果にも載せない。
+  # ⚠⚠ webhookはモロヘイヤのWebhook URLで、**URL自体が資格情報**（インスタンスURI＋
+  # アカウントのトークン＋saltのSHA256）。tootctl側は失敗の文面からも伏字化して扱うが、
+  # **こちらは `--webhook <url>` として引数に載せるので、CommandLine が実行のたびに
+  # ログへ丸ごと出していた**（#65）。`secrets:` へ渡して、ログ・例外の双方で伏せる。
+  # ⚠ 結果（`exec` の戻り値）には従来どおり載せない（`announced` の真偽だけ）。
   class MisskeyEmojiSyncTool < Tool
     include MastodonTootctl
 
@@ -15,7 +17,7 @@ module WritersBase
       origin = setting(:origin)
       raise Ginseng::ConfigError, "'/#{underscore}/origin' not found" if origin.blank?
       logger.info(tool: underscore, origin:, message: '実行開始')
-      command = tootctl_command(tootctl_args(origin))
+      command = tootctl_command(tootctl_args(origin), secrets: [setting(:webhook)])
       return {origin:, announced: setting(:webhook).present?, report: report(command.stdout)}
     end
 

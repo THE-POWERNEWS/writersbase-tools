@@ -89,11 +89,12 @@ module WritersBase
     # ⚠⚠ Ginseng::CommandLine#exec は status を返すだけで例外を投げないので、
     # 呼び出し側が見なければ失敗が消える（「消していないのに消した」と記録する類）。
     # CommandLine の直呼びを増やさず、外部コマンドは必ずここを通すこと（#63）。
-    def execute(args, env: {}, user: nil, dir: nil)
+    def execute(args, env: {}, user: nil, dir: nil, secrets: [])
       command = CommandLine.new(args)
       command.env = env
       command.user = user if user
       command.dir = dir if dir
+      command.secrets = secrets
       return command if test?
       command.exec
       raise command_error(command) unless command.status.zero?
@@ -120,7 +121,8 @@ module WritersBase
     # ⚠ 何も言わずに落ちるコマンド（zfs destroy 等）があるので、stderr が空でも
     # 「どのコマンドがどう落ちたか」は必ず残す。
     def command_error(command)
-      return command.stderr.strip if command.stderr.present?
+      # ⚠ 資格情報は stderr にも載りうるので、例外へ移すときも伏せる（#65）
+      return command.masked(command.stderr.strip) if command.stderr.present?
       return "#{command.args.first} が異常終了しました (#{exit_status_text(command)})"
     end
 

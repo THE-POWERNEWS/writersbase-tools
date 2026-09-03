@@ -37,6 +37,10 @@ sentry:
     - '(?i)\b[a-z][a-z0-9+.-]*://[^\s:/@]+:\K[^\s@]+(?=@)'
     - '(?i)\b(?:MYSQL_PWD|PGPASSWORD)=\K\S+'
     - '(?i)\b(?:token|auth_token|auth_key|access_token|refresh_token|password|secret|api_key)=\K\S+'
+    # ⚠ モロヘイヤの webhook URL は**パス**にダイジェストが載るので、URL のクエリを
+    # 見るマスクでは伏せられない。`--webhook <url>` の形で拾う（#65）。
+    # ⚠ CommandLine#secrets 側で伏せるのが本線で、これはその漏れに対する保険。
+    - '(?i)--webhook[=\s]+\K\S+'
 hourly: []
 daily: []
 weekly: []
