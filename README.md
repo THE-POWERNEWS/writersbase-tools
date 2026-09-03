@@ -137,7 +137,7 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| target | 対象ZFSパーティション | zroot/mysql |
+| target | 対象ZFSパーティション | ⚠ **null（必須）** |
 | days | スナップショット保管日数 | 3 |
 | host | 接続先ホスト | 127.0.0.1 |
 | user | 接続ユーザー | root |
@@ -160,9 +160,9 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| target | 対象ZFSパーティション | zroot/postgres |
+| target | 対象ZFSパーティション | ⚠ **null（必須）** |
 | days | スナップショット保管日数 | 3 |
-| dsn | PostgreSQL接続文字列 | postgres://postgres@localhost/mastodon |
+| dsn | PostgreSQL接続文字列 | postgres://postgres@localhost/mastodon<br>⚠⚠ **DB 名が埋まっています。ノードごとに必ず上書きしてください** |
 
 ### mastodon（共通設定）
 
@@ -220,9 +220,11 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 ### rsync_backup
 
+⚠⚠ **`rsync --delete` を使います。**宛先を間違えると、宛先側の余剰ファイルが消えます。
+
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| dest | SSH転送先 (user@host:/path) | user@host:/path/to/backup |
+| dest | SSH転送先 (user@host:/path) | ⚠ **null（必須）** |
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
 
