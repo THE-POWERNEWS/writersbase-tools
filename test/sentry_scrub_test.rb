@@ -46,6 +46,15 @@ module WritersBase
       )
     end
 
+    # ⚠ webhook URL はダイジェストが**パス**に載るので、クエリを見るマスクでは
+    # 伏せられない。CommandLine#secrets の漏れに対する保険（#65）
+    def test_webhook_option
+      result = scrubbed('tootctl emoji sync --webhook https://mulukhiya.example/webhook/9f3c1b7e failed')
+
+      assert_not_match(/9f3c1b7e/, result)
+      assert_match(/--webhook \[FILTERED\]/, result)
+    end
+
     def test_preserves_plain_message
       assert_match(/zstd が見つかりません/, scrubbed('zstd が見つかりません'))
     end
