@@ -74,6 +74,23 @@ module WritersBase
       return command
     end
 
+    # パイプラインを、途中の失敗を落とさないシェルで実行するための引数を組み立てる。
+    # ⚠⚠ `sh` が返すのは末尾のコマンドの status だけなので、`pg_dump | zstd > path` は
+    # **pg_dump が落ちても 0** になる。zstd は空の入力でも正しい .zst を書くため、
+    # もっともらしいサイズの小さいファイルが残り、失敗が success として記録される（#62）。
+    # ⚠ bash に依存する。FreeBSD では base に無いが、フリートは deployer 経由で入っている。
+    def pipefail_args(args)
+      return ['bash', '-o', 'pipefail', '-c', CommandLine.new(args).to_s]
+    end
+
+    # ⚠ pipefail で拾えない壊れ方に備え、書けたファイル自体を確かめる。
+    def verify_archive(path)
+      raise "#{path} が作られていません" unless File.exist?(path)
+      raise "#{path} が空です" if File.empty?(path)
+      execute(['zstd', '-t', path])
+      return path
+    end
+
     # ⚠ 何も言わずに落ちるコマンド（zfs destroy 等）があるので、stderr が空でも
     # 「どのコマンドがどう落ちたか」は必ず残す。
     def command_error(command)

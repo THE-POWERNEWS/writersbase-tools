@@ -27,6 +27,7 @@
 - **root で bundler が使えること。**FreeBSD は `gem install bundler`（⚠ pkg の `rubygem-bundler` は使わない方針）、Ubuntu は `ruby-bundler` / `ruby-dev` / `build-essential` / `libpq-dev` / `default-libmysqlclient-dev` / `zstd`
 - ⚠ **`rake install` は `bundle exec` を挟むこと。**素の `rake` だと default gem が先に activate され、`Gemfile.lock` の rake と衝突して `Gem::LoadError` で落ちる（chubo-core `257f3d0`）
 - ⚠ **Gemfile が `mysql2` と `pg` を無条件に要求する。**MySQL を使わないノードでもクライアントライブラリが要る
+- ⚠ **bash が要る。**ダンプは `bash -o pipefail -c` でパイプラインを実行する（#62）。FreeBSD では base に無く、フリートは `freebsd::deployer` の `package 'bash'` で入っている。**この recipe を当てていないノードへ配るときは bash を入れること**
 - ログは rsyslog で `/var/log/writersbase-tools.log` に振り分け、newsyslog（FreeBSD）/ logrotate（Ubuntu）で回す
 
 ## ⚠ 罠
