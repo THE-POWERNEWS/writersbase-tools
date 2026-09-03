@@ -2,6 +2,10 @@
 
 VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubuntu Server対応。
 
+⚠ **位置づけ・規約・進め方・リリース手順・進捗の同期手順の正本は [docs/](docs/README.md)。** 以下にはコードを触るときの構造だけを置く。
+
+@docs/CLAUDE.md
+
 ## プロジェクト構造
 
 - `app/lib/writers_base.rb` - エントリポイント。Zeitwerkでオートロード、`Bundler.require`で自動require
@@ -36,3 +40,9 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 
 - 外部gemのrequireは不要（`Bundler.require`で自動ロード）
 - PostgreSQL 15+が必要（`pg_backup_start`/`pg_backup_stop`使用のため）
+
+## ドキュメント
+
+- [docs/CLAUDE.md](docs/CLAUDE.md) — 規約の正本・ブランチ・リリース運用・進捗の同期手順・情報の記載先
+- [docs/positioning.md](docs/positioning.md) — ⚠ **名前に反して writersBASE 向けではない**／実際の利用者は chubo2 のフリート
+- [docs/deployment.md](docs/deployment.md) — 2 経路の cookbook・設定の置き場・⚠ 罠と既知の課題
