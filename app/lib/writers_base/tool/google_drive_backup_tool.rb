@@ -20,15 +20,13 @@ module WritersBase
     def sync(src, result)
       remote_path = "#{remote}:#{File.join(path, src)}"
       logger.info(tool: underscore, src:, dest: remote_path, message: '同期開始')
-      command = CommandLine.new([
+      args = [
         'rclone', 'sync', '--verbose',
         *excludes.flat_map {|pattern| ['--exclude', "#{pattern}/**", '--exclude', pattern]},
         "#{src}/",
         remote_path
-      ])
-      return if test?
-      command.exec
-      raise command.stderr unless command.status.zero?
+      ]
+      execute(args)
       logger.info(tool: underscore, src:, dest: remote_path, message: '同期完了')
       result[:success].push(src)
     end

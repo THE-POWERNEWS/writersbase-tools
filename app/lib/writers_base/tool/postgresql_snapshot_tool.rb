@@ -18,7 +18,9 @@ module WritersBase
     private
 
     def snapshots
-      return `zfs list -t snapshot`
+      # ⚠ zfs が無い／失敗した環境で「スナップショット 0 件」と読まないよう、
+      # バッククォートをやめて終了ステータスを見る（#63）。
+      return execute(['zfs', 'list', '-t', 'snapshot']).stdout.to_s
           .each_line
           .map {|line| line.split(/\s+/).first}
           .select {|v| v.split('@').first == target}
@@ -33,8 +35,13 @@ module WritersBase
       snapshots.each do |snapshot|
         next unless obsolete?(snapshot)
         logger.info(tool: underscore, snapshot: snapshot[:name], message: 'スナップショット削除')
-        CommandLine.new(['zfs', 'destroy', snapshot[:name]]).exec unless test?
+        execute(['zfs', 'destroy', snapshot[:name]])
         result[:delete].push(snapshot[:name])
+      rescue => e
+        # ⚠ 1 枚消せなくても掃除を続け、スナップショットの作成まで進む
+        # （`zfs hold` で守られたものが 1 枚あるだけで毎時の作成を止めない）
+        logger.error(tool: underscore, snapshot: snapshot[:name], error: e.message.strip)
+        result[:failure].push(snapshot: snapshot[:name], error: e.message.strip)
       end
     end
 
@@ -51,12 +58,14 @@ module WritersBase
 
       pg = PG::Connection.new(dsn)
       pg.exec_params(%{SELECT * FROM pg_backup_start($1, false)}, [name])
-      CommandLine.new(['zfs', 'snapshot', name]).exec unless test?
+      execute(['zfs', 'snapshot', name])
       logger.info(tool: underscore, snapshot: name, message: 'スナップショット作成完了')
       pg.exec(%{SELECT * FROM pg_backup_stop(true)})
 
       result[:success].push(name)
     ensure
+      # ⚠ zfs が落ちて pg_backup_stop まで進めなくても、接続を閉じれば
+      # 非排他バックアップは中断される
       pg&.close
     end
 
