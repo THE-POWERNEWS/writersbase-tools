@@ -24,7 +24,8 @@ module WritersBase
 
     def dump(path, params = {})
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ開始')
-      command = CommandLine.new([
+      return if test?
+      execute(pipefail_args([
         'mysqldump',
         '-h', params[:host],
         '-u', params[:user],
@@ -32,14 +33,17 @@ module WritersBase
         params[:db],
         :|, 'zstd', "-#{config['/zstd/level']}",
         :>, path
-      ])
-      command.env = {'MYSQL_PWD' => params[:password]}
-      return if test?
-      command.exec
+      ]), env: {'MYSQL_PWD' => params[:password]})
+      verify_archive(path)
       FileUtils.chmod(0o640, path)
       FileUtils.chown('root', root_group, path)
-    ensure
+      # ⚠ 以前は ensure に置いていたため、失敗した回にも「ダンプ完了」と出ていた
       logger.info(tool: underscore, db: params[:db], message: 'ダンプ完了')
+    rescue
+      # ⚠ 壊れた .zst を残さない。zstd は空の入力でも正しいファイルを書くので、
+      # 残すと次の回まで「今日のダンプ」に見える
+      FileUtils.rm_f(path)
+      raise
     end
 
     def delete_old_files(dir)
@@ -49,7 +53,8 @@ module WritersBase
         File.unlink(f)
         deleted.push(f)
       end
-      logger.warn(tool: underscore, dir:, message: '削除対象ファイルなし') if deleted.empty?
+      # ⚠ WritersBase::Logger#warn は error へ転送されるので、正常な状態を error で出さない
+      logger.info(tool: underscore, dir:, message: '削除対象ファイルなし') if deleted.empty?
       return deleted
     end
 

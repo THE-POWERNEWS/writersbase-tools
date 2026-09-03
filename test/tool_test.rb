@@ -19,6 +19,14 @@ module WritersBase
       assert_equal('boom', @tool.send(:command_error, command))
     end
 
+    # ⚠⚠ `sh` はパイプラインの末尾の status しか返さないので、`pg_dump | zstd > path` は
+    # pg_dump が落ちても 0 になる。bash の pipefail を明示して拾う（#62）
+    def test_pipefail_args
+      args = @tool.send(:pipefail_args, ['false', :|, 'zstd', '-3', :>, '/tmp/dump.zst'])
+
+      assert_equal(['bash', '-o', 'pipefail', '-c', 'false | zstd -3 > /tmp/dump.zst'], args)
+    end
+
     # ⚠ zfs destroy のように何も言わずに落ちるコマンドがあるので、stderr が空でも
     # 「どのコマンドがどう落ちたか」は残す。⚠ CommandLine#status は生値（3 なら 768）
     # なので、そのまま出さずに終了コードへ直す
