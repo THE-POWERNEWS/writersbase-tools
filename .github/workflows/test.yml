@@ -1,25 +1,36 @@
 name: test
 on:
   - push
+# ⚠⚠ 手順の本体は pooza/ginseng-style の composite action を参照している。
+# そこに入った変更がこのリポジトリの GITHUB_TOKEN を持って動くので、既定に頼らず絞る。
+permissions:
+  contents: read
 env:
   CI: 'true'
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
+        with:
+          # ⚠ 既定では認証情報がワークツリーの git config に残り、後続のステップから
+          # 使えてしまう。依存 gem は public な github: 参照なので消して困らない。
+          persist-credentials: false
       - uses: ruby/setup-ruby@v1
         with:
+          # ⚠ .rubocop.yml の TargetRubyVersion と揃えること（docs/CLAUDE.md）。
+          # 配る既定は 3.4 だが、ここを上げるときは両方を同時に上げる。
           ruby-version: 3.3.10
       - name: apt install
         run: |
           sudo apt update
           sudo apt install libsqlite3-dev
-      - name: bundle install
-        run: |
-          gem install bundler -v '~>4.0'
-          bundle install --jobs 4 --retry 3
-          bundle exec rake bundle:update
-          git diff
-          bundle exec rake bundle:check
-      - run: bundle exec rubocop
+      # ⚠ 手順の正本は composite action 側。参照は SHA で固定し、Gemfile の
+      # ginseng-style と同じ版に揃える（#70 と同じ理由 ＝ タグは付け替えられる）。
+      - uses: pooza/ginseng-style/.github/actions/ruby-check@ed862dcf9550d704ee670f65a30a333a694b883a # v1.1.12
+        with:
+          # ⚠⚠ CI で bundle update すると、Gemfile.lock が CI の結果を縛らなくなる。
+          # こちらが 1 行も変えていない日に、依存の新版で赤くなる。依存の更新は
+          # Dependabot が PR で持ってくるので、CI は lock のとおりに組む。
+          bundle-update: 'false'
+          bundle-check: 'false'

@@ -104,10 +104,10 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 
 ### リリース前の実機確認
 
-⚠⚠ **CI の緑はリリース判断の根拠にならない。**CI は `bundle exec rubocop` しか回しておらず、**テスト（`test/` の 3 本）を実行していない**。ツールの本体は外部コマンド（`zfs` / `rclone` / `pg_dump` / `tootctl`）への shell out なので、CI で検証できる範囲はほとんど無い。
+⚠⚠ **CI の緑はリリース判断の根拠にならない。**#69 で CI は `rake lint` ＋ `rake test` を回すようになったが、**ツールの本体は外部コマンド（`zfs` / `rclone` / `pg_dump` / `tootctl`）への shell out** なので、CI で検証できる範囲は限られる。⚠ 前提を満たさないケースは `disable?` で **omission** になる（**「実行されていない」が緑に埋もれないよう、件数がサマリに出る**）。
 
 - 手元・ステージングで `bin/wb <ツール名>` を単発実行して確かめる（`bin/wb help` で一覧）
-- テストは `bin/test.rb <ケース名>`。⚠ **`rake test` は無い**
+- テストは `bundle exec rake test`（全件）または `bin/test.rb <ケース名>`（単体）
 - cron から走る道具なので、**非ログインシェル相当（`env -i`）で確かめる**。⚠ ログインシェル前提の rbenv 初期化に依存している経路がある（#44）
 - ステージングに載せていない／載せられないタスクがある（`postgresql_snapshot` は専用 ZFS データセット、`mastodon_follow` は実アカウントを触る）。**載せられないものは本番で慎重に一度手で回す**
 
@@ -142,6 +142,7 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 
 ## push 前の必須手順
 
-1. `bundle exec rubocop`（lint が通ること）
-2. 触ったツールを `bin/wb <ツール名>` で実行、または `bin/test.rb <ケース名>`
-3. その上で push
+1. `bundle exec rake lint`（lint が通ること）
+2. `bundle exec rake test`（テストが通ること。⚠ omission の件数も見る）
+3. 触ったツールを `bin/wb <ツール名>` で実行
+4. その上で push

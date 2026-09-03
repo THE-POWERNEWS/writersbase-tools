@@ -26,8 +26,8 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 
 ## 開発ツール
 
-- RuboCop: `bundle exec rubocop` (自動修正: `bundle exec rubocop -a`)
-- テスト: `bin/wb help` で動作確認可能
+- Lint: `bundle exec rake lint`（＝ `bundle exec rubocop`。自動修正は `bundle exec rubocop -a`）
+- テスト: `bundle exec rake test`（全件）／ `bin/test.rb <ケース名>`（単体）。動作確認は `bin/wb <ツール名>`
 - GitHub CLI: `gh`
 
 ## Mastodon関連ツールの共通パターン
