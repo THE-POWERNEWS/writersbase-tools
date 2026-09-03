@@ -7,8 +7,9 @@ module WritersBase
     end
 
     def body(args = {})
-      result = exec(args)
-      logger.info(tool: underscore, result:)
+      result = @result = exec(args)
+      # ⚠ failure が詰まっていても info で出していたため、ログを見ても異常が目立たなかった
+      failed? ? logger.error(tool: underscore, result:) : logger.info(tool: underscore, result:)
       contents = []
       if result.is_a?(String)
         contents.push(result)
@@ -16,6 +17,31 @@ module WritersBase
         contents.push(JSON.pretty_generate(result))
       end
       return contents.join("\n")
+    end
+
+    # ⚠ 各ツールは失敗を自分で握って `result[:failure]` に積み、正常に return する。
+    # 握られた失敗を呼び出し側（bin/wb）から拾えるようにしておく（#64）。
+    def failures
+      return [] unless @result.is_a?(Hash)
+      return @result[:failure].to_a
+    end
+
+    def failed?
+      return failures.present?
+    end
+
+    # ⚠ 1 回の実行で N 件失敗しても、Sentry へは 1 件にまとめて送る
+    # （DB ごとに別 issue にしない）。
+    def failure_error
+      message = "#{underscore} が #{failures.size} 件失敗しました"
+      return ToolError.new("#{message} (#{failure_details.join(' / ')})")
+    end
+
+    def failure_details
+      return failures.map do |failure|
+        next failure.to_s unless failure.is_a?(Hash)
+        next failure.map {|k, v| "#{k}: #{v}"}.join(', ')
+      end
     end
 
     def underscore
