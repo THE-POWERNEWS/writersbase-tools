@@ -31,11 +31,18 @@ module WritersBase
 
     def clean_snapshots(result)
       snapshots.each do |snapshot|
-        next unless snapshot[:time].nil? || snapshot[:time] < Time.now - (days * 86_400)
+        next unless obsolete?(snapshot)
         logger.info(tool: underscore, snapshot: snapshot[:name], message: 'スナップショット削除')
         CommandLine.new(['zfs', 'destroy', snapshot[:name]]).exec unless test?
         result[:delete].push(snapshot[:name])
       end
+    end
+
+    # ⚠ 日時を取り出せない名前は、このツールの持ち物ではない（作るものは必ず %F_%T を持つ）。
+    # 手で退避したスナップショット（`@before-migration` 等）を消さないよう、掃除の対象から外す。
+    def obsolete?(snapshot)
+      return false unless snapshot[:time]
+      return snapshot[:time] < Time.now - (days * 86_400)
     end
 
     def create_snapshot(result)
