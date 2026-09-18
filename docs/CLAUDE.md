@@ -23,7 +23,11 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - `.rubocop.yml` は `inherit_gem` の上に **`TargetRubyVersion: 3.3`** だけを置く。⚠ **CI が ruby 3.3.10 で回る**ため（配る既定は 3.4）。CI の版を上げたらここも上げる
 - `Gemfile` の `ginseng-style` は **SHA 固定**（`ed862dcf…` ＝ v1.1.12）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
 - CI は ginseng-style の composite action（`ruby-check`）を使う（#69）。⚠⚠ **参照の SHA は `Gemfile` の ginseng-style と同じものに揃える。**版を上げるときは 2 か所を同時に書き換える
-- ⚠ `ginseng-core` は `Gemfile` では ref を指定せず、`Gemfile.lock` の revision で固定している（現在 1.23.4 / `85d1c5b`）
+- ⚠ `ginseng-core` は `Gemfile` では ref を指定せず、`Gemfile.lock` の revision で固定している（現在 **1.23.7 / `b6e736d`**）。⚠ **これを `tag: v1.23.7` へ移す PR #94 が open**（pooza/ginseng-style#103 のロールアウト）。revision は 1 ビットも動かない「記録」で、狙いは**破綻の受け皿を無関係な `bundle update` から版を上げる PR の CI へ移すこと**
+
+### 保留中の依存の更新
+
+- ⏳ **`sentry-ruby` 7.0.0（PR #93）は意図的に保留**。tools が触る API（`Sentry.init` / `capture_exception` / `before_send` / `close`）は無傷だが、7.0.0 で **logs / metrics が既定で有効**になり（`enable_logs` / `enable_metrics` は撤去）、`send_default_pii` が deprecated（`data_collection` へ）。⚠⚠ **1.6.0 は「失敗が Sentry に出るようになる」リリースなので、送信経路の挙動が黙って変わるのは最も避けたい**。dev1 で例外を 1 件飛ばし `env` 付きで着弾するのを確認してからマージする。**閉じないこと**
 
 ## ブランチ
 
@@ -54,13 +58,24 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### 🔴 v1.5.2 以降が未リリース（2026-09-03 時点・#71）
+### v1.6.0 は出荷済み（2026-09-08 タグ・#71）
 
-最新タグは **v1.5.2**（2026-04-12）。`/package/version` は **1.6.0** へバンプ済み（⚠ **バンプは出荷ではない**）。v1.5.2 以降に **#37 Sentry 導入**・**misskey_emoji_sync 追加**・**#44 tootctl の login shell 経由**に加えて、**マイルストーン 1.6.0 の 11 件すべて**が `main` に載っている。
+**最新タグは v1.6.0**（`d3500df`／公開 2026-09-08）。`/package/version` も **1.6.0**。v1.5.2（2026-04-12）から 48 コミットぶんで、マイルストーン `1.6.0` の 11 件・#37 Sentry 導入・misskey_emoji_sync 追加・#44 tootctl の login shell 経由をすべて含む。
 
-⚠⚠ **1.6.0 は「失敗が見えるようになる」リリース。**これまで黙っていた失敗が periodic のメールと Sentry に出始めるので、**反映後の最初の数回は新しい失敗が増えたように見える**（実際には見えていなかったもの）。
+⚠ **利用側への反映は先に済んでいる**（chubo2 `#214`・2026-09-04 に 9 台すべてを `d3500df` へ／記録は pooza/chubo2 `docs/infra-history.md`）。**タグはその状態を後から確定させたもの**なので、今回は「タグを打ったが 1 台にも届いていない」状態ではない。
 
-⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。
+⚠⚠ **1.6.0 は「失敗が見えるようになる」リリース。**これまで黙っていた失敗が periodic のメールと Sentry に出始める。**反映後の最初の数回は新しい失敗が増えたように見える**（実際には見えていなかったもの）。⚠ 実際に 2026-09-04 以降、**これまで見えていなかった失敗が Sentry に出ている**（下記「反映後に見えた失敗」）。
+
+⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。⚠ v1.6.0 の後も `main` は 2 コミット進んでおり（ginseng-core の bump）、**version は 1.6.0 のまま**。次のマイルストーンに着手した時点でバンプする。
+
+### 反映後に見えた失敗（2026-09-15 時点・Sentry `writersbase-tools`）
+
+⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 6 件だが、うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもの。**実害があるのは次の 1 件だけ**。
+
+- 🔴 **`google_drive_backup` が Misskey ノードで継続失敗**（`WRITERSBASE-TOOLS-4`・3 回／初回 2026-09-04・直近 2026-09-14）。`src: /home/misskey/repos/misskey` の `.nvmrc` がシンボリックリンクで、`rclone sync` が `Can't follow symlink without -L/--copy-links` を出して非ゼロで終わる。⚠ **`--links` / `--copy-links` を渡すか、リンクを `excludes` に落とすかの判断が要る**（前者は宛先の中身が変わるので、`rclone sync` の宛先削除と合わせて見ること）。⚠ 対象 src を絞る話は pooza/chubo2#194 と重なる
+- ⚠ **`bin/wb <存在しない名前>` が `NameError: uninitialized constant WritersBase::ConfigTool` として Sentry に載る**（`WRITERSBASE-TOOLS-6`・1 回・2026-09-12）。`bin/wb.rb` の集約点がツールの失敗と打ち間違いを区別しないため。**害は無いがノイズになる**
+
+⚠⚠ **通知経路は依然として無い**（#91）。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。
 
 ### リリース前レビュー
 
@@ -82,7 +97,7 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 
 ⚠⚠ **赤 6 件のうち 4 件が「失敗が成功に見える」型だった。**外部コマンドへ shell out する道具の集まりなので、**終了ステータスの扱いが割れていること自体が最大の欠陥**（`Tool#compress` / `GoogleDriveBackupTool` / `RsyncBackupTool` / `MastodonTootctl` は見ているが、`zfs` / `service` / `pg_dump` / `mysqldump` は見ていない）。
 
-| | Issue | 観点 | 状態（2026-09-03） |
+| | Issue | 観点 | 状態（2026-09-15） |
 | --- | --- | --- | --- |
 | 🔴 赤 | [#61](https://github.com/THE-POWERNEWS/writersbase-tools/issues/61) スナップショットの掃除が「日時を持たない名前」を無条件に削除する | 破壊的操作 | ✅ #76 |
 | 🔴 赤 | [#62](https://github.com/THE-POWERNEWS/writersbase-tools/issues/62) ダンプの失敗を検出できず、直後のローテーションで正常なダンプを消す | 破壊的操作 | ✅ #78 |
@@ -92,16 +107,16 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 | 🔴 赤 | [#72](https://github.com/THE-POWERNEWS/writersbase-tools/issues/72) `rake install` は一部が失敗しても成功として終わる | エラー処理 | ✅ #83 |
 | 🟡 黄 | [#66](https://github.com/THE-POWERNEWS/writersbase-tools/issues/66) `/logger/mask_fields` 未定義でマスクが丸ごと無効 | セキュリティ | ✅ #85（ginseng-core の bump 込み） |
 | 🟡 黄 | [#67](https://github.com/THE-POWERNEWS/writersbase-tools/issues/67) 他ノードで黙って失敗する既定値 | 設定の既定値 | ✅ #88（⚠ dsn だけ #87 へ送り） |
-| 🟡 黄 | [#68](https://github.com/THE-POWERNEWS/writersbase-tools/issues/68) periodic が毎回 root で `bundle install` する | セキュリティ | ⏳ 次リリースへ |
+| 🟡 黄 | [#68](https://github.com/THE-POWERNEWS/writersbase-tools/issues/68) periodic が毎回 root で `bundle install` する | セキュリティ | ⏳ **open**（1.6.0 には載らず） |
 | 🟡 黄 | [#69](https://github.com/THE-POWERNEWS/writersbase-tools/issues/69) CI がテストを実行していない | 規約整合性 | ✅ #86 |
 | 🟡 黄 | [#70](https://github.com/THE-POWERNEWS/writersbase-tools/issues/70) ginseng-style をタグではなく SHA で固定する | 規約整合性 | ✅ #84 |
-| 🟡 黄 | [#71](https://github.com/THE-POWERNEWS/writersbase-tools/issues/71) v1.5.2 から 20 コミットが未リリース | 規約整合性 | ⏳ **タグを打つまで open** |
+| 🟡 黄 | [#71](https://github.com/THE-POWERNEWS/writersbase-tools/issues/71) v1.5.2 から 20 コミットが未リリース | 規約整合性 | ✅ **v1.6.0**（2026-09-08 タグ） |
 
 **緑（起票せず・次に触るときの申し送り）** — 3 件とも 1.6.0 で処理済み
 
 - ✅ 「削除対象ファイルなし」を error レベルで出していた件 → #78 で info へ。⚠ **`WritersBase::Logger#warn`（error への転送）は #85 で撤去**したので、いまは `warn` も素の warn
 - ✅ `dump` の `ensure logger.info('ダンプ完了')` が失敗時にも「完了」と出す件 → #78
-- ⏳ `mysqldump` の `--single-transaction` → **#79 として起票**（次リリースへ）
+- ⏳ `mysqldump` の `--single-transaction` → **#79 として起票**（⏳ open・1.6.0 には載らず）
 
 ⚠ **レビューはサブエージェントの並列ではなく、単一セッションで全ファイルを読んで実施した。**規模（app/lib 配下 30 ファイル弱）では並列にする利得が無いため。**次回も同じでよい。**
 
