@@ -85,8 +85,14 @@ rake uninstall  # cronスクリプトをアンインストール
 🔴 **`local.yaml`は「先に見つけたディレクトリが勝つ」。マージではありません。**
 
 ```ruby
-next if @raw.key?(key)  # Ginseng::Config#load
+key = File.basename(f, suffix)  # Ginseng::Config#load
+next if @raw.key?(key)
 ```
+
+⚠⚠ **ここでの`key`は設定キーではなく、拡張子を除いたファイル名**（`local` / `application`）です。
+だから**キー単位のマージではなく、ファイル単位で丸ごと捨てられます**。
+2つのディレクトリに別々のキーを書いた`local.yaml`を置いて実測すると、
+後ろのディレクトリのキーは`ConfigError`（未定義）になります。
 
 ⚠⚠ **手元で試すつもりでチェックアウトに`config/local.yaml`を置くと、
 `/usr/local/etc/writersbase-tools/local.yaml`（＝配備済みの実効設定）は
