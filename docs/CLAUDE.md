@@ -68,14 +68,18 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。⚠ v1.6.0 の後も `main` は 2 コミット進んでおり（ginseng-core の bump）、**version は 1.6.0 のまま**。次のマイルストーンに着手した時点でバンプする。
 
-### 反映後に見えた失敗（2026-09-15 時点・Sentry `writersbase-tools`）
+### 反映後に見えた失敗（2026-09-18 時点・Sentry `writersbase-tools`）
 
-⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 6 件だが、うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもの。**実害があるのは次の 1 件だけ**。
+⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 7 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 3 件**。
 
 - 🔴 **`google_drive_backup` が Misskey ノードで継続失敗**（`WRITERSBASE-TOOLS-4`・3 回／初回 2026-09-04・直近 2026-09-14）。`src: /home/misskey/repos/misskey` の `.nvmrc` がシンボリックリンクで、`rclone sync` が `Can't follow symlink without -L/--copy-links` を出して非ゼロで終わる。⚠ **`--links` / `--copy-links` を渡すか、リンクを `excludes` に落とすかの判断が要る**（前者は宛先の中身が変わるので、`rclone sync` の宛先削除と合わせて見ること）。⚠ 対象 src を絞る話は pooza/chubo2#194 と重なる
+- 🔴 **`postgresql_dump` が shallu / zugoga で継続失敗**（`WRITERSBASE-TOOLS-7`・8 件／初回 2026-09-17・直近 2026-09-18）。`zstd: error 25 : Write error : No space left on device`。⚠⚠ **道具の側は正しい** — 失敗を拾い（#63）、壊れた `.zst` を消し、**ローテーションを走らせずに**（#62）終わっており、既存の 7 世代は無事。原因は 2026-09-13 の backups 縮小（pooza/chubo2#233）で撮った `zfs` スナップショット `@move1` / `@move2` が残り、**保持期間を過ぎて消したはずのダンプを掴んだまま** 16.5G / 11.9G を占めていたこと。⚠ 起票は pooza/chubo2#242（直すのは向こうのディスク）。**ただし 09-17 / 09-18 のダンプは取れていない**
+- ⚠ **`mastodon_follow` が `account: info` で `No such account`**（`WRITERSBASE-TOOLS-3`・1 回・2026-09-04）。⚠ 2026-09-15 の棚卸しでは意図的な 3 件にも実害にも数えていなかった**取りこぼし**。実機の設定を見て、消えたアカウントなら node yaml から外す
 - ⚠ **`bin/wb <存在しない名前>` が `NameError: uninitialized constant WritersBase::ConfigTool` として Sentry に載る**（`WRITERSBASE-TOOLS-6`・1 回・2026-09-12）。`bin/wb.rb` の集約点がツールの失敗と打ち間違いを区別しないため。**害は無いがノイズになる**
 
-⚠⚠ **通知経路は依然として無い**（#91）。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。
+⚠⚠ **通知経路は依然として無い**（#91）。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。⚠ `-7` は **2 日間・本番 2 台でバックアップが取れていない**状態を誰も知らなかった。**monit 側にも同じ穴がある**（89% / 92% で鳴っていない・pooza/chubo2#242）。
+
+⚠ **Sentry の件数をそのまま実行回数と読まない。**`-7` の 8 件は **2 台 × 2 日 × 1 日 2 回**だった。`periodic daily` が anacron と cron の両方から走っていて、**`daily` に並べた道具が 1 日 2 回実行されている**（pooza/chubo2#243・FreeBSD 3 台）。
 
 ### リリース前レビュー
 
@@ -90,6 +94,16 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 | **設定の既定値** | ⚠ 配列キーは**置換**される（[deployment.md](deployment.md)）。既定を変えるときは、利用側の node yaml が上書きしている前提で影響を見る |
 
 分類は 赤（必修）／黄（余力があれば）／緑（送り）。
+
+#### 外部レビュアー（OpenAI Codex）
+
+PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開いた時点でも走ることがあるが、当てにしないこと**（2026-09-18 の実測: #98 は開いた 35 秒後に自動で走ったが、**#100 / #102 は走らなかった**）。**確実なのは明示的に投げること。**⚠ **人のレビューの代わりではなく、上の観点を回す前の当て木**として使う。
+
+- ⚠⚠ **GitHub App の導入は org ごと。**pooza 個人の repo で動いていても、**THE-POWERNEWS の repo では別に入れる必要がある**（2026-09-18 に導入。それまで #94 の `@codex review` は 3 日間**無反応**だった）
+- ⚠ **App を入れただけでは足りない。**repo ごとに https://chatgpt.com/codex/cloud/settings/environments で環境を作る。未作成なら bot が `To use Codex here, create an environment for this repo` と返す（pooza/ginseng-style#73 / #77 の実績）
+- ⚠ **無反応と「環境が無い」は別物。**何も返らないときは **App が届いていない**（org 未導入・repo 未選択）
+- ⚠⚠ **指摘の有無で返り方が違う。**指摘があれば **review ＋ 行コメント**（`pulls/{n}/reviews` と `pulls/{n}/comments`）、無ければ **`Didn't find any major issues.` という PR コメント**（`issues/{n}/comments`）。⚠ **`reviews` だけを見ていると「返ってきていない」と誤読する**（2026-09-18 に実測）。応答は依頼から 2〜3 分
+- ⚠⚠ **差分だけを見た指摘は意図を誤読する。**#94（`branch: main` → `tag: v1.23.7`・**指す SHA は同じ**）のような「更新ではなく記録」の PR では特に。**返ってきた指摘も赤／黄／緑に仕分けてから扱う**
 
 ### リリース前レビューの記録: 2026-09-02（初回）
 
