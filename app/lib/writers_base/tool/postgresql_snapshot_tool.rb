@@ -3,6 +3,9 @@ module WritersBase
     def exec(args = {})
       result = {success: [], delete: [], failure: []}
       # ⚠ 設定を先に読んで落とす。zfs を叩く前に「設定が無い」と分かるように（#67）
+      # ⚠⚠ **ここは Config#lookup を通さない**（#104）。既定へ倒すと、存在しない
+      # データセットを黙って掃除しにいく。キーが無ければ target 自身が ConfigError を
+      # 投げ、`target: ''` のような空値はこの blank? が拾う。**どちらも同じ形で落ちる。**
       raise Ginseng::ConfigError, "'/#{underscore}/target' not found" if target.blank?
       # ⚠⚠ dsn にも既定を持たせない（#87）。以前の既定は DB 名まで埋まっていたため、
       # Mastodon 以外のノードへ写すと**存在しない DB に繋ぎ続ける**。

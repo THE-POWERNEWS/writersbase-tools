@@ -55,7 +55,7 @@ module WritersBase
 
     # ⚠ 既定は有効。⚠⚠ **MyISAM を含む DB では false にすること**（`--lock-tables` に戻る）。
     def single_transaction?
-      return config["/#{underscore}/single_transaction"] != false
+      return config.lookup("/#{underscore}/single_transaction", true) != false
     end
 
     def delete_old_files(dir)

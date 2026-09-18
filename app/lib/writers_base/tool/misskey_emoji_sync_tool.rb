@@ -30,10 +30,9 @@ module WritersBase
     # ⚠ Ginseng::Configは未設定のキーで例外を投げる。originは無ければ落としたいが、
     # webhookは「告知しない」という正当な設定なので、ここで分けずにnilへ倒して
     # 呼び出し側で判断する
+    # ⚠ 既定へ倒す口は Config#lookup に寄せた（#104）
     def setting(key)
-      return config["/#{underscore}/#{key}"]
-    rescue Ginseng::ConfigError
-      return nil
+      return config.lookup("/#{underscore}/#{key}")
     end
 
     def tootctl_args(origin)

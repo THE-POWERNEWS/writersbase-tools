@@ -55,11 +55,9 @@ module WritersBase
   # ⚠ **Ginseng::Config は値が nil のとき ConfigError を投げる。** 素で読むと
   # DSN 未設定という**普通の状態**で毎回 stderr に警告が出て、cron からの
   # 実行がメールを生む。既定値へ倒して黙らせる。
+  # ⚠ 既定へ倒す口は Config#lookup に寄せた（#104）。
   def self.sentry_config(key, default = nil)
-    value = Config.instance["/sentry/#{key}"]
-    return value.nil? ? default : value
-  rescue Ginseng::ConfigError
-    return default
+    return Config.instance.lookup("/sentry/#{key}", default)
   end
 
   # 送信前に例外メッセージから資格情報を落とす。
