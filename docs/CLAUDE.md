@@ -97,7 +97,7 @@ ginseng-style が最低限として置く 3 観点に、本プロジェクト固
 
 #### 外部レビュアー（OpenAI Codex）
 
-PR に `@codex review` と書くとレビューが返る。⚠ **PR を開いた時点（と draft を ready にした時点）でも自動で走る**ので、明示的に頼まなくても 1 回は当たっている。⚠ **人のレビューの代わりではなく、上の観点を回す前の当て木**として使う。
+PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開いた時点でも走ることがあるが、当てにしないこと**（2026-09-18 の実測: #98 は開いた 35 秒後に自動で走ったが、**#100 / #102 は走らなかった**）。**確実なのは明示的に投げること。**⚠ **人のレビューの代わりではなく、上の観点を回す前の当て木**として使う。
 
 - ⚠⚠ **GitHub App の導入は org ごと。**pooza 個人の repo で動いていても、**THE-POWERNEWS の repo では別に入れる必要がある**（2026-09-18 に導入。それまで #94 の `@codex review` は 3 日間**無反応**だった）
 - ⚠ **App を入れただけでは足りない。**repo ごとに https://chatgpt.com/codex/cloud/settings/environments で環境を作る。未作成なら bot が `To use Codex here, create an environment for this repo` と返す（pooza/ginseng-style#73 / #77 の実績）
