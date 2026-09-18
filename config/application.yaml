@@ -134,6 +134,10 @@ rsync_backup:
 google_drive_backup:
   remote: gdrive
   path: /backup
+  # ⚠⚠ シンボリックリンクを `<名前>.rclonelink` として保存する（#97）。
+  # 渡さないと rclone はリンクを落とす（1.75 は黙って、1.60 は非ゼロで終わって）。
+  # ⚠ 宛先に `.rclonelink` が生えるので、false へ倒すと次の sync がそれを消す。
+  links: true
   sources:
     - /etc
     - /usr/local/etc

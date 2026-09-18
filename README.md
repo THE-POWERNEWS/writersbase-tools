@@ -215,8 +215,11 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 | path | Google Drive上のバックアップ先パス | /backup |
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
+| links | シンボリックリンクを`.rclonelink`として保存する（`--links`） | true |
 
 事前に`rclone config`でGoogle Driveリモートを設定しておく必要があります。
+
+⚠⚠ **`links`を`false`にするとシンボリックリンクがバックアップから落ちます。**rclone は`--links`が無いとリンクを飛ばし、**版によって黙って飛ばす（1.75）か非ゼロで終わる（1.60）かが違うだけ**です（#97）。⚠ `true`にすると宛先に`.rclonelink`というテキストファイルが生えます。後から`false`へ戻すと、`rclone sync`が宛先のそれらを削除します。
 
 ### rsync_backup
 
