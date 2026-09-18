@@ -19,7 +19,8 @@
 - **設定ファイル**
   - `Ginseng::Config` は `/usr/local/etc/writersbase-tools/`（FreeBSD）/ `/etc/writersbase-tools/`（Ubuntu）を直接読む
   - chubo-core はそこへ `local.yaml` を置き、**リポジトリ内へのシンボリックリンクは張らない方針**（古いリンクがあれば削除する）
-  - env 側は `config/local.yaml` → `/etc/writersbase-tools/local.yaml` の**リンクを張る**
+  - env 側は `config/local.yaml` → `/etc/writersbase-tools/local.yaml` の**リンクを張る**（実体は 1 つなので shadow にはならない）
+  - 🔴 **`local.yaml` は「先に見つけたディレクトリが勝つ」**（`next if @raw.key?(key)`）。⚠⚠ **chubo2 経路のノードでチェックアウトに `config/local.yaml` を作ると、`/usr/local/etc/.../local.yaml` が丸ごと無視される**（マージではない）。探索順は [README.md](../README.md) の「設定」
 - **periodic の入れ替え**: env 側は `rake uninstall` → `rake install`、chubo-core 側は `rake install` のみ
 
 ### 共通の前提

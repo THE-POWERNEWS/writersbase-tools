@@ -14,7 +14,7 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 - `app/lib/writers_base/installer.rb` - cronスクリプトのインストーラ
 - `bin/wb.rb` - ツール実行エントリポイント (`bin/wb <tool_name>`)
 - `config/application.yaml` - デフォルト設定。ツール名をキーにして各設定を格納
-- `config/local.yaml` - 環境固有の設定（Git管理対象外）。`application.yaml`の値を上書き
+- `local.yaml` - 環境固有の設定（Git管理対象外）。`application.yaml`の値を上書き。⚠ **配備済みノードでは `config/` ではなく `/usr/local/etc/writersbase-tools/`（FreeBSD）/ `/etc/writersbase-tools/`（Ubuntu）に置かれている**（探索順と shadow の罠は [README.md](README.md) の「設定」）
 - `config/autoload.yaml` - Zeitwerk inflection設定
 
 ## ツール追加パターン
