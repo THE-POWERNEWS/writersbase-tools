@@ -62,6 +62,11 @@ mysql_dump:
   password: null
   databases: []
   port: 3306
+  # ⚠ InnoDB を MVCC で一貫して読む。`--lock-tables`（mysqldump の既定）が
+  # 自動的に無効になるので、**ダンプ中も書き込みが止まらない**（#79）。
+  # 🔴 **MyISAM のテーブルには何の保護も無くなる。**混ざっている DB では
+  # false にして `--lock-tables` に戻すこと。
+  single_transaction: true
   days: 7
   dest:
     dir: /var/backups/db

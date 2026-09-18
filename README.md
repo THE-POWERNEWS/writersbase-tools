@@ -132,6 +132,13 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 | port | ポート番号 | 3306 |
 | days | ダンプファイル保管日数 | 7 |
 | dest.dir | 出力先ディレクトリ | /var/backups/db |
+| single_transaction | `--single-transaction`を渡す | true |
+
+⚠⚠ **`single_transaction`は、MyISAMのテーブルを含むデータベースでは`false`にしてください。**
+
+`mysqldump`の既定は`--opt`で、**`--lock-tables`と`--quick`は既に有効**です（実測: `lock-tables TRUE` / `quick TRUE` / `single-transaction FALSE`）。つまり既定でも1つのデータベースの中では一貫していますが、⚠ **ダンプのあいだ書き込みが止まります**。
+
+`--single-transaction`は`--lock-tables`を**自動的に無効化**し、InnoDBのMVCCで一貫性を取ります。書き込みを止めずに済む代わりに、🔴 **MyISAMのテーブルには何の保護も無くなります**（#79）。⚠ ダンプ中のDDLでも壊れます。
 
 ### mysql_snapshot
 
