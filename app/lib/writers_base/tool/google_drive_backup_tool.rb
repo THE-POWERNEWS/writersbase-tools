@@ -25,10 +25,14 @@ module WritersBase
       result[:success].push(src)
     end
 
-    # ⚠⚠ `--links` を渡さない rclone は、シンボリックリンクを**バックアップから落とす**。
-    # 落とし方が版で違うだけで、失われるものは同じ（#97）:
-    #   - rclone 1.75: NOTICE も出さず**黙って飛ばす**
-    #   - rclone 1.60: NOTICE を出して**非ゼロで終わる**（vulcan だけが失敗して見えたのはこれ）
+    # ⚠⚠ `--links` を渡さない rclone は、シンボリックリンクを**バックアップから落とす**（#97）。
+    # 🔴 **しかも exit 0 で終わる。**`NOTICE: ... Can't follow symlink without -L/--copy-links`
+    # を出すだけなので、`Tool#execute` は成功として通す。**誰にも気づかれない。**
+    # 実測（2026-09-18・同じ入力で 1 リンク）:
+    #   - rclone 1.60.1（vulcan / dev27）… NOTICE・**exit 0**・宛先にリンクが無い
+    #   - rclone 1.75.1（FreeBSD 3 台）  … NOTICE・**exit 0**・同じ
+    # ⚠ 版による違いは無い。⚠⚠ **`WRITERSBASE-TOOLS-4` の非ゼロ終了は symlink ではなく、
+    # Drive API のクォータ（403 rateLimitExceeded / pooza/chubo2#193）が原因。**
     # ⚠ `--links` はリンクを `<名前>.rclonelink` というテキストとして保存し、復元でリンクに戻す。
     # `--copy-links` はリンク先の中身を実体として写すので、復元するとリンクが実体に化ける。
     def sync_args(src, remote_path)
