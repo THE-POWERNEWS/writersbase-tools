@@ -102,6 +102,7 @@ PR に `@codex review` と書くとレビューが返る。⚠ **人のレビュ
 - ⚠⚠ **GitHub App の導入は org ごと。**pooza 個人の repo で動いていても、**THE-POWERNEWS の repo では別に入れる必要がある**（2026-09-18 に導入。それまで #94 の `@codex review` は 3 日間**無反応**だった）
 - ⚠ **App を入れただけでは足りない。**repo ごとに https://chatgpt.com/codex/cloud/settings/environments で環境を作る。未作成なら bot が `To use Codex here, create an environment for this repo` と返す（pooza/ginseng-style#73 / #77 の実績）
 - ⚠ **無反応と「環境が無い」は別物。**何も返らないときは **App が届いていない**（org 未導入・repo 未選択）
+- ⚠⚠ **指摘の有無で返り方が違う。**指摘があれば **review ＋ 行コメント**（`pulls/{n}/reviews` と `pulls/{n}/comments`）、無ければ **`Didn't find any major issues.` という PR コメント**（`issues/{n}/comments`）。⚠ **`reviews` だけを見ていると「返ってきていない」と誤読する**（2026-09-18 に実測）。応答は依頼から 2〜3 分
 - ⚠⚠ **差分だけを見た指摘は意図を誤読する。**#94（`branch: main` → `tag: v1.23.7`・**指す SHA は同じ**）のような「更新ではなく記録」の PR では特に。**返ってきた指摘も赤／黄／緑に仕分けてから扱う**
 
 ### リリース前レビューの記録: 2026-09-02（初回）
