@@ -16,6 +16,32 @@ module WritersBase
       assert_match(%r{bin/wb postgresql_dump\n\z}, contents)
     end
 
+    # ⚠⚠ cron から走るスクリプトに依存を入れさせない（#68）。復活させると、毎時
+    # root が rubygems.org へ出ていき、レビューを経ていない Gemfile が無人で入る
+    def test_contents_does_not_install_gems
+      contents = @installer.contents('postgresql_dump')
+
+      assert_not_match(/bundle install/, contents)
+      assert_match(/bundle check/, contents)
+      assert_match(/未充足/, contents)
+    end
+
+    # ⚠ cd の失敗で先へ進ませない。違うディレクトリの bin/wb を叩きうる（#68）
+    def test_contents_aborts_on_error
+      contents = @installer.contents('postgresql_dump')
+
+      assert_match(/^set -e$/, contents)
+      assert_match(%r{^cd '/.+'$}, contents)
+    end
+
+    # ⚠ チェックアウトへ .bundle/config を書きに行かせない（#68）
+    def test_contents_does_not_write_bundle_config
+      contents = @installer.contents('postgresql_dump')
+
+      assert_not_match(/bundle config/, contents)
+      assert_match(/BUNDLE_SILENCE_ROOT_WARNING=1/, contents)
+    end
+
     def test_dest
       assert_match(/writersbase-tools-postgresql-dump/, @installer.dest(:daily, 'postgresql_dump'))
     end

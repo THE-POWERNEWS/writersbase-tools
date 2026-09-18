@@ -55,12 +55,33 @@ module WritersBase
       return config["/#{period}"] || []
     end
 
+    # ⚠⚠ **cron / periodic から走るスクリプトは依存を入れない**（#68）。毎時 root で
+    # rubygems.org へ出ていくし、レビューを経ていない `Gemfile` の変更を無人で
+    # 取り込んでしまう。バックアップやスナップショットは**外へ出られなくても
+    # 走ってほしい**種類の仕事でもある。入れるのは構成管理（`--recipes=writersbase_tools`
+    # / `--recipes=tools`）の仕事なので、ここでは充足を確かめるだけにして、
+    # 足りなければ**明確なメッセージで落として cron に報せる**。
+    #
+    # ⚠ `bin/wb` が最後の行なので、終了コードはそのまま periodic / cron へ伝わる。
     def contents(tool)
       return [
         '#!/bin/sh',
-        "cd #{Environment.dir}",
-        'bundle config silence_root_warning true',
-        'bundle install',
+        "# #{Package.full_name} が生成。手で直しても rake install で上書きされる。",
+        # ⚠ cd の失敗で先へ進ませない。チェックアウトを移動・削除したノードで、
+        # 想定と違うディレクトリの bin/wb を叩きうる。
+        'set -e',
+        # ⚠ Shellwords は使わない。stdlib だが require しているのは
+        # ginseng-core の CommandLine で、**その定数に触るまでロードされない**
+        # （ここは CommandLine を使わないので NameError になる）。
+        "cd '#{Environment.dir}'",
+        # ⚠ bundle config だとチェックアウトへ .bundle/config を書きに行く。
+        # 状態を残さない環境変数で同じことをする。
+        'export BUNDLE_SILENCE_ROOT_WARNING=1',
+        'if ! bundle_check=$(bundle check 2>&1); then',
+        '  echo "$bundle_check" >&2',
+        "  echo '#{Package.name}のbundleが未充足です。構成管理を流して入れ直してください。' >&2",
+        '  exit 1',
+        'fi',
         "bin/wb #{tool}",
         '',
       ].join("\n")

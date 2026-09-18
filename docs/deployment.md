@@ -41,6 +41,28 @@
 - ⚠ **`service_restart` に `mastodon-web` を入れると外形監視がダウンとして拾う。**puma の復帰に 30〜45 秒かかる（pooza/chubo2#125 で `mastodon-sidekiq` だけへ縮小済み）
 - ⚠ **rclone.conf は実行時の状態ファイル。**無条件に上書きすると更新済み access_token が巻き戻り、しかも itamae がテンプレートの差分を標準出力に出すので **refresh_token が平文でログと Slack に流れる**。chubo-core は `not_if 'test -f ...'` に是正済み
 
+## ⚠⚠ 1.7.0 を配るときに知っておくこと
+
+**periodic / cron のスクリプトが `bundle install` をやめた**（#68）。⚠ **スクリプトの中身が変わるので、`rake install` を流し直すまで古いスクリプトが残る**（＝ 古いノードでは従来どおり毎回 `bundle install` する）。
+
+```sh
+#!/bin/sh
+set -e
+cd '<チェックアウト>'
+export BUNDLE_SILENCE_ROOT_WARNING=1
+if ! bundle_check=$(bundle check 2>&1); then
+  echo "$bundle_check" >&2
+  echo 'writersbase-toolsのbundleが未充足です。構成管理を流して入れ直してください。' >&2
+  exit 1
+fi
+bin/wb <ツール名>
+```
+
+- ⚠⚠ **依存を入れるのは構成管理の仕事になった。**`git pull` しただけで `Gemfile` が動いたノードは、**次の cron で「未充足です」と言って exit 1** する。⚠ **`bundle install` を流すこと**（chubo-core / env の cookbook はどちらも流す）
+- ⚠ **`bundle check` は原則ネットワークに出ない**（`Gemfile.lock` が解決済みのとき）。⚠⚠ **未充足のときだけ** rubygems.org へ問い合わせに行くことがある
+- ⚠ **`set -e` が付いた。**`cd` に失敗したら `bin/wb` を叩かずに落ちる（従来は**別のディレクトリの `bin/wb` を叩きうる**状態だった）
+- ⚠ `bundle config silence_root_warning true` をやめ、環境変数 `BUNDLE_SILENCE_ROOT_WARNING=1` にした。**チェックアウトへ `.bundle/config` を書きに行かない**ため
+
 ## ⚠⚠ 1.6.0 を配るときに知っておくこと
 
 **1.6.0 は「失敗が見えるようになる」リリース。**これまで黙って成功に見えていたものが、periodic のメールと Sentry に出始める。⚠ **反映直後に「新しい失敗が増えた」ように見えるが、実際にはこれまで見えていなかったもの。**
