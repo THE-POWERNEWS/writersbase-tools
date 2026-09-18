@@ -115,6 +115,41 @@ next if @raw.key?(key)
 （この場合は実体が1つなのでshadowになりません）。経路ごとの差は
 [docs/deployment.md](docs/deployment.md)を参照してください。
 
+### heartbeat（実行の監視）
+
+実行のたびに **Uptime Kuma の push モニタ**へハートビートを送ります（#91）。
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| base | push エンドポイントの URL | `https://uptime.b-shock.org/api/push` |
+| timeout | 送信のタイムアウト秒数 | 20 |
+| tokens | **ツール名 → push トークン**。書いたツールだけ送る | `{}` |
+
+```yaml
+heartbeat:
+  tokens:
+    postgresql_dump: xxxxxxxxxxxx
+    google_drive_backup: yyyyyyyyyyyy
+```
+
+🔴 **成功時も送ります。**push モニタは「ハートビートが途切れたら DOWN」という向きなので、
+成功を送らないと「走った」ことが伝わりません。⚠ **これは欠点ではなく利点で、
+「そもそも走らなかった」（宣言漏れ・ノード停止・cron の設置漏れ）も DOWN になります** ——
+Sentry には無い利点です。
+
+- 成功 … `status=up` / `msg=OK`
+- 失敗 … `status=down` / `msg=<失敗の要約>`（⚠ 200 文字で切り、Sentry と同じ網で伏せてから送ります）
+
+⚠⚠ **push URL（トークン）はそれ自体が資格情報です。**`local.yaml` に置いてください。
+⚠ トークンは**パスに入る**ため `Ginseng::HTTP` のログでは伏せられません。そのため送信は
+`CommandLine#secrets` に載せた `curl` で行い、ログでは `[FILTERED]` になります。
+
+⚠ **Kuma 側にモニタが無ければ、送っても誰も見ません。**モニタの登録と interval
+（**ツールの実行間隔に合わせる**）は利用側の仕事です。
+
+⚠ **監視の都合で本業は落としません。**送信に失敗しても警告を出すだけで、ツールの
+終了コードは変わりません。
+
 ### sentry（エラー監視）
 
 ツールの失敗を Sentry へ能動的に通知します（#37）。
