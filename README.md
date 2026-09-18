@@ -169,7 +169,7 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 | --- | --- | --- |
 | target | 対象ZFSパーティション | ⚠ **null（必須）** |
 | days | スナップショット保管日数 | 3 |
-| dsn | PostgreSQL接続文字列 | postgres://postgres@localhost/mastodon<br>⚠⚠ **DB 名が埋まっています。ノードごとに必ず上書きしてください** |
+| dsn | PostgreSQL接続文字列 | ⚠ **null（必須）**<br>⚠⚠ 未設定なら`ConfigError`で落ちます（#87） |
 
 ### mastodon（共通設定）
 

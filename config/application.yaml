@@ -93,11 +93,11 @@ postgresql_snapshot:
   # ⚠⚠ **ノードごとに必ず設定する。**未設定なら ConfigError で落ちる（#67）。
   target: null
   days: 3
-  # ⚠⚠ **DB 名が埋まっている。ノードごとに必ず上書きすること。**
-  # Misskey のノードへそのまま持って行くと、存在しない DB に繋ぐ。
-  # ⚠ 既定を消すと dsn を書いていない既存ノードが落ちるので、この版では残す。
-  # #87 で次の版に消す（利用側が明示したことを確認してから）。
-  dsn: postgres://postgres@localhost/mastodon
+  # ⚠⚠ **ノードごとに必ず設定する。**未設定なら ConfigError で落ちる（#87）。
+  # 以前は `postgres://postgres@localhost/mastodon` を既定に置いていたが、
+  # **DB 名まで埋まっている**ため、Mastodon 以外のノードへ写すと
+  # 存在しない DB に繋ぎ続ける。
+  dsn: null
 mastodon:
   user: mastodon
   rails_env: production
