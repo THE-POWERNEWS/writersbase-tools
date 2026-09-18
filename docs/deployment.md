@@ -35,9 +35,9 @@
 - ⚠⚠ **`rake install` は cron を書き換える。**長期間更新していないノードへ「ついでに流す」ができない。**そのノードのバックアップ系 cron を止めうる**（THE-POWERNEWS/writersbase-env#137）
 - ⚠⚠ **配列の設定は「マージ」ではなく「置換」。**`Ginseng::Config` は `/google_drive_backup/excludes` のような平坦キーを後勝ちさせるので、node yaml に書くと **`config/application.yaml` の既定 10 件（`.git` / `node_modules` / `vendor/bundle` / `tmp` / `.cache` / `*.bak` …）が丸ごと消える**。書き足すつもりなら**既定を書き写した上に足す**
 - ⚠⚠ **`google_drive_backup` は `rclone sync`＝宛先の余剰ファイルを削除する。**ステージングは `path: /backup/staging/devNN` で本番の `/backup/<host>` と分離すること。共有すると本番バックアップを消しうる
-- ⚠ **`postgresql_snapshot` / `postgresql_dump` の `dsn` を省略しない。**既定は `postgres://postgres@localhost/mastodon` で、**DB 名の違うノード（Misskey 等）にそのまま写すと存在しない DB に繋いで毎時ジョブが黙って失敗し続ける**
+- ⚠⚠ **`postgresql_snapshot` の `dsn` は必須**（#87 で既定を外した）。書いていなければ `ConfigError` で落ちる ＝ **PostgreSQL へ繋ぐ前に止まる**。⚠ かつての既定は `postgres://postgres@localhost/mastodon` で **DB 名まで埋まっていた**ため、DB 名の違うノード（Misskey 等）へそのまま写すと**存在しない DB に繋いで毎時ジョブが黙って失敗し続けた**。⚠ `postgresql_dump` には **`dsn` というキーは無い**（`host` / `user` / `password` / `port` / `databases` を個別に書く）
 - ⚠ **tootctl 系は `bash -lc` 経由で実行する**（#44 / `bdd5f3a`）。cron の非ログインシェルでは rbenv が初期化されず、OS の Ruby にフォールバックする
-- ⚠ **FreeBSD の periodic daily は 1 日 2 回走り、着火時刻も固定ではない。**`/etc/crontab` の `34 3 * * *` に加え anacron が「今日まだ走っていない daily」を拾う。先行タスク（rclone）の所要時間ぶん後ろにもズレる。**「毎晩 N 時に走る」前提で手順を書かないこと**
+- ⚠ **FreeBSD の periodic daily は着火時刻が固定ではない。**先行タスク（rclone）の所要時間ぶん後ろへズレる。**「毎晩 N 時に走る」前提で手順を書かないこと**。⚠⚠ **2026-09-18 まで 1 日 2 回走っていた** — `/etc/crontab` の `periodic daily` に加え、anacron が「今日まだ走っていない daily」を拾っていた（daily だけでなく weekly / monthly も二重）。**pooza/chubo2#243 で FreeBSD 10 台から anacron ごと外して解消済み**。⚠ 実測は 2026-09-18 現在 `anacron=absent` / `crontab_daily=1`
 - ⚠ **`service_restart` に `mastodon-web` を入れると外形監視がダウンとして拾う。**puma の復帰に 30〜45 秒かかる（pooza/chubo2#125 で `mastodon-sidekiq` だけへ縮小済み）
 - ⚠ **rclone.conf は実行時の状態ファイル。**無条件に上書きすると更新済み access_token が巻き戻り、しかも itamae がテンプレートの差分を標準出力に出すので **refresh_token が平文でログと Slack に流れる**。chubo-core は `not_if 'test -f ...'` に是正済み
 
