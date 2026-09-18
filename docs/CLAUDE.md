@@ -72,7 +72,8 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 7 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 3 件**。
 
-- 🔴 **`google_drive_backup` が Misskey ノードで継続失敗**（`WRITERSBASE-TOOLS-4`・3 回／初回 2026-09-04・直近 2026-09-14）。`src: /home/misskey/repos/misskey` の `.nvmrc` がシンボリックリンクで、`rclone sync` が `Can't follow symlink without -L/--copy-links` を出して非ゼロで終わる。⚠ **`--links` / `--copy-links` を渡すか、リンクを `excludes` に落とすかの判断が要る**（前者は宛先の中身が変わるので、`rclone sync` の宛先削除と合わせて見ること）。⚠ 対象 src を絞る話は pooza/chubo2#194 と重なる
+- 🔴 **`google_drive_backup` が vulcan で継続失敗**（`WRITERSBASE-TOOLS-4`・初回 2026-09-04・直近 2026-09-18）。⚠⚠ **原因は Drive API のクォータ**（`Error 403 ... rateLimitExceeded`・1 回の実行で 6 回・8 分走って `Transferred: 0 B`）。**pooza/chubo2#193（rclone 既定の共有 client_id）そのもの**で、⚠ **#97 を入れても止まらない。**
+- ⚠⚠ **`Can't follow symlink` は失敗の原因ではなかった**（2026-09-18 に実測して訂正）。rclone は **1.60.1 / 1.75.1 とも NOTICE を出して `exit 0`** で終わる。🔴 **つまりリンクは全ノードで黙ってバックアップから落ちていた**（`/etc` だけで vulcan 1063・zugoga 176・gomander 7）。#97 の `--links` は**その静かな欠落**を塞ぐもので、Sentry の失敗を止めるものではない
 - 🔴 **`postgresql_dump` が shallu / zugoga で継続失敗**（`WRITERSBASE-TOOLS-7`・8 件／初回 2026-09-17・直近 2026-09-18）。`zstd: error 25 : Write error : No space left on device`。⚠⚠ **道具の側は正しい** — 失敗を拾い（#63）、壊れた `.zst` を消し、**ローテーションを走らせずに**（#62）終わっており、既存の 7 世代は無事。原因は 2026-09-13 の backups 縮小（pooza/chubo2#233）で撮った `zfs` スナップショット `@move1` / `@move2` が残り、**保持期間を過ぎて消したはずのダンプを掴んだまま** 16.5G / 11.9G を占めていたこと。⚠ 起票は pooza/chubo2#242（直すのは向こうのディスク）。**ただし 09-17 / 09-18 のダンプは取れていない**
 - ⚠ **`mastodon_follow` が `account: info` で `No such account`**（`WRITERSBASE-TOOLS-3`・1 回・2026-09-04）。⚠ 2026-09-15 の棚卸しでは意図的な 3 件にも実害にも数えていなかった**取りこぼし**。実機の設定を見て、消えたアカウントなら node yaml から外す
 - ⚠ **`bin/wb <存在しない名前>` が `NameError: uninitialized constant WritersBase::ConfigTool` として Sentry に載る**（`WRITERSBASE-TOOLS-6`・1 回・2026-09-12）。`bin/wb.rb` の集約点がツールの失敗と打ち間違いを区別しないため。**害は無いがノイズになる**
