@@ -19,7 +19,8 @@ module WritersBase
     end
 
     def self.type
-      return config['/environment'] || 'development'
+      # ⚠ `|| 'development'` ではキーが無いときに例外になる（#104）
+      return config.lookup('/environment', 'development')
     end
 
     def self.development?

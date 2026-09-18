@@ -31,5 +31,20 @@ module WritersBase
     def test_links_enabled_by_default
       assert_true(@tool.send(:links?))
     end
+
+    # ⚠⚠ キーごと消えても有効側へ倒す（#104）。`config[...] != false` のままだと、
+    # ここは例外になっていた ＝ **「無ければ既定」は効いていなかった**
+    def test_links_enabled_without_key
+      config.delete('/google_drive_backup/links')
+
+      assert_true(@tool.send(:links?))
+    end
+
+    # ⚠ excludes も同じ。`|| []` は例外の前に到達しない（#104）
+    def test_excludes_without_key
+      config.delete('/google_drive_backup/excludes')
+
+      assert_equal([], @tool.send(:excludes))
+    end
   end
 end

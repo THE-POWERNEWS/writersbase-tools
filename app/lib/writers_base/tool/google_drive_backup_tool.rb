@@ -51,11 +51,11 @@ module WritersBase
     # ⚠ 既定は有効。⚠⚠ 無効にすると**リンクが黙って落ちる**ので、
     # 宛先に `.rclonelink` を生やせない事情があるときだけ false にすること。
     def links?
-      return config["/#{underscore}/links"] != false
+      return config.lookup("/#{underscore}/links", true) != false
     end
 
     def remote = config["/#{underscore}/remote"]
     def path = config["/#{underscore}/path"]
-    def excludes = config["/#{underscore}/excludes"] || []
+    def excludes = config.lookup("/#{underscore}/excludes", [])
   end
 end

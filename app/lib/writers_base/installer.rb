@@ -52,7 +52,8 @@ module WritersBase
     end
 
     def entries(period)
-      return config["/#{period}"] || []
+      # ⚠ `|| []` ではキーが無いときに例外になる（#104）
+      return config.lookup("/#{period}", [])
     end
 
     # ⚠⚠ **cron / periodic から走るスクリプトは依存を入れない**（#68）。毎時 root で

@@ -36,6 +36,6 @@ module WritersBase
     end
 
     def dest = config["/#{underscore}/dest"]
-    def excludes = config["/#{underscore}/excludes"] || []
+    def excludes = config.lookup("/#{underscore}/excludes", [])
   end
 end

@@ -35,6 +35,14 @@ module WritersBase
       assert_true(@tool.send(:single_transaction?))
     end
 
+    # ⚠⚠ キーごと消えても既定（有効）へ倒す（#104）。`config[...] != false` のままだと
+    # ここは ConfigError になっていた
+    def test_single_transaction_without_key
+      config.delete('/mysql_dump/single_transaction')
+
+      assert_true(@tool.send(:single_transaction?))
+    end
+
     private
 
     def params
