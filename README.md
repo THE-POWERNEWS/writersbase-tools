@@ -29,8 +29,8 @@ bin/wb help
 
 ### cronへのインストール・アンインストール
 
-`config/local.yaml`の`hourly`、`daily`、`weekly`、`monthly`にツール名を設定し、
-rakeタスクでcronスクリプトとしてインストールできます。
+設定（下記「[設定](#設定)」の探索先のいずれか）の`hourly`、`daily`、`weekly`、`monthly`に
+ツール名を設定し、rakeタスクでcronスクリプトとしてインストールできます。
 
 ```sh
 rake install    # cronスクリプトをインストール
@@ -58,9 +58,51 @@ rake uninstall  # cronスクリプトをアンインストール
 
 ## 設定
 
-`config/application.yaml`にデフォルト値が定義されています。
-環境固有の設定は`config/local.yaml`を作成し、必要な項目のみ上書きしてください（`application.yaml`を直接編集する必要はありません）。
-`config/local.yaml`はGit管理対象外です。
+`config/application.yaml`にデフォルト値が定義されています。環境固有の設定は
+`local.yaml`を作成して、必要な項目のみ上書きしてください（`application.yaml`を直接
+編集する必要はありません）。`local.yaml`はGit管理対象外です。
+
+### 探索先と優先順
+
+`Ginseng::Config`は**3つのディレクトリ**を、この順に探します。
+
+| # | ディレクトリ | 実際に使っているノード |
+| --- | --- | --- |
+| 1 | `<チェックアウト>/config` | 手元の開発環境 |
+| 2 | `/usr/local/etc/writersbase-tools` | FreeBSD（shallu / zugoga / gomander） |
+| 3 | `/etc/writersbase-tools` | Ubuntu（vulcan / wiki / vpn） |
+
+各ディレクトリの中では、ファイル名が**`<ホスト名>.yaml` → `local.yaml` →
+`application.yaml` → `lib.yaml`** の順に優先されます（先にあるものが勝ち）。
+
+- ⚠ **`<ホスト名>`は`Socket.gethostname`の値**です。フリートの各機はFQDNを返すので、
+  ファイル名も`shallu.b-shock.co.jp.yaml`のようになります（`shallu.yaml`では効きません）。
+  **いまどのノードも使っていませんが、仕様としてあります**
+- ⚠ **チェックアウトの`config/`に`local.yaml`は置かれていません。**配備済みノードの実効設定は
+  上の表の2・3にあります（2026-09-18に本番4台で実測）。README を読んで
+  `config/local.yaml`を探しても見つからないのは、そのためです
+
+🔴 **`local.yaml`は「先に見つけたディレクトリが勝つ」。マージではありません。**
+
+```ruby
+key = File.basename(f, suffix)  # Ginseng::Config#load
+next if @raw.key?(key)
+```
+
+⚠⚠ **ここでの`key`は設定キーではなく、拡張子を除いたファイル名**（`local` / `application`）です。
+だから**キー単位のマージではなく、ファイル単位で丸ごと捨てられます**。
+2つのディレクトリに別々のキーを書いた`local.yaml`を置いて実測すると、
+後ろのディレクトリのキーは`ConfigError`（未定義）になります。
+
+⚠⚠ **手元で試すつもりでチェックアウトに`config/local.yaml`を置くと、
+`/usr/local/etc/writersbase-tools/local.yaml`（＝配備済みの実効設定）は
+丸ごと無視されます。**サーバ上のチェックアウトで一時的にキーを足したいときも、
+ファイルごと上書きしてしまうので、⚠ **配備済みノードでは`config/`に`local.yaml`を作らないこと。**
+
+⚠ 配布経路によって置き場が違い、**writersbase-env側だけは
+`config/local.yaml` → `/etc/writersbase-tools/local.yaml`のシンボリックリンクを張ります**
+（この場合は実体が1つなのでshadowになりません）。経路ごとの差は
+[docs/deployment.md](docs/deployment.md)を参照してください。
 
 ### sentry（エラー監視）
 
@@ -73,7 +115,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | traces_sample_rate | 性能計測の採取率。`0` なら計測しない | 0 |
 | scrub_patterns | 送信前に伏せる正規表現。`\K` で値だけを伏せる | 下記 |
 
-⚠ **DSN は秘密ではありません**（送信専用・公開情報）ので、`config/local.yaml` に
+⚠ **DSN は秘密ではありません**（送信専用・公開情報）ので、`local.yaml` に
 平文で構いません。
 
 #### 送るもの
@@ -212,7 +254,7 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 `bin/tootctl emoji sync <origin> --no-dry-run` を実行します。`webhook`を設定すると、増えた絵文字の告知をそのURLへSlack互換のペイロードで投稿します（モロヘイヤのアカウント別Webhookを想定）。
 
-⚠ **Webhook URLはそれ自体が資格情報**なので、`config/local.yaml`側に置いてください。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
+⚠ **Webhook URLはそれ自体が資格情報**なので、`local.yaml`側に置いてください。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
 
 ### google_drive_backup
 

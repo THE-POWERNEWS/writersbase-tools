@@ -29,7 +29,8 @@ package:
 ruby:
   bin: /usr/bin/ruby3.3
 sentry:
-  # ⚠ 空なら Sentry は初期化されず、何も送らない。サーバでは config/local.yaml に書く。
+  # ⚠ 空なら Sentry は初期化されず、何も送らない。サーバでは local.yaml に書く
+  # （FreeBSD は /usr/local/etc/writersbase-tools/・Ubuntu は /etc/writersbase-tools/）。
   # ⚠ DSN は秘密ではない（送信専用・公開情報）。
   dsn: null
   # 省略時は /environment の値を使う

@@ -5,7 +5,7 @@
 サーバ上で定期実行する保守処理（バックアップ・スナップショット・ログ圧縮・SNS の保守コマンド）の**受け皿**。Ruby + [ginseng-core](https://github.com/pooza/ginseng-core) で書き、`bin/wb <ツール名>` で単発実行し、`rake install` で cron / periodic に配る。
 
 - 各ツールは `WritersBase::Tool` を継承し、`exec` と `description` だけを実装する
-- 設定は `config/application.yaml` を既定、サーバ側の `config/local.yaml` で上書きする
+- 設定は `config/application.yaml` を既定、サーバ側の `local.yaml`（`/usr/local/etc/writersbase-tools/` または `/etc/writersbase-tools/`）で上書きする
 - 前身は各サーバに手書きで置かれていた `ginseng-*` の periodic スクリプト群（`compress-access-log` / `backup-postgres` / `sidekiq-restart` 等）。それを 1 リポジトリに寄せたもの
 
 ## ⚠⚠ 名前に反して writersBASE 向けではない
