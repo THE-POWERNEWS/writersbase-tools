@@ -69,12 +69,14 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #68 | periodic が毎回 root で `bundle install` | ✅ #111 |
 | #104 | 「無ければ既定」風の書き方が機能していない | ✅ #112（`Config#lookup`） |
 | #91 | 失敗に気づける通知経路が無い | ✅ #113（⚠ **受け皿は pooza/chubo2#248**） |
-| #101 | `mysql_dump` が MyISAM の混在を検出しない | ⏳ **実測待ち** |
+| #101 | `mysql_dump` が MyISAM の混在を検出しない | ✅ **道具は直さない**（THE-POWERNEWS/writersbase-env#171 へ依頼） |
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ⏳ **上流待ち** |
 
 ⚠⚠ **1.7.0 は「配布物が変わる」リリース**になった。#68 で periodic スクリプトの中身が変わるので、⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ 従来どおり `bundle install` し続ける）。詳細は [deployment.md](deployment.md) の「1.7.0 を配るときに知っておくこと」。
 
-- **#101 は「そもそも MyISAM が居るのか」の実測が先。**⚠ `mysql_dump` が実際に動いているのは **writersbase-env 側（dev1 / dev2 / staging の Akamai Managed MySQL）**で、chubo2 のフリートでは `databases: []`。🔴 **本番 DB への問い合わせは実行環境のポリシーで止まる**ので、叩く形だけ Issue に置いてある
+- **#101 は「道具は直さない」で決着。**⚠ **MyISAM を積極的に使う方針は無い**ので、居たらそれ自体が事故 —— 道具が黙って `--lock-tables` へ戻すより、**テーブルを InnoDB へ直すのが正しい対処**。⚠⚠ **実測も是正も writersBASE のインフラ作業**なので、THE-POWERNEWS/writersbase-env#171 として依頼した
+  - ⭕ 事前調査では**自分たちのコードに `MyISAM` は 0 件**、テーブルを作るプラグインは `user-access-manager` だけで **`ENGINE=` 句を持たない**（＝ サーバ既定の InnoDB）。⚠ **残る経路は「持ち込んだダンプ」だけ**（`mysqldump` は `ENGINE=MyISAM` をそのまま書き出す）
+  - ⚠ 検査クエリは **`table_type = 'BASE TABLE'` で絞ること。**VIEW は `engine` が InnoDB にならないので、付けないと誤検出する
 - **#82 は上流（pooza/ginseng-core）へ `CommandLine#secrets` が入ってから。**⚠ 形は #82 のコメントに決めて置いた。⚠⚠ **こちらの `Gemfile` は tag 固定なので、版を上げる PR を通すまで届かない**
 - ⚠ **#104 は「手元で閉じる」を選んだ。**`Config#lookup(key, default)` に寄せ、**fail closed にしたい設定（`postgresql_snapshot` の `target` / `dsn`）は素の `config[...]` のまま**にしてある。⚠⚠ **#82 とは判断が逆**（あちらは本体へ寄せる側）なので、混ぜないこと
 
@@ -221,6 +223,7 @@ PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開い
   - ツール本体・設定の既定値・`Installer` → THE-POWERNEWS/writersbase-tools
   - 配備・node の設定・cookbook（`writersbase_tools`） → pooza/chubo2（実装が chubo-core でも起票は chubo2）
   - writersBASE 側の配備・`tools` cookbook → THE-POWERNEWS/writersbase-env
+  - ⚠⚠ **writersBASE のインフラ作業そのもの**（DB の調査・是正、実機での確認）も **THE-POWERNEWS/writersbase-env へ「依頼」の形で起票する。**⚠ こちらの Issue に実作業を溜めない（#101 → writersbase-env#171 が実例）
   - 規約・RuboCop 設定 → pooza/ginseng-style
 - **プロジェクトで共有すべき知見** → `docs/` 以下（git 管理下）。⚠ Issue とセッションメモリだけで済ませない
 - **インフラの現況・手順・罠** → pooza/chubo2 の `docs/infra-note.md` / `docs/infra-history.md`。⚠ **こちらの docs に写しを作らない**（正本を 2 つにしない）
