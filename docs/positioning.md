@@ -31,7 +31,7 @@
 
 periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` なので、**チェックアウトを `git pull` した瞬間にその版が本番になる**。cookbook は `git` リソースを持たず、chubo2 の `drift-sweep` は itamae のリソースを・`peer-diff` は宣言を見るだけで、**どちらの視野にも版は入らない**。
 
-🔴 **「chubo2 の反映 Issue が open ＝ 1 台も届いていない」と読まないこと。**実例が #246 で、起票の翌日には **本番 FreeBSD 3 台が v1.6.1 で走っていた**（2026-09-18・[CLAUDE.md](CLAUDE.md)）。**版を知るには実機に ssh して `git describe` する**（一括で並べる形は chubo2 `docs/infra-common.md` の writersbase-tools 節）。
+🔴 **「chubo2 の反映 Issue が open ＝ 1 台も届いていない」と読まないこと。**実例が #246 で、起票の翌日には **本番 FreeBSD 3 台が v1.6.1 で走っていた**（2026-09-18・[CLAUDE.md](CLAUDE.md)）。**版を知るには実機に ssh して `git describe --tags` する**（⚠ **`--tags` は必須**。理由は [CLAUDE.md](CLAUDE.md)。一括で並べる形は chubo2 `docs/infra-common.md` の writersbase-tools 節）。
 
 ### 🔴 writersBASE 側は最新版が動いていない（2026-09-01 実測）
 

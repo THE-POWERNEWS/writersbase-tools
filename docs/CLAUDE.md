@@ -90,7 +90,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ dev27（ステージング）は実機確認のため手で `8737a1c` に上げてあるが、`bin/chubo` を通していないので**宣言と実機がずれた状態**。揃えるのも #193 の後
 - ⚠⚠ **利用側は `git pull --ff-only` で main を追うと未リリースの 1.7.0 を掴む。**v1.6.1 の直後に `cf62324` でバンプしているため。**向こうはタグで指定する運用に変えた**（`git merge --ff-only refs/tags/v1.6.1`）
 
-⚠⚠ **本番で走っている版は、chubo2 のどの道具の視野にも入らない**（2026-09-19 に判明）。periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` で、**チェックアウトを `git pull` した瞬間にその版が本番になる**。cookbook は `git` リソースを持たず、`drift-sweep` は itamae のリソースを・`peer-diff` は宣言を見るだけ。🔴 **「chubo2 の Issue が open ＝ 届いていない」と読まないこと** —— #246 はまさにその形で、起票の翌日には前提が外れていた。**版を知るには実機に ssh して `git describe` する**（手順は chubo2 `docs/infra-common.md` の writersbase-tools 節）。
+⚠⚠ **本番で走っている版は、chubo2 のどの道具の視野にも入らない**（2026-09-19 に判明）。periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` で、**チェックアウトを `git pull` した瞬間にその版が本番になる**。cookbook は `git` リソースを持たず、`drift-sweep` は itamae のリソースを・`peer-diff` は宣言を見るだけ。🔴 **「chubo2 の Issue が open ＝ 届いていない」と読まないこと** —— #246 はまさにその形で、起票の翌日には前提が外れていた。**版を知るには実機に ssh して `git describe --tags` する**（手順は chubo2 `docs/infra-common.md` の writersbase-tools 節）。⚠⚠ **`--tags` を省くと必ず失敗する** —— `gh release create` が作るのは**軽量タグ**で、素の `git describe` は注釈付きタグしか見ないため（`fatal: No annotated tags can describe ...`）。
 
 ⚠ **3 件とも「黙って落ちているもの」を塞ぐ変更**だった。
 
