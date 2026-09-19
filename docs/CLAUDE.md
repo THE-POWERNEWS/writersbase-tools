@@ -70,31 +70,37 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #104 | 「無ければ既定」風の書き方が機能していない | ✅ #112（`Config#lookup`） |
 | #91 | 失敗に気づける通知経路が無い | ✅ #113（⚠ **受け皿は pooza/chubo2#248**） |
 | #101 | `mysql_dump` が MyISAM の混在を検出しない | ✅ **道具は直さない**（THE-POWERNEWS/writersbase-env#171 へ依頼） |
-| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ⏳ **上流待ち** |
+| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ⏳ **上流待ち**（pooza/ginseng-core#642） |
 
 ⚠⚠ **1.7.0 は「配布物が変わる」リリース**になった。#68 で periodic スクリプトの中身が変わるので、⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ 従来どおり `bundle install` し続ける）。詳細は [deployment.md](deployment.md) の「1.7.0 を配るときに知っておくこと」。
 
 - **#101 は「道具は直さない」で決着。**⚠ **MyISAM を積極的に使う方針は無い**ので、居たらそれ自体が事故 —— 道具が黙って `--lock-tables` へ戻すより、**テーブルを InnoDB へ直すのが正しい対処**。⚠⚠ **実測も是正も writersBASE のインフラ作業**なので、THE-POWERNEWS/writersbase-env#171 として依頼した
   - ⭕ 事前調査では**自分たちのコードに `MyISAM` は 0 件**、テーブルを作るプラグインは `user-access-manager` だけで **`ENGINE=` 句を持たない**（＝ サーバ既定の InnoDB）。⚠ **残る経路は「持ち込んだダンプ」だけ**（`mysqldump` は `ENGINE=MyISAM` をそのまま書き出す）
   - ⚠ 検査クエリは **`table_type = 'BASE TABLE'` で絞ること。**VIEW は `engine` が InnoDB にならないので、付けないと誤検出する
-- **#82 は上流（pooza/ginseng-core）へ `CommandLine#secrets` が入ってから。**⚠ 形は #82 のコメントに決めて置いた。⚠⚠ **こちらの `Gemfile` は tag 固定なので、版を上げる PR を通すまで届かない**
+- **#82 は上流（pooza/ginseng-core）へ `CommandLine#secrets` が入ってから。**✅ **2026-09-19 に pooza/ginseng-core#642 として起票済み**（`request` / `security` / `size:S`・open）。形は #642 に転記してある（`secrets` / `masked` / `log_exec`。⚠ **既定は空配列なので breaking ではない**）。⚠ **`waiting:pr` はあえて付けていない** —— こちらから PR を出すつもりだが、忘れたときに誰も動けなくなるため。⚠⚠ **こちらの `Gemfile` は tag 固定なので、版を上げる PR を通すまで届かない。1.7.0 はこれを待たない**
 - ⚠ **#104 は「手元で閉じる」を選んだ。**`Config#lookup(key, default)` に寄せ、**fail closed にしたい設定（`postgresql_snapshot` の `target` / `dsn`）は素の `config[...]` のまま**にしてある。⚠⚠ **#82 とは判断が逆**（あちらは本体へ寄せる側）なので、混ぜないこと
 
-### v1.6.1 は出荷済み（2026-09-18 タグ）—— ⚠ **本番にはまだ 1 台も届いていない**
+### v1.6.1 は出荷済み（2026-09-18 タグ）—— **本番 FreeBSD 3 台へ反映済み・vulcan だけ残**
 
 **最新タグは v1.6.1**（`8737a1c`／公開 2026-09-18）。マイルストーン `1.6.1` の 3 件（#97 / #79 / #87）。⚠ **`/package/version` は 2026-09-19 に 1.7.0 へバンプ済み**（#109 ＝ マイルストーン 1.7.0 に着手したため）。**出荷済みの最新は依然 v1.6.1**。
 
-⚠⚠ **v1.6.0 とは逆で、今回は「タグを打ったが宣言管理下のノードに 1 台も届いていない」状態。**反映の受け皿は **pooza/chubo2#246**（⚠ **2026-09-19 時点も open・0 台のまま**）。⚠ **例外は dev27（ステージング）だけ** — 実機確認のため手で `8737a1c` に上げてあり、**そこでは v1.6.1 が実際に走っている**。⚠⚠ ただし `bin/chubo` を通していないので**宣言と実機がずれた状態**であり、**配備済みとは数えない**。
+✅ **shallu / zugoga / gomander が 2026-09-18 に `8737a1c` で走り出した**（実測は 2026-09-19・chubo2#246）。⚠ **3 台とも 8 ソース全て成功・失敗 0**、`.rclonelink` の本数はローカルの symlink 数と完全一致、**破壊的変更（`postgresql_snapshot` の `dsn` 必須化）も通過して健在**。反映の受け皿 **pooza/chubo2#246 は 3/4 で open のまま**。
+
+- 🔴 **vulcan と dev27 は #193 の後に回した。**同日朝の実測で **vulcan の日次は 06:42 → 07:59 の 77 分**、うち `/var/backups/db`（2.3G）だけで 61 分、`/etc` は **exit 1** で終わっている。⚠ **ここへ `.rclonelink` 約 1065 本の一度きりの増分を乗せない**
+- ⚠ dev27（ステージング）は実機確認のため手で `8737a1c` に上げてあるが、`bin/chubo` を通していないので**宣言と実機がずれた状態**。揃えるのも #193 の後
+- ⚠⚠ **利用側は `git pull --ff-only` で main を追うと未リリースの 1.7.0 を掴む。**v1.6.1 の直後に `cf62324` でバンプしているため。**向こうはタグで指定する運用に変えた**（`git merge --ff-only refs/tags/v1.6.1`）
+
+⚠⚠ **本番で走っている版は、chubo2 のどの道具の視野にも入らない**（2026-09-19 に判明）。periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` で、**チェックアウトを `git pull` した瞬間にその版が本番になる**。cookbook は `git` リソースを持たず、`drift-sweep` は itamae のリソースを・`peer-diff` は宣言を見るだけ。🔴 **「chubo2 の Issue が open ＝ 届いていない」と読まないこと** —— #246 はまさにその形で、起票の翌日には前提が外れていた。**版を知るには実機に ssh して `git describe --tags` する**（手順は chubo2 `docs/infra-common.md` の writersbase-tools 節）。⚠⚠ **`--tags` を省くと必ず失敗する** —— `gh release create` が作るのは**軽量タグ**で、素の `git describe` は注釈付きタグしか見ないため（`fatal: No annotated tags can describe ...`）。
 
 ⚠ **3 件とも「黙って落ちているもの」を塞ぐ変更**だった。
 
 - **#97** `--links` … 🔴 **リンクが全ノードでバックアップから落ちていた**（`/etc` だけで vulcan 1063・zugoga 176・gomander 7）。`rclone` は `exit 0` で終わるので誰にも見えていなかった
 - **#79** `--single-transaction` … ⚠ `mysqldump` の既定は `--opt` で一貫性は元から取れており、**止まっていたのは書き込みのほう**だった。🔴 代償（MyISAM が無保護）の受け皿は #101
-- **#87** `dsn` 必須化 … ⚠⚠ **破壊的変更。**配る前に 4 台の `local.yaml` を見ること
+- **#87** `dsn` 必須化 … ⚠⚠ **破壊的変更。**配る前に 4 台の `local.yaml` を見ること。✅ **FreeBSD 3 台は通過して健在**
 
 ⚠⚠ **`WRITERSBASE-TOOLS-4` はこの版では止まらない。**原因は Drive API のクォータ（pooza/chubo2#193）。
 
-🔴 **配る順番に判断が要る。**`.rclonelink` が一度だけ増える（vulcan 約 1065・zugoga 約 200・gomander 約 40）ため、**#193 を先に片付けるほうが安全**。⚠⚠ **rclone の共有 client_id は 2026 年中に停止する**（rclone 自身が NOTICE で警告）ので、#193 は期限のある作業。
+✅ **配る順番は決着した**（2026-09-19）。`.rclonelink` が一度だけ増える（vulcan 約 1065・zugoga 約 200・gomander 約 40）ため、**#193 の影響下に無い FreeBSD 3 台（rclone 1.75.1・日次は数分）を先行させ、クォータに張り付いている vulcan と dev27 を #193 の後に回した**。⚠ 実測の増分コストは shallu で +35 分程度・一度きり。⚠⚠ **rclone の共有 client_id は 2026 年中に停止する**（rclone 自身が NOTICE で警告）ので、#193 は期限のある作業。
 
 #### リリース前レビュー: 2026-09-18（v1.6.1）
 
@@ -118,16 +124,18 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 7 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 3 件**。⚠ **未解決は 6 件**（`-7` だけ 2026-09-18 に resolved）。
 
-- 🔴 **`google_drive_backup` が vulcan で継続失敗**（`WRITERSBASE-TOOLS-4`・計 5 件／初回 2026-09-04・**直近 2026-09-19 06:42 JST**）。⚠⚠ **原因は Drive API のクォータ**（`Error 403 ... rateLimitExceeded`・1 回の実行で 6 回・8 分走って `Transferred: 0 B`）。**pooza/chubo2#193（rclone 既定の共有 client_id）そのもの**で、⚠ **#97 を入れても止まらない。**⚠ 5 件とも **vulcan・`release` は 1.6.0** ＝ **v1.6.1 が 1 台も届いていないことの裏づけ**でもある
+- 🔴 **`google_drive_backup` が vulcan で継続失敗**（`WRITERSBASE-TOOLS-4`・計 5 件／初回 2026-09-04・**直近 2026-09-19 07:59 JST**）。⚠⚠ **原因は Drive API のクォータ**（`Error 403 ... rateLimitExceeded`・1 回の実行で 6 回・8 分走って `Transferred: 0 B`）。**pooza/chubo2#193（rclone 既定の共有 client_id）そのもの**で、⚠ **#97 を入れても止まらない。**⚠ 5 件とも **vulcan・`release` は 1.6.0** ＝ **vulcan にだけ v1.6.1 が届いていない**ことの裏づけ（FreeBSD 3 台は 09-18 に上がっている）。⚠ **捕捉時刻は実行の終わり**で、この回は 06:42 に始まり 07:59 に落ちている
 - ⚠⚠ **`-4` の原因は Sentry の画面からは読めない。**メッセージが **1024 文字で切り詰められ**、先頭から `Can't follow symlink` の `NOTICE` が埋め尽くすため、**末尾にあるはずの `rateLimitExceeded` が 1 件も見えない**（2026-09-19 に全 5 件の `metadata.value` を実測）。🔴 **Sentry の本文だけを見て原因を決めない** — 実機の rclone ログに当たること。**この見え方こそが「symlink が原因」という誤読（#99・#106 で訂正）を生んだ経路**
 - ⚠⚠ **`Can't follow symlink` は失敗の原因ではなかった**（2026-09-18 に実測して訂正）。rclone は **1.60.1 / 1.75.1 とも NOTICE を出して `exit 0`** で終わる。🔴 **つまりリンクは全ノードで黙ってバックアップから落ちていた**（`/etc` だけで vulcan 1063・zugoga 176・gomander 7）。#97 の `--links` は**その静かな欠落**を塞ぐもので、Sentry の失敗を止めるものではない
 - ✅ **`postgresql_dump` が shallu / zugoga で継続失敗していた**（`WRITERSBASE-TOOLS-7`・8 件／初回 2026-09-17・最後 2026-09-18・**2026-09-18 に解消**）。`zstd: error 25 : Write error : No space left on device`。⚠⚠ **道具の側は正しい** — 失敗を拾い（#63）、壊れた `.zst` を消し、**ローテーションを走らせずに**（#62）終わっており、既存の 7 世代は無事。原因は 2026-09-13 の backups 縮小（pooza/chubo2#233）で撮った `zfs` スナップショット `@move1` / `@move2` が残り、**保持期間を過ぎて消したはずのダンプを掴んだまま** 16.5G / 11.9G を占めていたこと。⚠ 起票は pooza/chubo2#242（直すのは向こうのディスク）。**ただし 09-17 / 09-18 のダンプは取れていない**。✅ **2026-09-18 に chubo2#242 がクローズ**され、`-7` も **resolved**（`lastSeen` 09-17T19:44Z 以降は再発なし）。⚠ resolve は chubo2 の `sentry-resolve.rb`（#242 の副産物）で Issue 単位に打てる
 - ⚠ **`mastodon_follow` が `account: info` で `No such account`**（`WRITERSBASE-TOOLS-3`・1 回・2026-09-04）。⚠ 2026-09-15 の棚卸しでは意図的な 3 件にも実害にも数えていなかった**取りこぼし**。実機の設定を見て、消えたアカウントなら node yaml から外す
 - ⚠ **`bin/wb <存在しない名前>` が `NameError: uninitialized constant WritersBase::ConfigTool` として Sentry に載る**（`WRITERSBASE-TOOLS-6`・1 回・2026-09-12）。`bin/wb.rb` の集約点がツールの失敗と打ち間違いを区別しないため。**害は無いがノイズになる**
 
-⚠⚠ **通知経路は依然として無い**（#91）。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。⚠ `-7` は **2 日間・本番 2 台でバックアップが取れていない**状態を誰も知らなかった。**monit 側にも同じ穴があった**（89% / 92% で鳴っていない・pooza/chubo2#242）。✅ **monit 側は 2026-09-18 に塞がった**（pooza/chubo2#244 ＝ alert を Uptime Kuma の push モニタへ繋いだ）。⚠ **#91 の受け皿の候補が実在するようになった** — tools の失敗も同じ経路へ寄せられるか、着手時に見る。
+⚠⚠ **道具の側は #113 で Uptime Kuma の push へ送るようになったが、これらの失敗はまだ拾われていない**（#91 は ✅ だが **1.7.0 が未出荷**で、届いているのは v1.6.1 まで）。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。⚠ `-7` は **2 日間・本番 2 台でバックアップが取れていない**状態を誰も知らなかった。**monit 側にも同じ穴があった**（89% / 92% で鳴っていない・pooza/chubo2#242）。✅ **monit 側は 2026-09-18 に塞がった**（pooza/chubo2#244 ＝ alert を Uptime Kuma の push モニタへ繋いだ）。⚠ **利用側の受け皿は pooza/chubo2#248**（open・⚠ **chubo2#227 から「Ubuntu の `reboot_required` の出口」も引き継がれている**）。
 
-⚠ **Sentry の件数をそのまま実行回数と読まない。**`-7` の 8 件は **2 台 × 2 日 × 1 日 2 回**だった。`periodic daily` が anacron と cron の両方から走っていて、**`daily` に並べた道具が 1 日 2 回実行されている**（pooza/chubo2#243）。⚠⚠ **起票時の前提は 2 つとも外れていた**（2026-09-18 に chubo2 側で実測）—— **「3 台」ではなく FreeBSD 10 台すべて**、**daily だけでなく weekly / monthly も二重**。✅ **anacron ごと外して解消済み**（chubo2 `8f3d37b`・Issue は open のまま）。⚠ **解消は 09-18 以降の話**なので、それ以前の件数は依然 2 倍で読む。
+⚠ **Sentry の件数をそのまま実行回数と読まない。**`-7` の 8 件は **2 台 × 2 日 × 1 日 2 回**だった。`periodic daily` が anacron と cron の両方から走っていて、**`daily` に並べた道具が 1 日 2 回実行されている**（pooza/chubo2#243）。⚠⚠ **起票時の前提は 2 つとも外れていた**（2026-09-18 に chubo2 側で実測）—— **「3 台」ではなく FreeBSD 10 台すべて**、**daily だけでなく weekly / monthly も二重**。✅ **anacron ごと外して解消済み**（chubo2 `8f3d37b`・**chubo2#243 は 2026-09-18 にクローズ**）。⚠ **解消は 09-18 以降の話**なので、それ以前の件数は依然 2 倍で読む。
+
+⚠⚠ **1 日 1 回にはなったが、着火時刻は今も固定ではない**（2026-09-19 に chubo2 側で実測。shallu の daily は 09-18 が 00:10・09-19 が **03:27** と 3 時間以上ずれる）。🔴 **「何時に終わるか」を前提にした監視を作らないこと** —— #91 で入れた Uptime Kuma の push モニタの interval は、これを織り込んだ値にする（受け皿は pooza/chubo2#248）。⚠ hourly（`postgresql_snapshot` / `mastodon_follow`）は数十秒で終わるので素直でよい。
 
 ### リリース前レビュー
 
