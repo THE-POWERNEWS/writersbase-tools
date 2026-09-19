@@ -27,6 +27,12 @@
 
 雑多なバッチの受け皿という性質から、**要求の出どころは chubo2 のほうが多い**。⚠ **名前から利用側を推測しないこと。**
 
+### ⚠⚠ chubo2 側で実際に走っている版は、宣言のどこにも無い（2026-09-19 実測）
+
+periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` なので、**チェックアウトを `git pull` した瞬間にその版が本番になる**。cookbook は `git` リソースを持たず、chubo2 の `drift-sweep` は itamae のリソースを・`peer-diff` は宣言を見るだけで、**どちらの視野にも版は入らない**。
+
+🔴 **「chubo2 の反映 Issue が open ＝ 1 台も届いていない」と読まないこと。**実例が #246 で、起票の翌日には **本番 FreeBSD 3 台が v1.6.1 で走っていた**（2026-09-18・[CLAUDE.md](CLAUDE.md)）。**版を知るには実機に ssh して `git describe` する**（一括で並べる形は chubo2 `docs/infra-common.md` の writersbase-tools 節）。
+
 ### 🔴 writersBASE 側は最新版が動いていない（2026-09-01 実測）
 
 - `vpn.writersbase.net` … ⚠ **名前が解決しない。**ノードファイルも雛形だけ
