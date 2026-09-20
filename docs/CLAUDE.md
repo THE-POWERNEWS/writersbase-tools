@@ -60,7 +60,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### 1.7.0 は開発中（2026-09-19 時点・⚠ **まだタグを打っていない**）
+### 1.7.0 は開発中（2026-09-20 時点・⚠ **まだタグを打っていない**）
 
 `/package/version` は **1.7.0**（#109 でバンプ）。⚠⚠ **出荷済みの最新は v1.6.1 のまま。**
 
@@ -71,7 +71,36 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #104 | 「無ければ既定」風の書き方が機能していない | ✅ #112（`Config#lookup`） |
 | #91 | 失敗に気づける通知経路が無い | ✅ #113（⚠ **受け皿は pooza/chubo2#248**） |
 | #101 | `mysql_dump` が MyISAM の混在を検出しない | ✅ **道具は直さない**（THE-POWERNEWS/writersbase-env#171 へ依頼） |
-| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ⏳ **上流待ち**（pooza/ginseng-core#645 が open） |
+| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ➡️ **1.7.1 へ送った**（⏳ 上流 pooza/ginseng-core#645 が open） |
+| #120 | `google_drive_backup` の `path` 既定が共有の宛先を指す | 🔴 **リリース前レビューの赤**（未着手） |
+| #121 | 資格情報がコマンドラインに載る | 🔴 **リリース前レビューの赤**（未着手） |
+
+#### リリース前レビュー: 2026-09-20（1.7.0）
+
+⚠ **`main`（v1.6.1 + 28 コミット）の `app/lib` 配下を単一セッションで全部読んだ。**赤 2・黄 3・緑 2。
+⚠⚠ **赤 2 件はどちらも「1 行書き忘れたら壊れる」型**で、#67 / #87 で潰したはずの
+**「それらしい既定」と「秘密の置き場」**が別の場所に残っていた。
+
+| | Issue | 観点 |
+| --- | --- | --- |
+| 🔴 赤 | [#120](https://github.com/THE-POWERNEWS/writersbase-tools/issues/120) `google_drive_backup` の `path` 既定が共有の宛先を指す | 破壊的操作・設定の既定値 |
+| 🔴 赤 | [#121](https://github.com/THE-POWERNEWS/writersbase-tools/issues/121) 資格情報がコマンドラインに載り、非 root から読める | セキュリティ |
+| 🟡 黄 | [#122](https://github.com/THE-POWERNEWS/writersbase-tools/issues/122) 未対応プラットフォームで黙って倒れる 2 か所 | エラー処理 |
+| 🟡 黄 | [#123](https://github.com/THE-POWERNEWS/writersbase-tools/issues/123) `access_log_compress` の既定が生ログに当たりうる | 破壊的操作・観測性 |
+| 🟡 黄 | [#124](https://github.com/THE-POWERNEWS/writersbase-tools/issues/124) 同じ処理が 2 か所に写経されている | 規約整合性 |
+
+- **#120** … `path: /backup` にホスト名が入らないので、**既定のまま 2 台目を走らせると 1 台目の `/backup/etc` を `rclone sync` が消す。**⚠ 4 台とも `local.yaml` で上書きしているので事故っていないだけ。⚠⚠ **`rsync_backup` の `dest`（#67）・`postgresql_snapshot` の `dsn`（#87）と同じ理由がここにだけ効いていない**
+- **#121** … ⚠⚠ **`CommandLine#secrets`（#65）はログと例外を伏せるが、`ps` は伏せない。**実測で **vulcan は非 root（`misskey`）から root の `/proc/1/cmdline` が読め**、shallu は `security.bsd.see_other_uids: 1`。🔴 **`Heartbeat` の push URL は 1.7.0 で新しく入れた経路**。⚠ `misskey_emoji_sync` の `--webhook` は tootctl の仕様に縛られるので**道具側だけでは閉じない**
+- ⚠ **#119（失敗時にログが残らない）も赤だが、1.7.1 へ送ると判断した。**道具の欠陥ではあるが、**出荷を止めるより先に 1.7.0 の push モニタを届けるほうが効く**（いま本番に居るのは v1.6.1 で、失敗は誰も見ていない）
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- `Environment.rake?` / `test?` が `rescue false` 修飾子で**例外を丸ごと握っている**。⚠ 環境判定なので実害は薄いが、同じ書き方を増やさないこと
+- ⚠ **テストの無い道具が 5 つ**（`mastodon_follow` / `mastodon_media_cleanup` / `reboot_required` / `service_restart` / `help`）。⚠⚠ **`reboot_required` は #122 の当事者**なので、直すときにテストを足す
+
+⚠ **パスワードの扱いは正しかった。**`MYSQL_PWD` / `PGPASSWORD` は環境変数経由で、
+**コマンドラインには載っていない**（`/proc/<pid>/environ` は所有者と root しか読めない）。
+⚠ ログ側も `/logger/mask_fields` でキーごと落ちており、実機の `command:` 行は `"env":{}` と出る（実測）。
 
 ⚠⚠ **1.7.0 は「配布物が変わる」リリース**になった。#68 で periodic スクリプトの中身が変わるので、⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ 従来どおり `bundle install` し続ける）。詳細は [deployment.md](deployment.md) の「1.7.0 を配るときに知っておくこと」。
 
