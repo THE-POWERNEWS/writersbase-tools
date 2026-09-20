@@ -46,5 +46,30 @@ module WritersBase
 
       assert_equal([], @tool.send(:excludes))
     end
+
+    # ⚠⚠ `rclone sync` は宛先を source に合わせるので、**宛先が定まらないまま
+    # 走らせない**（#120）。🔴 既定が `/backup` だったころは、path を書き忘れた
+    # 2 台目が 1 台目と同じ `gdrive:/backup/etc` へ sync して、先に置かれていた
+    # ぶんを消していた。
+    def test_execute_without_path
+      omit('path が設定されている') if config?('/google_drive_backup/path')
+
+      assert_raise(Ginseng::ConfigError) {@tool.exec}
+    end
+
+    # ⚠ `path: ''` のような空値も、キーが無いのと同じ形で落ちること
+    def test_execute_with_blank_path
+      config['/google_drive_backup/path'] = ''
+
+      assert_raise(Ginseng::ConfigError) {@tool.exec}
+    end
+
+    # ⚠ remote も同じ扱い。⚠⚠ **既定を持つ側だが、空にされたら落とす**
+    def test_execute_with_blank_remote
+      config['/google_drive_backup/path'] = '/backup/example.jp'
+      config['/google_drive_backup/remote'] = ''
+
+      assert_raise(Ginseng::ConfigError) {@tool.exec}
+    end
   end
 end

@@ -2,6 +2,20 @@ module WritersBase
   class GoogleDriveBackupTool < Tool
     def exec(args = {})
       result = {success: [], failure: []}
+      # ⚠⚠ `rclone sync` は**宛先を source に合わせる**（宛先にしかないものを消す）道具
+      # なので、宛先が定まらないまま走らせない。⚠ ソースごとの失敗にはせず、
+      # 設定の誤りとして 1 件で落とす（`rsync_backup` の dest と同じ扱い・#67）。
+      #
+      # 🔴 **以前の既定 `/backup` はホスト名を含まなかった。**宛先は
+      # `#{remote}:#{File.join(path, src)}` なので、path を書き忘れた 2 台目は
+      # `gdrive:/backup/etc` ＝ **1 台目と同じ場所**へ sync し、先に置かれていた
+      # ぶんを削除する（#120）。⚠⚠ **`--links`（#97）以降は `.rclonelink` も
+      # まとめて入れ替わる。**
+      #
+      # ⚠ キーが無ければ remote / path 自身が ConfigError を投げ、`path: ''` の
+      # ような空値はこの blank? が拾う。**どちらも同じ形で落ちる**（#87 と同じ）。
+      raise Ginseng::ConfigError, "'/#{underscore}/remote' not found" if remote.blank?
+      raise Ginseng::ConfigError, "'/#{underscore}/path' not found" if path.blank?
       sources.each do |src|
         sync(src, result)
       rescue => e
