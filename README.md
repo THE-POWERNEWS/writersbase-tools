@@ -300,7 +300,7 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 `bin/tootctl emoji sync <origin> --no-dry-run` を実行します。`webhook`を設定すると、増えた絵文字の告知をそのURLへSlack互換のペイロードで投稿します（モロヘイヤのアカウント別Webhookを想定）。
 
-⚠ **Webhook URLはそれ自体が資格情報**なので、`local.yaml`側に置いてください。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
+⚠ **Webhook URLはそれ自体が資格情報**なので、`local.yaml`側に置いてください。🔴 **ログと例外では伏せていますが、実行中は`ps`から読めます**（`--webhook <url>`としてtootctlの引数に載るため・#127）。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
 
 ### google_drive_backup
 

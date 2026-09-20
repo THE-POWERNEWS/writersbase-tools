@@ -22,41 +22,68 @@ module WritersBase
     # 🔴 成功時も送る。push モニタは「途切れたら DOWN」という向きなので、
     # 成功を送らないと「走った」ことが伝わらない（#91）
     def test_up_sends_status_up
-      args = @heartbeat.up.args
-
-      assert_equal('curl', args.first)
-      assert_include(args, 'status=up')
-      assert_include(args, 'msg=OK')
-      assert_equal(File.join('https://uptime.b-shock.org/api/push', TOKEN), args.last)
+      assert_equal({status: 'up', msg: 'OK'}, @heartbeat.up)
     end
 
     def test_down_sends_status_down
-      args = @heartbeat.down('postgresql_dump が 1 件失敗しました').args
+      query = @heartbeat.down('postgresql_dump が 1 件失敗しました')
 
-      assert_include(args, 'status=down')
-      assert_include(args, 'msg=postgresql_dump が 1 件失敗しました')
+      assert_equal('down', query[:status])
+      assert_equal('postgresql_dump が 1 件失敗しました', query[:msg])
     end
 
-    # ⚠⚠ push URL はそれ自体が資格情報。ログにも例外にも出さない（#65 と同じ経路）
-    def test_url_is_masked_in_log
-      command = @heartbeat.up
+    # ⚠⚠ **push URL はそれ自体が資格情報で、トークンはパスに入る（#91）。**
+    # 🔴 **以前は curl の引数に載せていたので `ps` から読めた（#121）。**
+    # いまは Ruby 側から送るので、**どのプロセスの引数にも載らない。**
+    def test_token_is_not_passed_as_argument
+      query = @heartbeat.up
 
-      assert_not_match(Regexp.new(TOKEN), command.masked(command.to_s))
+      assert_kind_of(Hash, query)
+      assert_not_match(Regexp.new(TOKEN), query.to_s)
+    end
+
+    # ⚠ ログに出る経路（Ginseng::HTTP#log の `url:`）でトークンが伏せられること。
+    # ⚠⚠ **マスクの正本は Ginseng::Masking** なので、道具側で同等品を書かず
+    # `/logger/mask_url_paths` で足す（#121）。
+    def test_url_is_masked_in_log
+      entry = Logger.new.send(:create_entry, {method: :GET, url: @heartbeat.send(:url)})
+
+      assert_not_match(Regexp.new(TOKEN), entry)
+      assert_match(%r{/api/push/}, entry)
+    end
+
+    # ⚠ 例外の本文には URL がそのまま載る（HTTParty / GatewayError）
+    def test_error_message_is_masked
+      masked = @heartbeat.send(:masked, "Bad response 403 (#{@heartbeat.send(:url)})")
+
+      assert_not_match(Regexp.new(TOKEN), masked)
+    end
+
+    # ⚠⚠ 空のトークンで gsub すると 1 文字ごとに印が挟まる
+    def test_masked_without_token
+      config.delete('/heartbeat/tokens/postgresql_dump')
+
+      assert_equal('plain text', @heartbeat.send(:masked, 'plain text'))
+    end
+
+    # ⚠⚠ **再送しない。**`down` は Sentry へ送るより手前で呼ばれるので、
+    # 通知が詰まっているときに失敗の報告そのものが遅れる（#121）
+    def test_http_does_not_retry
+      assert_equal(1, @heartbeat.send(:http).retry_limit)
     end
 
     # ⚠ Kuma の msg は一覧に出る。長い stderr を丸ごと送らない
     def test_message_is_summarized
-      args = @heartbeat.down("#{'a' * 500}\n\nbbb").args
-      msg = args.find {|arg| arg.to_s.start_with?('msg=')}
+      query = @heartbeat.down("#{'a' * 500}\n\nbbb")
 
-      assert_true(msg.length <= Heartbeat::MESSAGE_LIMIT + 4)
+      assert_true(query[:msg].length <= Heartbeat::MESSAGE_LIMIT)
     end
 
     # ⚠ 失敗の本文には資格情報が載りうる。Sentry へ送る前と同じ網を通す（#37 / #65）
     def test_message_is_scrubbed
-      args = @heartbeat.down('MYSQL_PWD=hunter2secret mysqldump ...').args
+      query = @heartbeat.down('MYSQL_PWD=hunter2secret mysqldump ...')
 
-      assert_not_match(/hunter2secret/, args.join(' '))
+      assert_not_match(/hunter2secret/, query[:msg])
     end
   end
 end

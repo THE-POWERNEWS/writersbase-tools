@@ -6,6 +6,10 @@ http:
   retry:
     limit: 3
     seconds: 1
+  # ⚠⚠ **`Ginseng::HTTP#initialize` が無条件に読む**ので、欠けていると
+  # `HTTP.new` の時点で ConfigError になる（#121 で `Heartbeat` が初めて使って発覚）。
+  timeout:
+    seconds: 20
 # 実行結果を Uptime Kuma の push モニタへ送る（#91）。
 # 🔴 **成功時も送る。**push モニタは「ハートビートが途切れたら DOWN」という向きなので、
 # **そもそも走らなかった**（宣言漏れ・ノード停止）も拾える。
@@ -26,6 +30,9 @@ logger:
   # `/mulukhiya/webhook/` だけなので、素の `/webhook/` も足す。
   mask_url_paths:
     - /webhook/
+    # ⚠ Uptime Kuma の push URL もパスにトークンが載る（#91）。
+    # `Ginseng::HTTP#log` が `url:` を出すので、ここで伏せる（#121）。
+    - /api/push/
 package:
   authors:
     - Tatsuya Koishi
