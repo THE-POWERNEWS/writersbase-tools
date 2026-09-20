@@ -7,6 +7,11 @@ module WritersBase
   # **こちらは `--webhook <url>` として引数に載せるので、CommandLine が実行のたびに
   # ログへ丸ごと出していた**（#65）。`secrets:` へ渡して、ログ・例外の双方で伏せる。
   # ⚠ 結果（`exec` の戻り値）には従来どおり載せない（`announced` の真偽だけ）。
+  #
+  # 🔴 **ただし `secrets:` が伏せるのはログと例外で、`ps` は伏せない**（#121）。
+  # `--webhook <url>` はプロセスの引数に載るので、同居する非 root ユーザから
+  # 実行中は読める（2026-09-20 に実測）。⚠⚠ **tootctl の引数仕様に縛られるので
+  # 道具側だけでは閉じない** —— 受け皿は **#127**。
   class MisskeyEmojiSyncTool < Tool
     include MastodonTootctl
 
