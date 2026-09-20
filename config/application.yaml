@@ -148,7 +148,11 @@ rsync_backup:
     - '*.tmp'
 google_drive_backup:
   remote: gdrive
-  path: /backup
+  # ⚠⚠ **ノードごとに必ず設定する。**未設定なら ConfigError で落ちる（#120）。
+  # 以前は `/backup` を既定に置いていたが、**ホスト名を含まない**ため、
+  # 宣言を書き忘れたノードが先に置いた別ノードのバックアップを
+  # `rclone sync` で消す形になっていた。⚠ `/backup/<FQDN>` のように書くこと。
+  path: null
   # ⚠⚠ シンボリックリンクを `<名前>.rclonelink` として保存する（#97）。
   # 🔴 渡さないと rclone はリンクを落とす。**しかも exit 0 で終わる**ので気づけない
   # （1.60 / 1.75 とも同じ挙動であることを 2026-09-18 に実測）。

@@ -304,15 +304,19 @@ Sentry は例外が起きた行の前後を丸ごと送るため、メッセー�
 
 ### google_drive_backup
 
+⚠⚠ **`rclone sync` を使います。**宛先を間違えると、宛先側の余剰ファイルが消えます。
+
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
 | remote | rcloneリモート名 | gdrive |
-| path | Google Drive上のバックアップ先パス | /backup |
+| path | Google Drive上のバックアップ先パス（⚠ **ホスト名を含めること**） | ⚠ **null（必須）** |
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
 | links | シンボリックリンクを`.rclonelink`として保存する（`--links`） | true |
 
 事前に`rclone config`でGoogle Driveリモートを設定しておく必要があります。
+
+⚠⚠ **`path`には必ずホスト名を含めてください**（`/backup/shallu.b-shock.co.jp`）。宛先は`<remote>:<path>/<source>`で組み立てられ、**ホスト名はどこにも自動で入りません**。🔴 以前の既定`/backup`のまま2台目を走らせると、宛先が1台目と同じ`gdrive:/backup/etc`になり、**先に置かれていたぶんを`rclone sync`が削除します**（#120）。未設定・空文字のときは実行時にエラーにします。
 
 ⚠⚠ **`links`を`false`にするとシンボリックリンクがバックアップから落ちます。**🔴 **しかも`rclone`は`exit 0`で終わります**（`NOTICE`を出すだけ）。ツール側は成功として扱うので、**落ちたことに誰も気づけません**（#97）。⚠ rclone 1.60.1 / 1.75.1 とも同じ挙動であることを実測済みです。⚠ `true`にすると宛先に`.rclonelink`というテキストファイルが生えます。後から`false`へ戻すと、`rclone sync`が宛先のそれらを削除します。
 
