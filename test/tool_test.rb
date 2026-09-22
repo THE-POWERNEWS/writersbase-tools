@@ -114,5 +114,21 @@ module WritersBase
 
       assert_match(/exit 3/, @tool.send(:command_error, command))
     end
+
+    # ⚠ root_group も nil を返すと、chown が group を変えずに成功する（#122）
+    def test_root_group_unsupported_platform
+      @tool.define_singleton_method(:platform_family) {Environment.platform_family(:plan9)}
+
+      assert_raise(RuntimeError) {@tool.send(:root_group)}
+    end
+
+    def test_root_group
+      @tool.define_singleton_method(:platform_family) {:freebsd}
+
+      assert_equal('wheel', @tool.send(:root_group))
+      @tool.define_singleton_method(:platform_family) {:debian}
+
+      assert_equal('adm', @tool.send(:root_group))
+    end
   end
 end

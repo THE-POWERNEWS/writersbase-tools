@@ -163,13 +163,19 @@ module WritersBase
       return super
     end
 
+    # ⚠ 未対応のプラットフォームで `nil` を返すと、`FileUtils.chown('root', nil, path)` は
+    # **group を変えずに成功する**（#122）。判定は `Environment.platform_family` が例外にする。
     def root_group
-      case Environment.platform
-      when :free_bsd, :freebsd
+      case platform_family
+      when :freebsd
         return 'wheel'
       when :debian
         return 'adm'
       end
+    end
+
+    def platform_family
+      return Environment.platform_family
     end
   end
 end

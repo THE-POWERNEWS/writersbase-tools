@@ -90,36 +90,29 @@ module WritersBase
 
     def dest(period, tool, index = 900)
       basename = "#{Package.name}-#{tool}".tr('_', '-')
-      case platform
-      when :free_bsd, :freebsd
+      case Environment.platform_family(platform)
+      when :freebsd
         return File.join(destroot(period), "#{index}.#{basename}.rb")
       when :debian
         return File.join(destroot(period), basename)
       end
-      raise unsupported_platform_error
     end
 
     def destroot(period)
-      case platform
-      when :free_bsd, :freebsd
+      case Environment.platform_family(platform)
+      when :freebsd
         return File.join('/usr/local/etc/periodic', period.to_s)
       when :debian
         return "/etc/cron.#{period}"
       end
-      raise unsupported_platform_error
     end
-
-    def platform
-      return Environment.platform
-    end
-
-    private
 
     # ⚠ 未対応のプラットフォームでは「0 件インストールして成功」にしない。
     # 従来は dest が nil を返し、`File.write(nil, ...)` の TypeError を
     # エントリごとに握って**全滅しても終了コード 0** だった（#72）。
-    def unsupported_platform_error
-      return "未対応のプラットフォームです (#{platform.inspect})"
+    # 判定と例外は `Environment.platform_family` にある（#122）。
+    def platform
+      return Environment.platform
     end
   end
 end

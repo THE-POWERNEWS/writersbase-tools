@@ -1,5 +1,7 @@
 module WritersBase
   class RebootRequiredTool < Tool
+    DEBIAN_FLAG = '/var/run/reboot-required'.freeze
+
     def exec(args = {})
       return '再起動が必要' if reboot_required?
       return ''
@@ -11,12 +13,14 @@ module WritersBase
 
     private
 
+    # ⚠⚠ 未対応のプラットフォームで `nil`（＝「再起動は不要」）を返さない（#122）。
+    # #63 で塞いだ「uname が落ちると常に不要へ倒れる」と同じ型。
     def reboot_required?
-      case Environment.platform
-      when :free_bsd, :freebsd
+      case platform_family
+      when :freebsd
         return freebsd_reboot_required?
       when :debian
-        return File.exist?('/var/run/reboot-required')
+        return File.exist?(DEBIAN_FLAG)
       end
     end
 
