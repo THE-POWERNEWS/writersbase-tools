@@ -127,7 +127,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 **緑（起票せず・次に触るときの申し送り）**
 
 - `Environment.rake?` / `test?` が `rescue false` 修飾子で**例外を丸ごと握っている**。⚠ 環境判定なので実害は薄いが、同じ書き方を増やさないこと
-- ⚠ **テストの無い道具が 5 つ**（`mastodon_follow` / `mastodon_media_cleanup` / `reboot_required` / `service_restart` / `help`）。⚠⚠ **`reboot_required` は #122 の当事者**なので、直すときにテストを足す。✅ **#122 で `reboot_required` に足した**ので、**残りは 4 つ**
+- ⚠ **テストの無い道具が 4 つ**（`mastodon_follow` / `mastodon_media_cleanup` / `service_restart` / `help`）。⚠ レビュー時点では `reboot_required` を含む 5 つだったが、**#122 の当事者だったので直すときに足した**
 
 ⚠ **パスワードの扱いは正しかった。**`MYSQL_PWD` / `PGPASSWORD` は環境変数経由で、
 **コマンドラインには載っていない**（`/proc/<pid>/environ` は所有者と root しか読めない）。
