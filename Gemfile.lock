@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/pooza/ginseng-core.git
-  revision: b6e736db820caca781890fb134b937e7e37ca61c
-  tag: v1.23.7
+  revision: 442cf2867b3568bf37573480ce0fdccca4af4885
+  tag: v1.24.0
   specs:
-    ginseng-core (1.23.7)
+    ginseng-core (1.24.0)
       activesupport (>= 8.1.2.1)
       addressable (>= 2.9.0)
       cgi (>= 0.4.2)
