@@ -73,6 +73,10 @@ zstd:
 access_log_compress:
   dir: /var/log/nginx
   days: 1
+  # ⚠⚠ ローテート済みと分かる名前（rsyslog が日付で書く access_YYYYMMDD.log）だけに当てる。
+  # `*.log` では nginx が開いたままの error.log / access.log にも当たり、`zstd --rm` で消す（#123）
+  patterns:
+    - 'access_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].log'
 mysql_dump:
   host: 127.0.0.1
   user: root
