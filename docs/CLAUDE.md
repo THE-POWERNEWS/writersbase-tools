@@ -69,7 +69,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #119 | 失敗したときだけログが残らない | ✅ `Tool#abbreviate`（先頭 200 ＋ 末尾 700 文字）。⚠ **配るまで効かない** |
 | #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | 未着手（#121 の積み残し） |
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | ✅ `Environment.platform_family` へ寄せて例外にした（`Installer` も同じ判定を使う） |
-| #123 | `access_log_compress` の既定が生ログに当たりうる | 未着手 |
+| #123 | `access_log_compress` の既定が生ログに当たりうる | ✅ 既定を `access_YYYYMMDD.log` に絞り（`patterns`）、失敗を 1 件ずつログへ出す |
 | #124 | 同じ処理が 2 か所に写経されている | 未着手 |
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **ginseng-core を v1.24.0 へ上げて上書きを外した**（下記） |
 
