@@ -2,6 +2,10 @@ module WritersBase
   class Tool
     attr_reader :logger, :config
 
+    # 失敗の文字列に残す先頭・末尾の文字数（`abbreviate`・#119）
+    ERROR_HEAD = 200
+    ERROR_TAIL = 700
+
     def exec(args = {})
       raise Ginseng::ImplementError, "'#{__method__}' not implemented"
     end
@@ -122,8 +126,23 @@ module WritersBase
     # 「どのコマンドがどう落ちたか」は必ず残す。
     def command_error(command)
       # ⚠ 資格情報は stderr にも載りうるので、例外へ移すときも伏せる（#65）
-      return command.masked(command.stderr.strip) if command.stderr.present?
+      # ⚠⚠ **伏せてから切る。**逆にすると、資格情報の途中で切れた断片が伏せられずに残る
+      return abbreviate(command.masked(command.stderr.strip)) if command.stderr.present?
       return "#{command.args.first} が異常終了しました (#{exit_status_text(command)})"
+    end
+
+    # ⚠⚠ **stderr を丸ごと載せると、原因が残らない**（#119）。実測で、journald（Ubuntu）は
+    # 300 KB を超える行を**行ごと捨て**、FreeBSD の syslogd は **8,087 バイト**で、
+    # Sentry は **1,024 文字**で切り詰める。🔴 3 経路とも**先頭しか残らない**が、
+    # rclone は**原因を末尾に書く**（`--verbose` の NOTICE が先頭を埋め、
+    # `rateLimitExceeded` が 1 件も見えなかった ＝ #99 の誤読の経路）。
+    # ⚠ 頭だけ切ると今と同じになるので、**先頭と末尾を両方残す**。
+    # ⚠ 合計は Sentry の 1,024 文字を下回る値にしてある。`failure_error` が付ける
+    # 前置き（`… が 1 件失敗しました (src: /etc, error: `）を足しても、失敗 1 件なら末尾まで見える。
+    def abbreviate(text, head: ERROR_HEAD, tail: ERROR_TAIL)
+      return text if text.length <= head + tail
+      omitted = text.length - head - tail
+      return "#{text[0, head]}\n…（#{omitted} 文字省略）…\n#{text[-tail..]}"
     end
 
     # ⚠ Ginseng::CommandLine#status は Process::Status#to_i の生値で、終了コードでは
