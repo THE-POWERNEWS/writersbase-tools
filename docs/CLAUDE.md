@@ -23,7 +23,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - `.rubocop.yml` は `inherit_gem` の上に **`TargetRubyVersion: 3.3`** だけを置く。⚠ **CI が ruby 3.3.10 で回る**ため（配る既定は 3.4）。CI の版を上げたらここも上げる
 - `Gemfile` の `ginseng-style` は **SHA 固定**（`ed862dcf…` ＝ v1.1.12）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
 - CI は ginseng-style の composite action（`ruby-check`）を使う（#69）。⚠⚠ **参照の SHA は `Gemfile` の ginseng-style と同じものに揃える。**版を上げるときは 2 か所を同時に書き換える
-- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v1.23.7'`・#94 ＝ pooza/ginseng-style#103 のロールアウト）。⚠ **移行で revision は 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
+- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v1.24.0'`・#82 で v1.23.7 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
 - ⚠⚠ **同じ「固定」でも ginseng-style は SHA、ginseng-core は tag。矛盾ではない。**ginseng-style は **CI で実行されるコード**（composite action。`release-tag` は呼び出し側の `contents: write` を受け取る）なので、**付け替え可能なタグ自体が脅威**になる（pooza/ginseng-style#75）。ginseng-core は**実行時の依存**で、要件は「いつ版が動くかを人が決めること」だけなので tag で足りる（#103 も「`tag:`（または SHA）」と書いている）。⚠ **どちらかに揃えようとして倒さないこと**
 
 ### 保留中の依存の更新
@@ -71,10 +71,10 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | 未着手 |
 | #123 | `access_log_compress` の既定が生ログに当たりうる | 未着手 |
 | #124 | 同じ処理が 2 か所に写経されている | 未着手 |
-| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **着手可能になった**（下記） |
+| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **ginseng-core を v1.24.0 へ上げて上書きを外した**（下記） |
 
-- ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。⚠⚠ **こちらの `Gemfile` は `tag: 'v1.23.7'` のままなので、まだ 1 バイトも届いていない。**#82 は `tag: 'v1.24.0'` へ上げる PR と同時にやる
-  - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env` が `nil` / 数値を文字列に変えていたのを直した件（#646）は、`MYSQL_PWD` / `PGPASSWORD` を env で渡している経路に**効きうる**ので、上げたら dump 系を実機で 1 回ずつ回す
+- ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
+  - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、tools で `secrets:` を渡しているのは **`misskey_emoji_sync` だけ**（dump 系は渡していない）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
 - ⚠ **ginseng-style は v1.1.13 が出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 1 版遅れ。**中身は rubocop 1.91.0 への追随だけで、新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
 
 ### v1.7.0 は出荷済み（2026-09-20 タグ）—— ⚠⚠ **まだ 1 台にも配っていない**
