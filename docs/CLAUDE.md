@@ -102,7 +102,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #104 | 「無ければ既定」風の書き方が機能していない | ✅ #112（`Config#lookup`） |
 | #91 | 失敗に気づける通知経路が無い | ✅ #113（⚠ **受け皿は pooza/chubo2#248**） |
 | #101 | `mysql_dump` が MyISAM の混在を検出しない | ✅ **道具は直さない**（THE-POWERNEWS/writersbase-env#171 へ依頼） |
-| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ➡️ **1.7.1 へ送った**（⏳ 上流 pooza/ginseng-core#645 が open） |
+| #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ➡️ **1.7.1 へ送った**（⚠ 1.7.0 出荷時点では上流 pooza/ginseng-core#645 が open。✅ **2026-09-20 にマージ・v1.24.0**＝ 1.7.1 の節） |
 | #120 | `google_drive_backup` の `path` 既定が共有の宛先を指す | ✅ #126（⚠ **破壊的変更**） |
 | #121 | 資格情報がコマンドラインに載る | ✅ #128（⚠ `--webhook` は **#127** へ送り） |
 
@@ -138,7 +138,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - **#101 は「道具は直さない」で決着。**⚠ **MyISAM を積極的に使う方針は無い**ので、居たらそれ自体が事故 —— 道具が黙って `--lock-tables` へ戻すより、**テーブルを InnoDB へ直すのが正しい対処**。⚠⚠ **実測も是正も writersBASE のインフラ作業**なので、THE-POWERNEWS/writersbase-env#171 として依頼した
   - ⭕ 事前調査では**自分たちのコードに `MyISAM` は 0 件**、テーブルを作るプラグインは `user-access-manager` だけで **`ENGINE=` 句を持たない**（＝ サーバ既定の InnoDB）。⚠ **残る経路は「持ち込んだダンプ」だけ**（`mysqldump` は `ENGINE=MyISAM` をそのまま書き出す）
   - ⚠ 検査クエリは **`table_type = 'BASE TABLE'` で絞ること。**VIEW は `engine` が InnoDB にならないので、付けないと誤検出する
-- **#82 は上流（pooza/ginseng-core）へ `CommandLine#secrets` が入ってから。**✅ **2026-09-19 に pooza/ginseng-core#642 として起票し、同日 PR #645 も出した**（`feat/642-mask-command-secrets`・3 コミット・**CI は 3.3 / 3.4 / 4.0 とも緑**・2026-09-20 時点で open）。形は #642 に転記してある（`secrets` / `masked` / `log_exec`。⚠ **既定は空配列なので breaking ではない**）。⚠ **`waiting:pr` はあえて付けていない** —— 忘れたときに誰も動けなくなるため。⚠⚠ **こちらの `Gemfile` は tag 固定なので、PR がマージされても、版を上げる PR を通すまで 1 バイトも届かない。1.7.0 はこれを待たない**
+- **#82 は上流（pooza/ginseng-core）へ `CommandLine#secrets` が入ってから。**✅ **2026-09-19 に pooza/ginseng-core#642 として起票し、同日 PR #645 も出した**（`feat/642-mask-command-secrets`・3 コミット・**CI は 3.3 / 3.4 / 4.0 とも緑**・✅ **2026-09-20 にマージされ v1.24.0 で出た**＝ 1.7.1 の節）。形は #642 に転記してある（`secrets` / `masked` / `log_exec`。⚠ **既定は空配列なので breaking ではない**）。⚠ **`waiting:pr` はあえて付けていない** —— 忘れたときに誰も動けなくなるため。⚠⚠ **こちらの `Gemfile` は tag 固定なので、PR がマージされても、版を上げる PR を通すまで 1 バイトも届かない。1.7.0 はこれを待たない**
 - ⚠ **#104 は「手元で閉じる」を選んだ。**`Config#lookup(key, default)` に寄せ、**fail closed にしたい設定（`postgresql_snapshot` の `target` / `dsn`）は素の `config[...]` のまま**にしてある。⚠⚠ **#82 とは判断が逆**（あちらは本体へ寄せる側）なので、混ぜないこと
 
 ### v1.6.1（2026-09-18 タグ）—— ⚠ **いま本番 FreeBSD 3 台で走っているのはこれ**
