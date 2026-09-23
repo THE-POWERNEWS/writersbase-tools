@@ -18,12 +18,20 @@
 
 ⚠ **「いま使われていない」を「要らない」と読み替えないこと。** 上記の前提を踏まえずに撤去や縮小を提案しない。
 
+### ⚠ 境界は「writersBASE 由来か」ではなく「ドメインを触るか」
+
+この節の見出しに引きずられて、**writersBASE 由来というだけで締め出さないこと。** 締め出しの理由は上記のとおり「Ruby でドメインを触るとスキーマを二重に持つ」ことであって、出どころではない。
+
+サーバの状態を読むだけの道具は、writersBASE 由来でもここに収まる。実例が **#138**（WordPress の自動更新が当たっていないノードを検出する）で、読むのは `wp-includes/version.php` というテキストファイルと更新 API だけ、ドメインのデータには触らない。`reboot_required` と同じ層にいる。
+
+この線で見ると、証明書の期限・ディスクの空き・`wp-cron` の滞留あたりも同様に収まる。
+
 ## 実際の利用者は chubo2 のフリート
 
 | 利用側 | 何に使っているか | 状態 |
 | --- | --- | --- |
 | [pooza/chubo2](https://github.com/pooza/chubo2)（Mastodon / Misskey フリート） | 日次・毎時のバックアップ、ZFS スナップショット、ログ圧縮、`service_restart`、tootctl 系保守 | **主たる利用者。**本番 4 台（FreeBSD 3 + Ubuntu 1）＋ステージング 4 台で稼働中 |
-| [THE-POWERNEWS/writersbase-env](https://github.com/THE-POWERNEWS/writersbase-env) | ⚠ `tools.enable` が真なのは **`vpn` と `wiki` の 2 ノードだけ**（アプリのノードはすべて false） | 🔴 **どこでも最新版が動いていない**（下記） |
+| [THE-POWERNEWS/writersbase-env](https://github.com/THE-POWERNEWS/writersbase-env) | ⚠ `tools.enable` が真なのは **`dev1`（明示）と `vpn`（既定）の 2 ノードだけ**。`wiki` は明示的に false、`dev2` / `staging` も false | 🔴 **どこでも最新版が動いていない**（下記） |
 
 雑多なバッチの受け皿という性質から、**要求の出どころは chubo2 のほうが多い**。⚠ **名前から利用側を推測しないこと。**
 
@@ -33,11 +41,21 @@ periodic の各スクリプトは `cd <チェックアウト> && bin/wb <tool>` 
 
 🔴 **「chubo2 の反映 Issue が open ＝ 1 台も届いていない」と読まないこと。**実例が #246 で、起票の翌日には **本番 FreeBSD 3 台が v1.6.1 で走っていた**（2026-09-18・[CLAUDE.md](CLAUDE.md)）。**版を知るには実機に ssh して `git describe --tags` する**（⚠ **`--tags` は必須**。理由は [CLAUDE.md](CLAUDE.md)。一括で並べる形は chubo2 `docs/infra-common.md` の writersbase-tools 節）。
 
-### 🔴 writersBASE 側は最新版が動いていない（2026-09-01 実測）
+### 🔴 writersBASE 側は最新版が動いていない（2026-09-23 実測）
 
-- `vpn.writersbase.net` … ⚠ **名前が解決しない。**ノードファイルも雛形だけ
-- `wiki.writersbase.net` … 稼働中だが **2025-05-21 の版（`a6aaf78`）で止まっている**（`main` まで 93 コミット）
+| ノード | `tools.enable` | 実機で走っている版 |
+| --- | --- | --- |
+| `dev1.writersbase.net` | **真**（2026-09-07 に明示） | `v1.5.2-48-gd3500df` … **`main` まで 81 コミット**（最新タグは v1.7.0） |
+| `vpn.writersbase.net` | 真（既定） | ⚠ **名前が解決しない。**ノードファイルも雛形だけ |
+| `wiki.writersbase.net` | 偽（明示） | ⚠ **`v1.2.3`（`a6aaf78` / 2025-05-21）が今も走り続けている**。`main` まで 204 コミット |
+| `dev2` / `staging` | 偽 | — |
+
+⚠⚠ **`enable: false` は「走っていない」を意味しない。** wiki は偽なのに `/etc/cron.daily/writersbase-tools-*` が残っていて、16 か月前の版が毎日動いている（`rake uninstall` が走らないため。既述）。**止まっているかを知るには実機の `cron.daily` を見る。**
+
+⚠ **dev1 で立て直した（writersbase-env #158 / #159）のは「動くようになった」までで、「最新になった」ではない。** 81 コミット遅れたまま走っている。この表題の 🔴 は dev1 を含めて今も成り立つ。
+
 - ⚠ **「ついでに流す」ができない。**`--recipes=tools` は 15 か月分の更新になり、`bundle install` が Ruby 3.2.3 で走り、`rake uninstall` / `rake install` が **cron を書き換える**。そのノードのバックアップ系 cron を止めうる
+- ⚠ wiki は **24.04** で、`ginseng-core` の要求する Ruby >= 3.3 を apt から入れられない。**最新版を当てるには OS ごと上げるしかない**（`tools.enable: false` はこれが理由）
 - → **THE-POWERNEWS/writersbase-env#137** として切り出し済み。#37（Sentry）のクローズはそこまで待つ
 
 ⚠ **「失敗しても誰も気づかない」を直すための #37 が、まさに誰も気づかないまま放置されていたノードで止まっていた**という形になっている。
