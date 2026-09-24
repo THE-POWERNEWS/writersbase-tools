@@ -74,9 +74,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **ginseng-core を v1.24.0 へ上げて上書きを外した**（下記） |
 
 - ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
-  - ⚠ **ginseng-core は v1.25.0 が出ている**（2026-09-22）。取り込むかは中身を見て決める（⚠ tag 固定なので放置しても何も届かない）
+  - ⏳ **ginseng-core は v1.25.0 が出ているが、先送りにした**（2026-09-25 判断・#139）。中身は `Daemon` の pid ファイル（#643）と ginseng-style の追随だけで、**tools は常駐しないので影響しない**。次に版を上げる用事ができたときに一緒に上げる
   - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、tools で `secrets:` を渡しているのは **`misskey_emoji_sync` だけ**（dump 系は渡していない）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
-- ⚠ **ginseng-style は v1.1.13 が出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 1 版遅れ。**中身は rubocop 1.91.0 への追随だけで、新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
+- ⏳ **ginseng-style は v1.1.13 が出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 1 版遅れ。先送り**（2026-09-25・#139）。中身は rubocop 1.91.0 への追随だけで、新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
 
 ### v1.7.0（2026-09-20 タグ）—— ⚠ **本番 FreeBSD 3 台で走っているのはこれ**
 
