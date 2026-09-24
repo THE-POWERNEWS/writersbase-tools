@@ -75,8 +75,26 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 - ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
   - ⏳ **ginseng-core は v1.25.0 が出ているが、先送りにした**（2026-09-25 判断・#139）。中身は `Daemon` の pid ファイル（#643）と ginseng-style の追随だけで、**tools は常駐しないので影響しない**。次に版を上げる用事ができたときに一緒に上げる
-  - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、tools で `secrets:` を渡しているのは **`misskey_emoji_sync` だけ**（dump 系は渡していない）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
+  - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、⚠ **tools で `secrets:` を渡している道具はいま 0 本**（唯一だった `misskey_emoji_sync` も #127 で `--webhook` を引数から外した。口は `Tool#execute` / `tootctl_command` に残してある）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
 - ⏳ **ginseng-style は v1.1.13 が出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 1 版遅れ。先送り**（2026-09-25・#139）。中身は rubocop 1.91.0 への追随だけで、新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
+
+#### リリース前レビュー: 2026-09-25（1.7.1）
+
+⚠ **`main`（`2f8eb5a`）の `app/lib` 配下 33 ファイルと `bin/` を単一セッションで全部読んだ。**v1.7.0（`cba2604`）から **18 コミット**（`--no-merges`）。**赤 0・黄 1・緑 3。**⚠ 1.7.1 は**直す側のリリース**（1.7.0 のレビューで送った #119 / #122 / #123 / #124 と #127）で、新しい破壊的操作・設定の既定値の変更は `access_log_compress` の `patterns`（絞る方向）だけ。
+
+| | Issue | 観点 |
+| --- | --- | --- |
+| 🟡 黄 | [#144](https://github.com/THE-POWERNEWS/writersbase-tools/issues/144) `misskey_emoji_sync` が下書きを拾えなかったとき、告知が出ないまま成功で終わる | エラー処理・観測性 |
+
+- **#144** … tootctl（`origin/delmulin`）は `Nothing to announce.` か下書きの**どちらかを必ず出す**が、道具は「0 件」を区別しない。⚠ **いまの書式とは一致している**（`DRAFT_PATTERN` を tootctl の `say_drafts` と突き合わせた）ので止めない。⚠ `--announce` を知らない tootctl は Thor が落とすので、黙るのは**書式だけがずれた**場合
+- ⭕ **#124 の concern は挙動を変えていない。**`SnapshotRotation#exec` の「設定エラーも `failure` に積んで返す」は v1.7.0 の `PostgresqlSnapshotTool#exec` と同じ。include 側が `dump_args` / `dump_env` / `create_snapshot` を書き忘れても、**引数付きなので `Tool#method_missing` に吸われず `NoMethodError` で落ちる**（fail loud）
+- ⭕ **#127 の投稿経路**は `webhook_masked?` で「ログの `url:` が伏せられる URL」を保証してから tootctl を走らせ、失敗の文面は HTTP コードか例外クラスだけ。`mask_url` / `mask_urls_in` / `CommandLine#masked` は **v1.24.0 で public**（実物で確認）
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- `writers_base.rb` の `scrub_sentry_event` の上にあるコメントが「**いまの Gemfile.lock の ginseng-core には `mask_urls_in` がまだ無い**」のまま。⚠ **v1.24.0 には public で入っている**ので、`respond_to?` の分岐と `/sentry/scrub_patterns` 側の URL の重ね掛けは、次に触るときに整理してよい
+- `DumpRotation#delete_old_files` のコメント「`WritersBase::Logger#warn` は error へ転送される」は **#85 で撤去済みの挙動**（#124 で写経元からそのまま運んだ）
+- **`bundle update` は取り込まない。**Dependabot の open アラートは 0 件で、丸ごと上げると **sentry-ruby 7.0.0（#93 で保留）と json 3.0（メジャー）**が入る。残りは activesupport 8.1.4・regexp_parser・unicode-* の小版だけ（rubocop 1.91.0 は ginseng-style のピン＝ #139 に従う）
 
 ### v1.7.0（2026-09-20 タグ）—— ⚠ **本番 FreeBSD 3 台で走っているのはこれ**
 
