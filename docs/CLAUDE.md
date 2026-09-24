@@ -70,7 +70,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ #137（tootctl には `--announce` だけ渡し、告知は道具から POST する。⚠ 投稿の失敗は `failure` へ。**ログで伏せられない URL（パスが `mask_url_paths` に当たらないもの）は同期の前に設定エラー**）。⚠ **実機確認は zugoga で**（リリース前の実機確認） |
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | ✅ `Environment.platform_family` へ寄せて例外にした（`Installer` も同じ判定を使う） |
 | #123 | `access_log_compress` の既定が生ログに当たりうる | ✅ 既定を `access_YYYYMMDD.log` に絞り（`patterns`）、失敗を 1 件ずつログへ出す |
-| #124 | 同じ処理が 2 か所に写経されている | 未着手 |
+| #124 | 同じ処理が 2 か所に写経されている | ✅ concern へ寄せた（`TootctlCommands` / `DumpRotation` / `SnapshotRotation`）。⚠ **ツール名は変えていない**（node yaml と periodic が名前で呼ぶため）。寄せた先が使われていることを `ToolConcernsTest` で見る |
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **ginseng-core を v1.24.0 へ上げて上書きを外した**（下記） |
 
 - ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
@@ -130,7 +130,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 **緑（起票せず・次に触るときの申し送り）**
 
 - `Environment.rake?` / `test?` が `rescue false` 修飾子で**例外を丸ごと握っている**。⚠ 環境判定なので実害は薄いが、同じ書き方を増やさないこと
-- ⚠ **テストの無い道具が 4 つ**（`mastodon_follow` / `mastodon_media_cleanup` / `service_restart` / `help`）。⚠ レビュー時点では `reboot_required` を含む 5 つだったが、**#122 の当事者だったので直すときに足した**
+- ⚠ **テストの無い道具が 3 つ**（`mastodon_follow` / `service_restart` / `help`）。⚠ レビュー時点では `reboot_required` / `mastodon_media_cleanup` を含む 5 つだったが、**#122 / #124 で当事者になったので直すときに足した**
 
 ⚠ **パスワードの扱いは正しかった。**`MYSQL_PWD` / `PGPASSWORD` は環境変数経由で、
 **コマンドラインには載っていない**（`/proc/<pid>/environ` は所有者と root しか読めない）。
