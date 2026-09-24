@@ -67,7 +67,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #119 | 失敗したときだけログが残らない | ✅ `Tool#abbreviate`（先頭 200 ＋ 末尾 700 文字）。⚠ **配るまで効かない** |
-| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ #137（tootctl には `--announce` だけ渡し、告知は道具から POST する。⚠ 投稿の失敗は `failure` へ。**ログで伏せられない URL（パスが `mask_url_paths` に当たらないもの）は同期の前に設定エラー**）。⚠ **実機確認は zugoga で**（リリース前の実機確認） |
+| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ #137（tootctl には `--announce` だけ渡し、告知は道具から POST する。⚠ 投稿の失敗は `failure` へ。**ログで伏せられない URL（パスが `mask_url_paths` に当たらないもの）は同期の前に設定エラー**）。✅ **実機確認は 2026-09-25 に zugoga で**（下記。⚠ 実際の投稿までは未確認） |
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | ✅ `Environment.platform_family` へ寄せて例外にした（`Installer` も同じ判定を使う） |
 | #123 | `access_log_compress` の既定が生ログに当たりうる | ✅ 既定を `access_YYYYMMDD.log` に絞り（`patterns`）、失敗を 1 件ずつログへ出す |
 | #124 | 同じ処理が 2 か所に写経されている | ✅ concern へ寄せた（`TootctlCommands` / `DumpRotation` / `SnapshotRotation`）。⚠ **ツール名は変えていない**（node yaml と periodic が名前で呼ぶため）。寄せた先が使われていることを `ToolConcernsTest` で見る |
@@ -95,6 +95,24 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - `writers_base.rb` の `scrub_sentry_event` の上にあるコメントが「**いまの Gemfile.lock の ginseng-core には `mask_urls_in` がまだ無い**」のまま。⚠ **v1.24.0 には public で入っている**ので、`respond_to?` の分岐と `/sentry/scrub_patterns` 側の URL の重ね掛けは、次に触るときに整理してよい
 - `DumpRotation#delete_old_files` のコメント「`WritersBase::Logger#warn` は error へ転送される」は **#85 で撤去済みの挙動**（#124 で写経元からそのまま運んだ）
 - **`bundle update` は取り込まない。**Dependabot の open アラートは 0 件で、丸ごと上げると **sentry-ruby 7.0.0（#93 で保留）と json 3.0（メジャー）**が入る。残りは activesupport 8.1.4・regexp_parser・unicode-* の小版だけ（rubocop 1.91.0 は ginseng-style のピン＝ #139 に従う）
+
+#### 実機確認: 2026-09-25（1.7.1・zugoga）
+
+⚠⚠ **本番のチェックアウト（`/home/mastodon/repos/writersbase-tools`）には触れていない。**`git pull` した瞬間に periodic がその版で走るため、`main`（`c1690c1`）を **`/var/tmp` へ別に clone**し（`bundle config set --local path vendor/bundle`）、cron 相当（`sudo env -i ... LANG=C.UTF-8`）から単発で回して、終わったら消した。設定は同じ `/usr/local/etc/writersbase-tools/local.yaml` を読む。
+
+| 道具 | Issue | 回し方 | 結果 |
+| --- | --- | --- | --- |
+| `reboot_required` | #122 | `bin/wb` | ✅ exit 0（`14.5-RELEASE` 同士） |
+| `postgresql_snapshot` | #124 | `bin/wb`（本物の `zroot/pg/data`） | ✅ 1 枚作成・exit 0（余分な 1 枚は毎時の掃除が消す） |
+| `postgresql_dump` | #124 | ⚠ **`databases` を `postgres`・`dest/dir` を `/var/tmp` へ差し替え** | ✅ `zstd -t` 通過・0640 root:wheel・`command:` 行は `"env":{}` |
+| `mastodon_maintenance` | #124 | ⚠ **`commands` を `version` へ差し替え** | ✅ `TootctlCommands` → `bash -lc` の経路が通る |
+| `misskey_emoji_sync` | #127 | `bin/wb`（本物の webhook） | ✅ **実機の webhook が `webhook_masked?` を通る**（設定エラーにならない）。引数は v1.7.0 の `--webhook [FILTERED]` → **`--announce` だけ**になった |
+| `access_log_compress` | #123 | `bin/wb` | ✅ 1 日未満の `access_*.log` 2 本を正しく見送り、生きている `error/error.log` に触れない |
+
+- ⚠ **`postgresql_dump` を本物のまま回さなかった理由。**当日のダンプ（4.2 GB）と**同じ名前**に書くので、⚠⚠ **失敗すると `dump` の `rescue` が当日の正常なダンプを消す**（`FileUtils.rm_f(path)`）。日次の 1 回だけなら起きない形だが、手で 2 回目を回すときは宛先を変えること
+- ⚠ **モロヘイヤへの実際の投稿までは確かめられていない。**dry-run で取り込み待ちの絵文字が 0 件（`Nothing to announce.`）だったため。⚠ 最初に絵文字が届いた日に初めて Ruby 側の POST が本番で走る。失敗すれば `failure` として Sentry / Kuma に出る（#137）
+- ⚠ **`announced: true` が何も投稿していない回にも出た**（`webhook.present?` をそのまま載せている）。**#144 に追記**
+- ⚠ 直下の `/var/log/nginx/error.log.zst` は、**旧既定の `*.log` が生きた `error.log` を圧縮した跡**と見られる（#123 が塞いだ形の実例）
 
 ### v1.7.0（2026-09-20 タグ）—— ⚠ **本番 FreeBSD 3 台で走っているのはこれ**
 
