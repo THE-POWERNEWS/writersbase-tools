@@ -3,27 +3,38 @@ module WritersBase
   # 告知する日次タスク（pooza/mastodon#950）。
   #
   # ⚠⚠ webhookはモロヘイヤのWebhook URLで、**URL自体が資格情報**（インスタンスURI＋
-  # アカウントのトークン＋saltのSHA256）。tootctl側は失敗の文面からも伏字化して扱うが、
-  # **こちらは `--webhook <url>` として引数に載せるので、CommandLine が実行のたびに
-  # ログへ丸ごと出していた**（#65）。`secrets:` へ渡して、ログ・例外の双方で伏せる。
-  # ⚠ 結果（`exec` の戻り値）には従来どおり載せない（`announced` の真偽だけ）。
+  # アカウントのトークン＋saltのSHA256）。
   #
-  # 🔴 **ただし `secrets:` が伏せるのはログと例外で、`ps` は伏せない**（#121）。
-  # `--webhook <url>` はプロセスの引数に載るので、同居する非 root ユーザから
-  # 実行中は読める（2026-09-20 に実測）。⚠⚠ **tootctl の引数仕様に縛られるので
-  # 道具側だけでは閉じない** —— 受け皿は **#127**。
+  # 🔴 **以前は `tootctl emoji sync --webhook <url>` として引数に載せていたので、
+  # 同居する非 root ユーザから `ps` で読めた**（#127・2026-09-20 に実測）。
+  # `CommandLine#secrets`（#65）が伏せるのはログと例外で、**プロセスリストは伏せない。**
+  # tootctl の `--webhook` は環境変数や stdin から受ける口を持たない。
+  #
+  # ⚠ いまは tootctl には `--announce`（下書きを標準出力へ出すだけ）を渡し、
+  # **告知の投稿はこちら（Ruby）から送る**（#121 の `Heartbeat` と同じ形）。
+  # URL はどのプロセスの引数にも載らない。ログに出る経路（`Ginseng::HTTP#log` の
+  # `url:`）は `/logger/mask_url_paths` の `/webhook/` で伏せる。⚠ 伏せられない URL
+  # （接頭辞が当たらないもの）は、tootctl を走らせる前に設定エラーで止める。
+  # ⚠ 下書きの文面・文字数上限での分割は tootctl 側の仕事のまま。こちらは切り出して送るだけ。
+  # ⚠ 結果（`exec` の戻り値）には URL を載せない（`announced` の真偽だけ）。
   class MisskeyEmojiSyncTool < Tool
     include MastodonTootctl
 
     # ⚠ 出力は初回同期だと数百件のショートコードを含む。日次ログには要点だけ残す
     REPORTED_PREFIXES = /\A(Copied|Posted|Failed|Nothing to announce)/
 
+    # tootctl の `say_drafts` が出す形（`--- announcement[ i/n] ---` 〜 `--- end ---`）
+    DRAFT_PATTERN = %r{^--- (announcement(?: \d+/\d+)?) ---\n(.*?)\n--- end ---$}m
+
     def exec(args = {})
       origin = setting(:origin)
       raise Ginseng::ConfigError, "'/#{underscore}/origin' not found" if origin.blank?
+      raise Ginseng::ConfigError, "'/#{underscore}/webhook' is not masked" unless webhook_masked?
       logger.info(tool: underscore, origin:, message: '実行開始')
-      command = tootctl_command(tootctl_args(origin), secrets: [setting(:webhook)])
-      return {origin:, announced: setting(:webhook).present?, report: report(command.stdout)}
+      command = tootctl_command(tootctl_args(origin))
+      result = {origin:, announced: webhook.present?, report: report(command.stdout), failure: []}
+      post_drafts(drafts(command.stdout), result) if webhook.present?
+      return result
     end
 
     def description
@@ -40,11 +51,66 @@ module WritersBase
       return config.lookup("/#{underscore}/#{key}")
     end
 
+    def webhook
+      return setting(:webhook)
+    end
+
+    # ⚠⚠ ログの `url:` を伏せるのは `/logger/mask_url_paths` で、**パスの接頭辞を
+    # 知っているものしか伏せない。**Slack の `/services/...` のような URL は素通りする。
+    # 道具側で同等品を書かず（マスクの正本は `Ginseng::Masking`）、伏せられない URL なら
+    # **tootctl を走らせる前に**止める。同期のあとで止めると、告知が二度と出ない
+    # ⚠⚠ **URL 全体ではなくパスで比べる**（Codex P2）。`?access_token=` のような
+    # クエリだけが伏せられても、資格情報の載ったパスは素のまま残る
+    def webhook_masked?
+      return true if webhook.blank?
+      return Ginseng::URI.parse(logger.mask_url(webhook)).path != Ginseng::URI.parse(webhook).path
+    end
+
+    # ⚠⚠ `--webhook` を渡さないこと（#127）。渡すと URL がプロセスの引数に載る
     def tootctl_args(origin)
       args = ['emoji', 'sync', origin, '--no-dry-run']
-      webhook = setting(:webhook)
-      args.push('--webhook', webhook) if webhook.present?
+      args.push('--announce') if webhook.present?
       return args
+    end
+
+    def drafts(stdout)
+      return stdout.to_s.scan(DRAFT_PATTERN).map {|label, text| {label:, text:}}
+    end
+
+    # ⚠ 投稿の失敗で同期そのものは止めない（書き込みは済んでいる）。ただし tootctl の
+    # `--webhook` は失敗しても exit 0 で**黙って消えていた**ので、こちらでは
+    # `failure` に積んで Sentry / Kuma へ届ける。⚠ 次回は差分ゼロで告知が出ないので、
+    # **失敗した告知は手で出す**しかない。
+    def post_drafts(drafts, result)
+      drafts.each do |draft|
+        post_draft(draft[:text])
+        result[:report].push("Posted #{draft[:label]}.")
+      rescue => e
+        error = post_error(e)
+        logger.error(tool: underscore, announcement: draft[:label], error:)
+        result[:report].push("Failed to post #{draft[:label]}: #{error}")
+        result[:failure].push(announcement: draft[:label], error:)
+      end
+    end
+
+    def post_draft(text)
+      return if test?
+      return http.post(webhook, body: {text:})
+    end
+
+    def http
+      http = HTTP.new
+      # ⚠⚠ **再送しない。**相手が受け取ったあとで応答だけ落ちると、同じ告知が 2 回出る
+      http.retry_limit = 1
+      return http
+    end
+
+    # ⚠ 例外の文面を出さない。接続まわりの例外は URL（の一部）を含みうるので、
+    # tootctl 側（`post_drafts`）と同じく HTTP のコードか例外クラスだけにする
+    def post_error(error)
+      code = error.response&.code if error.respond_to?(:response)
+      return "HTTP #{code}" if code
+      return error.class.to_s
     end
 
     def report(stdout)
