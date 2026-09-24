@@ -67,11 +67,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #119 | 失敗したときだけログが残らない | ✅ `Tool#abbreviate`（先頭 200 ＋ 末尾 700 文字）。⚠ **配るまで効かない** |
-<<<<<<< HEAD
-| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | 🔄 PR #137（tootctl には `--announce` だけ渡し、告知は道具から送る）。⚠ **実機確認は zugoga で**（リリース前の実機確認） |
-=======
-| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ tootctl には `--announce` だけ渡し、告知は道具から POST する（⚠ 投稿の失敗は `failure` へ） |
->>>>>>> origin/main
+| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ #137（tootctl には `--announce` だけ渡し、告知は道具から POST する。⚠ 投稿の失敗は `failure` へ。**ログで伏せられない URL（パスが `mask_url_paths` に当たらないもの）は同期の前に設定エラー**）。⚠ **実機確認は zugoga で**（リリース前の実機確認） |
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | ✅ `Environment.platform_family` へ寄せて例外にした（`Installer` も同じ判定を使う） |
 | #123 | `access_log_compress` の既定が生ログに当たりうる | ✅ 既定を `access_YYYYMMDD.log` に絞り（`patterns`）、失敗を 1 件ずつログへ出す |
 | #124 | 同じ処理が 2 か所に写経されている | 未着手 |
