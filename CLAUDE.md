@@ -24,6 +24,8 @@ VPS上で実行するサーバー管理ユーティリティ集。FreeBSD / Ubun
 3. `config/application.yaml` にデフォルト設定を追加
 4. `README.md` のツール一覧と設定セクションを更新
 
+⚠ **似た道具を足すときは、既存のツールを写経せず concern に寄せる**（#124）。ダンプは `DumpRotation`（`dump_args` / `dump_env` を実装）、ZFS スナップショットは `SnapshotRotation`（`create_snapshot` を実装・設定の検査は `validate_config!` を `super` 付きで上書き）、tootctl のサブコマンドを並べるだけなら `TootctlCommands`。寄せたら `test/tool_concerns_test.rb` に並べる
+
 ## 開発ツール
 
 - Lint: `bundle exec rake lint`（＝ `bundle exec rubocop`。自動修正は `bundle exec rubocop -a`）
