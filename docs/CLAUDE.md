@@ -67,7 +67,11 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #119 | 失敗したときだけログが残らない | ✅ `Tool#abbreviate`（先頭 200 ＋ 末尾 700 文字）。⚠ **配るまで効かない** |
+<<<<<<< HEAD
 | #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | 🔄 PR #137（tootctl には `--announce` だけ渡し、告知は道具から送る）。⚠ **実機確認は zugoga で**（リリース前の実機確認） |
+=======
+| #127 | `misskey_emoji_sync` の webhook URL が `ps` から読める | ✅ tootctl には `--announce` だけ渡し、告知は道具から POST する（⚠ 投稿の失敗は `failure` へ） |
+>>>>>>> origin/main
 | #122 | 未対応プラットフォームで黙って倒れる 2 か所 | ✅ `Environment.platform_family` へ寄せて例外にした（`Installer` も同じ判定を使う） |
 | #123 | `access_log_compress` の既定が生ログに当たりうる | ✅ 既定を `access_YYYYMMDD.log` に絞り（`patterns`）、失敗を 1 件ずつログへ出す |
 | #124 | 同じ処理が 2 か所に写経されている | 未着手 |
@@ -107,7 +111,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #101 | `mysql_dump` が MyISAM の混在を検出しない | ✅ **道具は直さない**（THE-POWERNEWS/writersbase-env#171 へ依頼） |
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ➡️ **1.7.1 へ送った**（⚠ 1.7.0 出荷時点では上流 pooza/ginseng-core#645 が open。✅ **2026-09-20 にマージ・v1.24.0**＝ 1.7.1 の節） |
 | #120 | `google_drive_backup` の `path` 既定が共有の宛先を指す | ✅ #126（⚠ **破壊的変更**） |
-| #121 | 資格情報がコマンドラインに載る | ✅ #128（⚠ `--webhook` は **#127** へ送り） |
+| #121 | 資格情報がコマンドラインに載る | ✅ #128（⚠ `--webhook` は **#127** へ送り、1.7.1 で解消） |
 
 #### リリース前レビュー: 2026-09-20（1.7.0）
 
@@ -124,7 +128,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | 🟡 黄 | [#124](https://github.com/THE-POWERNEWS/writersbase-tools/issues/124) 同じ処理が 2 か所に写経されている | 規約整合性 |
 
 - **#120** … `path: /backup` にホスト名が入らないので、**既定のまま 2 台目を走らせると 1 台目の `/backup/etc` を `rclone sync` が消す。**⚠ 4 台とも `local.yaml` で上書きしているので事故っていないだけ。⚠⚠ **`rsync_backup` の `dest`（#67）・`postgresql_snapshot` の `dsn`（#87）と同じ理由がここにだけ効いていない**
-- **#121** … ⚠⚠ **`CommandLine#secrets`（#65）はログと例外を伏せるが、`ps` は伏せない。**実測で **vulcan は非 root（`misskey`）から root の `/proc/1/cmdline` が読め**、shallu は `security.bsd.see_other_uids: 1`。🔴 **`Heartbeat` の push URL は 1.7.0 で新しく入れた経路**。⚠ `misskey_emoji_sync` の `--webhook` は tootctl の仕様に縛られるので**道具側だけでは閉じない**
+- **#121** … ⚠⚠ **`CommandLine#secrets`（#65）はログと例外を伏せるが、`ps` は伏せない。**実測で **vulcan は非 root（`misskey`）から root の `/proc/1/cmdline` が読め**、shallu は `security.bsd.see_other_uids: 1`。🔴 **`Heartbeat` の push URL は 1.7.0 で新しく入れた経路**。⚠ `misskey_emoji_sync` の `--webhook` は tootctl の仕様に縛られる（⚠ 当時は「道具側だけでは閉じない」と見たが、**tootctl の `--announce` で下書きだけ出させ、投稿を道具側へ移せば閉じられた**・#127）
 - ⚠ **#119（失敗時にログが残らない）も赤だが、1.7.1 へ送ると判断した。**道具の欠陥ではあるが、**出荷を止めるより先に 1.7.0 の push モニタを届けるほうが効く**（いま本番に居るのは v1.6.1 で、失敗は誰も見ていない）
 
 **緑（起票せず・次に触るときの申し送り）**
