@@ -13,7 +13,8 @@ module WritersBase
   # ⚠ いまは tootctl には `--announce`（下書きを標準出力へ出すだけ）を渡し、
   # **告知の投稿はこちら（Ruby）から送る**（#121 の `Heartbeat` と同じ形）。
   # URL はどのプロセスの引数にも載らない。ログに出る経路（`Ginseng::HTTP#log` の
-  # `url:`）は `/logger/mask_url_paths` の `/webhook/` で伏せる。
+  # `url:`）は `/logger/mask_url_paths` の `/webhook/` で伏せる。⚠ 伏せられない URL
+  # （接頭辞が当たらないもの）は、tootctl を走らせる前に設定エラーで止める。
   # ⚠ 下書きの文面・文字数上限での分割は tootctl 側の仕事のまま。こちらは切り出して送るだけ。
   # ⚠ 結果（`exec` の戻り値）には URL を載せない（`announced` の真偽だけ）。
   class MisskeyEmojiSyncTool < Tool
@@ -28,6 +29,7 @@ module WritersBase
     def exec(args = {})
       origin = setting(:origin)
       raise Ginseng::ConfigError, "'/#{underscore}/origin' not found" if origin.blank?
+      raise Ginseng::ConfigError, "'/#{underscore}/webhook' is not masked" unless webhook_masked?
       logger.info(tool: underscore, origin:, message: '実行開始')
       command = tootctl_command(tootctl_args(origin))
       result = {origin:, announced: webhook.present?, report: report(command.stdout), failure: []}
@@ -51,6 +53,15 @@ module WritersBase
 
     def webhook
       return setting(:webhook)
+    end
+
+    # ⚠⚠ ログの `url:` を伏せるのは `/logger/mask_url_paths` で、**パスの接頭辞を
+    # 知っているものしか伏せない。**Slack の `/services/...` のような URL は素通りする。
+    # 道具側で同等品を書かず（マスクの正本は `Ginseng::Masking`）、伏せられない URL なら
+    # **tootctl を走らせる前に**止める。同期のあとで止めると、告知が二度と出ない
+    def webhook_masked?
+      return true if webhook.blank?
+      return logger.mask_url(webhook) != webhook
     end
 
     # ⚠⚠ `--webhook` を渡さないこと（#127）。渡すと URL がプロセスの引数に載る

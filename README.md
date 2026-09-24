@@ -306,7 +306,7 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 
 `bin/tootctl emoji sync <origin> --no-dry-run` を実行します。`webhook`を設定すると、tootctlに`--announce`を付けて告知の下書きを出させ、**この道具が**そのURLへSlack互換のペイロード（`{"text": ...}`）で投稿します（モロヘイヤのアカウント別Webhookを想定）。投稿に失敗した告知は失敗として扱います（Sentry／ハートビートへ届く）。⚠ 次回は差分ゼロで告知が出ないので、失敗した告知は手で出してください。
 
-⚠ **Webhook URLはそれ自体が資格情報**なので、`local.yaml`側に置いてください。⚠ URLはどのプロセスの引数にも載せていません（#127。以前は`--webhook <url>`としてtootctlへ渡していたので、実行中は`ps`から読めました）。ログでは`/logger/mask_url_paths`の`/webhook/`で伏せます。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
+⚠ **Webhook URLはそれ自体が資格情報**なので、`local.yaml`側に置いてください。⚠ URLはどのプロセスの引数にも載せていません（#127。以前は`--webhook <url>`としてtootctlへ渡していたので、実行中は`ps`から読めました）。ログでは`/logger/mask_url_paths`の`/webhook/`で伏せます。⚠ **伏せられないURL（パスが`/webhook/`を含まないもの。Slackの`/services/...`など）は、同期を始める前に設定エラーで止めます。**使うときは`/logger/mask_url_paths`へ接頭辞を足してください。`origin`が未設定のときは「毎日静かに何もしない」状態を避けるため実行時にエラーにします。
 
 ### google_drive_backup
 

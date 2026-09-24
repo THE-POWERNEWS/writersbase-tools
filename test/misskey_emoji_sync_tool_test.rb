@@ -85,6 +85,23 @@ module WritersBase
       assert_not_match(/9f3c1b7e/, args.join(' '))
     end
 
+    # ⚠⚠ マスクの接頭辞に当たらない URL は、ログの url: に素のまま出る（Codex P2）。
+    # tootctl を走らせる前に設定エラーで止め、文面にも URL を出さない
+    def test_unmasked_webhook
+      config['/misskey_emoji_sync/origin'] = 'https://misskey.example'
+      config['/misskey_emoji_sync/webhook'] = 'https://hooks.slack.example/services/T0/B0/9f3c1b7e'
+      error = assert_raise(Ginseng::ConfigError) {@tool.exec}
+
+      assert_not_match(/9f3c1b7e/, error.message)
+    end
+
+    def test_webhook_masked
+      assert_true(@tool.send(:webhook_masked?)) if @tool.send(:setting, :webhook).blank?
+      config['/misskey_emoji_sync/webhook'] = WEBHOOK
+
+      assert_true(@tool.send(:webhook_masked?))
+    end
+
     def test_drafts
       drafts = @tool.send(:drafts, STDOUT_WITH_DRAFTS)
 
