@@ -95,6 +95,13 @@ module WritersBase
       assert_not_match(/9f3c1b7e/, error.message)
     end
 
+    # ⚠⚠ クエリだけ伏せられても、パスが素のままなら止める（Codex P2）
+    def test_webhook_masked_only_in_query
+      config['/misskey_emoji_sync/webhook'] = 'https://hooks.slack.example/services/T0/B0/9f3c1b7e?access_token=x'
+
+      assert_false(@tool.send(:webhook_masked?))
+    end
+
     def test_webhook_masked
       assert_true(@tool.send(:webhook_masked?)) if @tool.send(:setting, :webhook).blank?
       config['/misskey_emoji_sync/webhook'] = WEBHOOK

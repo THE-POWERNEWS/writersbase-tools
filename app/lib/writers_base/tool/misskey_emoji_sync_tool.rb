@@ -59,9 +59,11 @@ module WritersBase
     # 知っているものしか伏せない。**Slack の `/services/...` のような URL は素通りする。
     # 道具側で同等品を書かず（マスクの正本は `Ginseng::Masking`）、伏せられない URL なら
     # **tootctl を走らせる前に**止める。同期のあとで止めると、告知が二度と出ない
+    # ⚠⚠ **URL 全体ではなくパスで比べる**（Codex P2）。`?access_token=` のような
+    # クエリだけが伏せられても、資格情報の載ったパスは素のまま残る
     def webhook_masked?
       return true if webhook.blank?
-      return logger.mask_url(webhook) != webhook
+      return Ginseng::URI.parse(logger.mask_url(webhook)).path != Ginseng::URI.parse(webhook).path
     end
 
     # ⚠⚠ `--webhook` を渡さないこと（#127）。渡すと URL がプロセスの引数に載る
