@@ -60,6 +60,18 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
+### 1.8.0（開発中・2026-09-26 着手）
+
+`/package/version` は #149 で 1.8.0 へバンプした。⚠ **`main` は未リリースの 1.8.0 を指す**ので、利用側はタグ（`refs/tags/v1.7.1`）で版を上げること。マイルストーン `1.8.0` の 5 件（重み 7）。
+
+| Issue | 内容 |
+| --- | --- |
+| #149 | バンプ |
+| #150 | `Gemfile.lock` に `amd64-freebsd-15` を足す（FreeBSD 15 のノードでチェックアウトが汚れる） |
+| #144 | `misskey_emoji_sync` が下書きを拾えなかったとき、告知が出ないまま成功で終わる（1.7.1 のレビューの 🟡） |
+| #141 | `reboot_required` の heartbeat を 3 段にする（chubo2 からの依頼・しきい値 42 日） |
+| #138 | WordPress の自動更新が当たっていないノードを検出する道具（⚠ 効くのは `tools.enable` が真の dev1 だけ） |
+
 ### v1.7.1（2026-09-25 タグ）—— ⚠ **vulcan 以外の chubo2 管理ノードで走っている**
 
 **最新タグは v1.7.1**（`253852c`／公開 2026-09-25・`/package/version` は #131 でバンプ済み）。マイルストーン `1.7.1` の 6 件。⚠ 配るときは `bundle install` が要る（ginseng-core v1.24.0）が、periodic スクリプトの中身は 1.7.0 から変わらないので **`rake install` の流し直しは不要**。⚠ `access_log_compress` の対象が `access_YYYYMMDD.log` に絞られるので、**別の名前でローテートしているノードは `patterns` を上書きすること**（chubo2 の実測では 2026-09-26 時点の 8 台すべてが既定の形）
