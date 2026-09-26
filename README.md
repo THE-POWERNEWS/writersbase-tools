@@ -55,6 +55,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | google_drive_backup | rcloneでファイルをGoogle Driveにバックアップします。 |
 | rsync_backup | rsyncでファイルを外部サーバーにバックアップします。 |
 | service_restart | 設定されたサービスを再起動します。 |
+| wordpress_outdated | 導入済みの WordPress が、同じブランチの最新版より古ければ知らせます。 |
 
 ## 設定
 
@@ -352,6 +353,19 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 | dest | SSH転送先 (user@host:/path) | ⚠ **null（必須）** |
 | sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
+
+### wordpress_outdated
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| dirs | WordPress の置き場（`wp-includes/version.php` の親）の配列 | []（空なら何もしない） |
+| api | 最新版を引く WordPress の更新 API | `https://api.wordpress.org/core/version-check/1.7/` |
+
+導入版（`$wp_version`）を、**同じブランチ（major.minor）の最新版**と比べます（#138）。7.0 系なら 7.0 系の最新と比べ、7.1 が出ていても古いとは言いません。
+古ければ `WordPress が古い（<dir>: 導入 7.1.1 / 最新 7.1.2）` を返し、heartbeat を `down` にします（`reboot_required` と同じ形。Sentry へは送りません）。
+
+⚠ **読めなければ「最新」へ倒しません。**`version.php` が無い・`$wp_version` を読めない・API が落ちている・そのブランチの提供が API に無い、はいずれも例外（＝ Sentry・非ゼロ終了）です。
+⚠ リリース直後は、WordPress の自動更新が当たるまでの数時間だけ古く見えることがあります（次の回で戻ります）。
 
 ## ドキュメント
 
