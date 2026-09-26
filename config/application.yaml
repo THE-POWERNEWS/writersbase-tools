@@ -42,6 +42,10 @@ package:
   license: MIT
   url: https://github.com/THE-POWERNEWS/writersbase-tools
   version: 1.8.0
+reboot_required:
+  # ⚠ 稼働日数がこれ以上で、かつ再起動待ちなら heartbeat を down にする（#141）。
+  # chubo-core の monit（`monit.reboot_stale_days`）と揃えてある
+  stale_days: 42
 ruby:
   bin: /usr/bin/ruby3.3
 sentry:

@@ -34,6 +34,18 @@ module WritersBase
       return failures.present?
     end
 
+    # ⚠⚠ **失敗ではないが放置してはいけない状態**を heartbeat の down で知らせる口（#141）。
+    # 文字列を返すと bin/wb が down を送る。⚠ **Sentry へは送らず、終了コードも 0**
+    # （失敗ではないので、失敗の経路に混ぜると本物の失敗が埋もれる）。
+    def alert
+      return nil
+    end
+
+    # heartbeat の up に載せる msg。Kuma の一覧に出るので、要対応の手前の状態を載せてよい（#141）
+    def status_message
+      return 'OK'
+    end
+
     # ⚠ 1 回の実行で N 件失敗しても、Sentry へは 1 件にまとめて送る
     # （DB ごとに別 issue にしない）。
     def failure_error

@@ -34,8 +34,8 @@ module WritersBase
       @config = Config.instance
     end
 
-    def up
-      return push('up', 'OK')
+    def up(message = 'OK')
+      return push('up', message)
     end
 
     def down(message)

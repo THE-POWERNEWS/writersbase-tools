@@ -139,10 +139,11 @@ Sentry には無い利点です。
 
 - 成功 … `status=up` / `msg=OK`
 - 失敗 … `status=down` / `msg=<失敗の要約>`（⚠ 200 文字で切り、Sentry と同じ網で伏せてから送ります）
+- **失敗ではないが要対応** … `status=down` / `msg=<要対応の中身>`（#141）。⚠ **Sentry へは送らず、終了コードも 0** です。いまこれを使うのは `reboot_required` だけ（下記）
 
 ⚠⚠ **push URL（トークン）はそれ自体が資格情報です。**`local.yaml` に置いてください。
-⚠ トークンは**パスに入る**ため `Ginseng::HTTP` のログでは伏せられません。そのため送信は
-`CommandLine#secrets` に載せた `curl` で行い、ログでは `[FILTERED]` になります。
+⚠ トークンは**パスに入ります。**送信は Ruby 側から行うので、URL はどのプロセスの引数にも載りません（#121）。
+ログの `url:` は `/logger/mask_url_paths` の `/api/push/` で伏せます。
 
 ⚠ **Kuma 側にモニタが無ければ、送っても誰も見ません。**モニタの登録と interval
 （**ツールの実行間隔に合わせる**）は利用側の仕事です。
@@ -272,6 +273,22 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 | user | 実行ユーザー | mastodon |
 | rails_env | RAILS_ENV環境変数 | production |
 | dir | Mastodonインストールディレクトリ | /home/mastodon/repos/mastodon |
+
+### reboot_required
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| stale_days | 再起動待ちのまま、稼働日数がこれ以上なら heartbeat を down にする | 42 |
+
+再起動待ちは失敗ではないので、Sentry にも終了コードにも出ません。代わりに heartbeat を 3 段で送ります（#141）。
+
+| 状態 | heartbeat |
+| --- | --- |
+| 正常 | `up` / `OK` |
+| 要再起動（しきい値未満） | `up` / `OK 要再起動(...)` |
+| 要再起動（しきい値以上） | `down` / `要再起動(...)` |
+
+⚠ **日数は「待っている日数」ではなく稼働日数**です（いつ待ちに入ったかは分からないため）。chubo-core の monit と同じ近似・同じしきい値にしてあります。
 
 ### service_restart
 
