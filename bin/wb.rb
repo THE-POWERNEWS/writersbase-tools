@@ -20,7 +20,13 @@ module WritersBase
   # 例外にして、下の集約点（Sentry と非ゼロ終了）へ載せる（#64）。
   raise tool.failure_error if tool.failed?
   # ⚠ 成功したときだけ up を送る（#91）。失敗は下の集約点から down を送る
-  Heartbeat.new(name).up
+  # ⚠ 失敗ではないが要対応なもの（再起動待ちの放置など）は、ここで down を送る（#141）
+  heartbeat = Heartbeat.new(name)
+  if alert = tool.alert
+    heartbeat.down(alert)
+  else
+    heartbeat.up(tool.status_message)
+  end
 rescue => e
   # ⚠ **ここが唯一の集約点。** ツールの例外はすべてここへ来るので、
   # Sentry へはここだけで送る（#37）。bundle 未充足の早期失敗は SDK が

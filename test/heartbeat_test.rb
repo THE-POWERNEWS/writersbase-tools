@@ -25,6 +25,11 @@ module WritersBase
       assert_equal({status: 'up', msg: 'OK'}, @heartbeat.up)
     end
 
+    # 要対応の手前の状態を up の msg に載せられる（#141）
+    def test_up_with_message
+      assert_equal({status: 'up', msg: 'OK 要再起動(稼働3日)'}, @heartbeat.up('OK 要再起動(稼働3日)'))
+    end
+
     def test_down_sends_status_down
       query = @heartbeat.down('postgresql_dump が 1 件失敗しました')
 

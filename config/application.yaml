@@ -183,3 +183,7 @@ google_drive_backup:
     - '*.log'
     - '*.swp'
     - '*.tmp'
+reboot_required:
+  # ⚠ 稼働日数がこれ以上で、かつ再起動待ちなら heartbeat を down にする（#141）。
+  # chubo-core の monit（`monit.reboot_stale_days`）と揃えてある
+  stale_days: 42
