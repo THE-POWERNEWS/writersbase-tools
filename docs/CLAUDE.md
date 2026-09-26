@@ -64,13 +64,17 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 `/package/version` は #149 で 1.8.0 へバンプした。⚠ **`main` は未リリースの 1.8.0 を指す**ので、利用側はタグ（`refs/tags/v1.7.1`）で版を上げること。マイルストーン `1.8.0` の 5 件（重み 7）。
 
-| Issue | 内容 |
-| --- | --- |
-| #149 | バンプ |
-| #150 | `Gemfile.lock` に `amd64-freebsd-15` を足す（FreeBSD 15 のノードでチェックアウトが汚れる） |
-| #144 | `misskey_emoji_sync` が下書きを拾えなかったとき、告知が出ないまま成功で終わる（1.7.1 のレビューの 🟡） |
-| #141 | `reboot_required` の heartbeat を 3 段にする（chubo2 からの依頼・しきい値 42 日） |
-| #138 | WordPress の自動更新が当たっていないノードを検出する道具（⚠ 効くのは `tools.enable` が真の dev1 だけ） |
+| Issue | 内容 | 状態 |
+| --- | --- | --- |
+| #149 | バンプ | ✅ #151 |
+| #150 | `Gemfile.lock` に `amd64-freebsd-15` を足す（FreeBSD 15 のノードでチェックアウトが汚れる） | ✅ #152（PLATFORMS の 1 行だけ・gem の版は動かしていない） |
+| #144 | `misskey_emoji_sync` が下書きを拾えなかったとき、告知が出ないまま成功で終わる（1.7.1 のレビューの 🟡） | ✅ #153（下書きも `Nothing to announce.` も無ければ `failure`・`announced` は投稿できた件数） |
+| #141 | `reboot_required` の heartbeat を 3 段にする（chubo2 からの依頼・しきい値 42 日） | ✅ #154 |
+| #138 | WordPress の自動更新が当たっていないノードを検出する道具 | ✅ #155（`wordpress_outdated`） |
+
+- ⚠⚠ **#141 で「失敗ではないが要対応」を heartbeat へ伝える口（`Tool#alert` / `#status_message`）を足した。**`alert` が文字列を返すと `bin/wb` が `down` を送るが、**Sentry へは送らず終了コードも 0**。失敗の経路に混ぜると本物の失敗が埋もれるため。使っているのは `reboot_required` と `wordpress_outdated`
+- ⚠ **再起動待ちの日数は稼働日数で近似した**（Issue の提案した `/var/run/reboot-required` の mtime ではない）。あちらは更新のたびに `touch` し直されるので、**溜めているノードほど鳴らない**。chubo-core の monit と同じ近似・同じしきい値
+- ⚠ `wordpress_outdated` は**効くのが dev1 だけ**で、writersBASE 側には Kuma の push トークンがまだ無い（見えるのは stdout だけ）。有効化と受け口は writersbase-env 側の判断
 
 ### v1.7.1（2026-09-25 タグ）—— ⚠ **vulcan 以外の chubo2 管理ノードで走っている**
 
