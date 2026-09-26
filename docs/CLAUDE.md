@@ -79,7 +79,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 #### リリース前レビュー: 2026-09-26（1.8.0）
 
-⚠ **`main`（`6a37a8b`）の `app/lib` 配下 34 ファイルと `bin/` を単一セッションで全部読んだ。**v1.7.1 から **7 コミット**（`--no-merges`）。**赤 0・黄 0・緑 4。**新しい破壊的操作は無く、既定値の追加は `reboot_required` の `stale_days: 42` と `wordpress_outdated` の `dirs: []`（空なら何もしない）だけ。
+⚠ **`main`（`6a37a8b`）の `app/lib` 配下 34 ファイルと `bin/` を単一セッションで全部読んだ。**v1.7.1 から **7 コミット**（`--no-merges`）。**赤 0・黄 0・緑 4。**新しい破壊的操作は無く、既定値の追加は `reboot_required` の `stale_days: 42` と、`wordpress_outdated` の `dirs: []`（空なら何もしない）・`api`（WordPress の更新 API。⚠ 素の `config[...]` で読むので、node yaml で消すと例外）だけ。
 
 - ⭕ **`alert` の経路は失敗の経路と交わらない。**`bin/wb` は `failed?` を先に見て raise するので、失敗した回に `alert` が `up` / `down` を上書きすることはない。`alert` を持たない道具は `Tool#alert` の `nil` で従来どおり `up / OK`
 - ⭕ 新しく外部コマンドを叩くのは `sysctl -n kern.boottime` だけで、`Tool#execute` を通っている（非ゼロなら例外）。`/proc/uptime` が読めなければ `File.read` が例外。どちらも「稼働 0 日」へ倒れない
