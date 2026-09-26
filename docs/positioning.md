@@ -30,7 +30,7 @@
 
 | 利用側 | 何に使っているか | 状態 |
 | --- | --- | --- |
-| [pooza/chubo2](https://github.com/pooza/chubo2)（Mastodon / Misskey フリート） | 日次・毎時のバックアップ、ZFS スナップショット、ログ圧縮、`service_restart`、tootctl 系保守 | **主たる利用者。**本番 4 台（FreeBSD 3 + Ubuntu 1）＋ステージング 4 台で稼働中 |
+| [pooza/chubo2](https://github.com/pooza/chubo2)（Mastodon / Misskey フリート） | 日次・毎時のバックアップ、ZFS スナップショット、ログ圧縮、`service_restart`、tootctl 系保守 | **主たる利用者。**本番 4 台（FreeBSD 3 + Ubuntu 1）＋ステージング 4 台（dev24〜27）＋インフラ 3 台（deas・PowerDNS の pirazal / pirazis）で稼働中。⚠ **インフラ 3 台は 2026-09-26 まで chubo2 の管理外で、07-18 から止まっていた**（chubo2#255 / #256 で管理に載せ v1.7.1 へ） |
 | [THE-POWERNEWS/writersbase-env](https://github.com/THE-POWERNEWS/writersbase-env) | ⚠ `tools.enable` が真なのは **`dev1`（明示）と `vpn`（既定）の 2 ノードだけ**。`wiki` は明示的に false、`dev2` / `staging` も false | 🔴 **どこでも最新版が動いていない**（下記） |
 
 雑多なバッチの受け皿という性質から、**要求の出どころは chubo2 のほうが多い**。⚠ **名前から利用側を推測しないこと。**
