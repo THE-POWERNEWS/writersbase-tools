@@ -123,10 +123,11 @@ module WritersBase
     def test_post_drafts
       posted = []
       @tool.define_singleton_method(:post_draft) {|text| posted.push(text)}
-      result = {report: [], failure: []}
+      result = {announced: 0, report: [], failure: []}
       @tool.send(:post_drafts, @tool.send(:drafts, STDOUT_WITH_DRAFTS), result)
 
       assert_equal(2, posted.size)
+      assert_equal(2, result[:announced])
       assert_equal(['Posted announcement 1/2.', 'Posted announcement 2/2.'], result[:report])
       assert_equal([], result[:failure])
     end
@@ -136,13 +137,35 @@ module WritersBase
     def test_post_drafts_failure
       config['/misskey_emoji_sync/webhook'] = WEBHOOK
       @tool.define_singleton_method(:post_draft) {|_text| raise ResponseError, "Bad response 403 (#{WEBHOOK})"}
-      result = {report: [], failure: []}
+      result = {announced: 0, report: [], failure: []}
       @tool.send(:post_drafts, @tool.send(:drafts, STDOUT_WITH_DRAFTS), result)
 
+      assert_equal(0, result[:announced])
       assert_equal(2, result[:failure].size)
       assert_equal('HTTP 403', result[:failure].first[:error])
       assert_true(@tool.instance_variable_set(:@result, result) && @tool.failed?)
       assert_not_match(/9f3c1b7e/, result.to_s)
+    end
+
+    # 告知するものが無い回は黙って成功する
+    def test_announce_nothing
+      result = {announced: 0, report: [], failure: []}
+      @tool.send(:announce, "Copied 0, recategorized 0, removed 0 empty categories\nNothing to announce.\n", result)
+
+      assert_equal(0, result[:announced])
+      assert_equal([], result[:failure])
+    end
+
+    # ⚠⚠ 下書きも「Nothing to announce.」も無ければ、書式がずれて取りこぼしたと読む（#144）。
+    # 同期は済んでいて次回は差分ゼロなので、ここで黙ると告知は二度と出ない
+    def test_announce_unrecognized_output
+      result = {announced: 0, report: [], failure: []}
+      stdout = STDOUT_WITH_DRAFTS.gsub('--- end ---', '=== end ===')
+      @tool.send(:announce, stdout, result)
+
+      assert_equal(0, result[:announced])
+      assert_equal(1, result[:failure].size)
+      assert_true(@tool.instance_variable_set(:@result, result) && @tool.failed?)
     end
 
     def test_post_error_without_response
