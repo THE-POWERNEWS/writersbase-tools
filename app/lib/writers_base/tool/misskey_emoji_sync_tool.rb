@@ -90,7 +90,7 @@ module WritersBase
       return if stdout.to_s.match?(NOTHING_PATTERN)
       error = '告知の下書きを tootctl の出力から拾えませんでした'
       logger.error(tool: underscore, error:)
-      result[:failure].push(announcement: nil, error:)
+      result[:failure].push(error:)
     end
 
     # ⚠ 投稿の失敗で同期そのものは止めない（書き込みは済んでいる）。ただし tootctl の
