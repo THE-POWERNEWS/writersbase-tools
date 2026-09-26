@@ -15,10 +15,9 @@ module WritersBase
     def exec(args = {})
       # ⚠ WordPress の無いノード（wiki / vpn）では何もせず黙って終わる
       return '' if dirs.empty?
-      offers = latest_versions
       @outdated = dirs.filter_map do |dir|
         installed = installed_version(dir)
-        latest = latest_in_branch(offers, installed)
+        latest = latest_in_branch(latest_versions(installed), installed)
         next if installed >= latest
         "WordPress が古い（#{dir}: 導入 #{installed} / 最新 #{latest}）"
       end
@@ -52,8 +51,17 @@ module WritersBase
 
     # ⚠ 修正版の番号を手で持つと、今度はその表が腐る。更新 API から引く。
     # ⚠⚠ API が落ちたときは例外にする（「引けなかった」こと自体を出す）。
-    def latest_versions
-      response = http.get(api)
+    # ⚠ **導入版を `version` で渡す**（Codex P1）。API は「渡した版から見た更新候補」を返し、
+    # 中身は渡した版で変わる（7.1.1 なら 7.1 系だけ）。素で引くと全ブランチが返るが、
+    # それは約束された形ではない
+    def latest_versions(installed)
+      @latest_versions ||= {}
+      @latest_versions[installed] ||= fetch_latest_versions(installed)
+      return @latest_versions[installed]
+    end
+
+    def fetch_latest_versions(installed)
+      response = http.get(api, query: {version: installed.to_s})
       return JSON.parse(response.body)['offers'].to_a.filter_map do |offer|
         Gem::Version.new(offer['current']) if offer['current'].present?
       end

@@ -6,7 +6,7 @@ module WritersBase
       @tool = Tool.create('wordpress_outdated')
       @dir = Dir.mktmpdir
       FileUtils.mkdir_p(File.join(@dir, 'wp-includes'))
-      @tool.define_singleton_method(:latest_versions) {OFFERS}
+      @tool.define_singleton_method(:latest_versions) {|_installed| OFFERS}
     end
 
     def teardown
@@ -18,6 +18,21 @@ module WritersBase
       config['/wordpress_outdated/dirs'] = [@dir]
     end
 
+    # ⚠ 導入版を version で渡す（Codex P1）。応答の中身は渡した版で変わる
+    def test_query_has_installed_version
+      queries = []
+      http = Object.new
+      http.define_singleton_method(:get) do |_uri, options|
+        queries.push(options[:query])
+        return Struct.new(:body).new({offers: [{current: '7.0.6'}]}.to_json)
+      end
+      @tool.define_singleton_method(:http) {http}
+      @tool.singleton_class.send(:remove_method, :latest_versions)
+
+      assert_equal([Gem::Version.new('7.0.6')], @tool.send(:latest_versions, Gem::Version.new('7.0.3')))
+      assert_equal([{version: '7.0.3'}], queries)
+    end
+
     def test_description
       assert_kind_of(String, @tool.description)
     end
@@ -25,7 +40,7 @@ module WritersBase
     # WordPress の無いノードでは API も引かずに黙って終わる
     def test_without_dirs
       config['/wordpress_outdated/dirs'] = []
-      @tool.define_singleton_method(:latest_versions) {raise 'API を引いてはいけない'}
+      @tool.define_singleton_method(:latest_versions) {|_installed| raise 'API を引いてはいけない'}
 
       assert_equal('', @tool.exec)
       assert_nil(@tool.alert)
