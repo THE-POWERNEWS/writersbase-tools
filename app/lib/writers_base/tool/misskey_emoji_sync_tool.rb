@@ -26,14 +26,18 @@ module WritersBase
     # tootctl の `say_drafts` が出す形（`--- announcement[ i/n] ---` 〜 `--- end ---`）
     DRAFT_PATTERN = %r{^--- (announcement(?: \d+/\d+)?) ---\n(.*?)\n--- end ---$}m
 
+    # tootctl の `announce` は、下書きが無ければこの 1 行を出す。⚠ 下書きとこの行の
+    # **どちらかが必ず出る**ので、どちらも無ければ書式がずれたと読む（#144）
+    NOTHING_PATTERN = /^Nothing to announce\.$/
+
     def exec(args = {})
       origin = setting(:origin)
       raise Ginseng::ConfigError, "'/#{underscore}/origin' not found" if origin.blank?
       raise Ginseng::ConfigError, "'/#{underscore}/webhook' is not masked" unless webhook_masked?
       logger.info(tool: underscore, origin:, message: '実行開始')
       command = tootctl_command(tootctl_args(origin))
-      result = {origin:, announced: webhook.present?, report: report(command.stdout), failure: []}
-      post_drafts(drafts(command.stdout), result) if webhook.present?
+      result = {origin:, announced: 0, report: report(command.stdout), failure: []}
+      announce(command.stdout, result) if webhook.present?
       return result
     end
 
@@ -77,6 +81,18 @@ module WritersBase
       return stdout.to_s.scan(DRAFT_PATTERN).map {|label, text| {label:, text:}}
     end
 
+    # ⚠⚠ 下書きを 1 件も拾えず、`Nothing to announce.` も無いなら、tootctl の書式が
+    # ずれて**告知を取りこぼした**と読む（#144）。同期は済んでいて次回は差分ゼロなので、
+    # 黙って成功させると告知は二度と出ない。`failure` に積んで Sentry / Kuma へ届ける
+    def announce(stdout, result)
+      drafts = drafts(stdout)
+      return post_drafts(drafts, result) if drafts.present?
+      return if stdout.to_s.match?(NOTHING_PATTERN)
+      error = '告知の下書きを tootctl の出力から拾えませんでした'
+      logger.error(tool: underscore, error:)
+      result[:failure].push(announcement: nil, error:)
+    end
+
     # ⚠ 投稿の失敗で同期そのものは止めない（書き込みは済んでいる）。ただし tootctl の
     # `--webhook` は失敗しても exit 0 で**黙って消えていた**ので、こちらでは
     # `failure` に積んで Sentry / Kuma へ届ける。⚠ 次回は差分ゼロで告知が出ないので、
@@ -84,6 +100,7 @@ module WritersBase
     def post_drafts(drafts, result)
       drafts.each do |draft|
         post_draft(draft[:text])
+        result[:announced] += 1
         result[:report].push("Posted #{draft[:label]}.")
       rescue => e
         error = post_error(e)
