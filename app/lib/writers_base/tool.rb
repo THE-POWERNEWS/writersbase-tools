@@ -109,7 +109,8 @@ module WritersBase
     # ⚠⚠ `sh` が返すのは末尾のコマンドの status だけなので、`pg_dump | zstd > path` は
     # **pg_dump が落ちても 0** になる。zstd は空の入力でも正しい .zst を書くため、
     # もっともらしいサイズの小さいファイルが残り、失敗が success として記録される（#62）。
-    # ⚠ bash に依存する。FreeBSD では base に無いが、フリートは deployer 経由で入っている。
+    # ⚠ bash に依存する。FreeBSD では base に無いので、chubo-core が依存として入れる
+    # （入っていないノードでは `sh: bash: not found` で落ちる。pirazis で実例あり）。
     def pipefail_args(args)
       return ['bash', '-o', 'pipefail', '-c', CommandLine.new(args).to_s]
     end
