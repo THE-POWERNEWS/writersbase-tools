@@ -76,6 +76,36 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ **再起動待ちの日数は稼働日数で近似した**（Issue の提案した `/var/run/reboot-required` の mtime ではない）。あちらは更新のたびに `touch` し直されるので、**溜めているノードほど鳴らない**。chubo-core の monit と同じ近似・同じしきい値
 - ⚠ `wordpress_outdated` は**効くのが dev1 だけ**で、writersBASE 側には Kuma の push トークンがまだ無い（見えるのは stdout だけ）。有効化と受け口は writersbase-env 側の判断
 
+#### リリース前レビュー: 2026-09-26（1.8.0）
+
+⚠ **`main`（`6a37a8b`）の `app/lib` 配下 34 ファイルと `bin/` を単一セッションで全部読んだ。**v1.7.1 から **7 コミット**（`--no-merges`）。**赤 0・黄 0・緑 4。**新しい破壊的操作は無く、既定値の追加は `reboot_required` の `stale_days: 42` と `wordpress_outdated` の `dirs: []`（空なら何もしない）だけ。
+
+- ⭕ **`alert` の経路は失敗の経路と交わらない。**`bin/wb` は `failed?` を先に見て raise するので、失敗した回に `alert` が `up` / `down` を上書きすることはない。`alert` を持たない道具は `Tool#alert` の `nil` で従来どおり `up / OK`
+- ⭕ 新しく外部コマンドを叩くのは `sysctl -n kern.boottime` だけで、`Tool#execute` を通っている（非ゼロなら例外）。`/proc/uptime` が読めなければ `File.read` が例外。どちらも「稼働 0 日」へ倒れない
+- ⭕ `wordpress_outdated` の HTTP は更新 API だけで、資格情報を持たない。ログの `url:` に載るのは導入版（`?version=`）だけ
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- ⚠ **FreeBSD では、42 日を超えると monit と `reboot_required` の 2 本のモニタが同時に down になる**（chubo-core の `kuma-push.erb` がノードの総合状態に同じ判定を混ぜている）。依頼元（chubo2#141）は承知のうえだが、**配る側への申し送り**として chubo2 の反映 Issue に書く
+- `wordpress_outdated` は**開発版（`7.2-alpha` など）を入れたノードで例外になる**（API にそのブランチが無い）。本番で開発版は使わないので送る
+- `bin/wb` の `alert` の分岐はスクリプトなのでテストが無い（下の実機確認で通した）
+- 持ち越し 2 件（`writers_base.rb` の `mask_urls_in` のコメント・`DumpRotation#delete_old_files` の `Logger#warn` のコメント）は今回も触っていない
+
+#### 実機確認: 2026-09-26（1.8.0・zugoga）
+
+1.7.1 と同じく、⚠⚠ **本番のチェックアウトには触れず**、`main`（`6a37a8b`）を `/var/tmp` へ別に clone して cron 相当（`sudo env -i ... LANG=C.UTF-8`）から回し、終わったら消した（本番は `v1.7.1` のまま）。設定は同じ `/usr/local/etc/writersbase-tools/local.yaml`。
+
+| 道具 | Issue | 回し方 | 結果 |
+| --- | --- | --- | --- |
+| `reboot_required` | #141 | `bin/wb` | ✅ exit 0・**Kuma へ `up` が 200**（`url:` は `[FILTERED]`）。zugoga は再起動待ちではない（14.5-RELEASE 同士） |
+| `reboot_required` | #141 | `ruby -e` で `boot_time` / 差し替えた待ち状態 | ✅ 稼働日数が `kern.boottime`（09-12 起動 → 14 日）と一致。`usec` の大きい値を与えても `sec` を読む。待ち＋120 日で `alert` が `要再起動(14.5-RELEASE→14.5-RELEASE-p1/稼働120日)`（⚠ Kuma へは送っていない） |
+| `wordpress_outdated` | #138 | `ruby -e`（仮の 7.0.3） | ✅ FreeBSD から実際の API を引き、`導入 7.0.3 / 最新 7.0.6`・`failed?` は偽 |
+| `wordpress_outdated` | #138 | `bin/wb`（`dirs` 空） | ✅ 何もせず exit 0 |
+| `misskey_emoji_sync` | #144 | 先に tootctl の dry-run で 0 件を確かめてから `bin/wb` | ✅ `Nothing to announce.` を拾って `failure` は空・**`announced: 0`**（1.7.1 では `true` と出ていた）・Kuma へ 200 |
+
+- ⚠ **再起動待ちで実際に `down` を送る経路は、本番では回していない**（Kuma の実モニタが鳴るため）。判定までは上の差し替えで、送信の形は `Heartbeat#down` の既存の経路（#91 で実績あり）
+- ⚠ `misskey_emoji_sync` の**下書きを取りこぼしたときの `failure`** は、いまの tootctl が必ず正しい書式を出すので実機では起きない（テストでだけ見ている）
+
 ### v1.7.1（2026-09-25 タグ）—— ⚠ **vulcan 以外の chubo2 管理ノードで走っている**
 
 **最新タグは v1.7.1**（`253852c`／公開 2026-09-25・`/package/version` は #131 でバンプ済み）。マイルストーン `1.7.1` の 6 件。⚠ 配るときは `bundle install` が要る（ginseng-core v1.24.0）が、periodic スクリプトの中身は 1.7.0 から変わらないので **`rake install` の流し直しは不要**。⚠ `access_log_compress` の対象が `access_YYYYMMDD.log` に絞られるので、**別の名前でローテートしているノードは `patterns` を上書きすること**（chubo2 の実測では 2026-09-26 時点の 8 台すべてが既定の形）
