@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/pooza/ginseng-core.git
-  revision: 442cf2867b3568bf37573480ce0fdccca4af4885
-  tag: v1.24.0
+  revision: 394f90fb962ea203ae2ffdd6c0c2185a242242ed
+  tag: v1.25.0
   specs:
-    ginseng-core (1.24.0)
+    ginseng-core (1.25.0)
       activesupport (>= 8.1.2.1)
       addressable (>= 2.9.0)
       cgi (>= 0.4.2)
@@ -46,7 +46,7 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (8.1.3.1)
+    activesupport (8.1.4)
       base64
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.3.1)
@@ -82,7 +82,7 @@ GEM
       multi_xml (>= 0.5.2)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
-    json (2.21.2)
+    json (3.0.2)
     json-schema (6.2.0)
       addressable (~> 2.8)
       bigdecimal (>= 3.1, < 5)
