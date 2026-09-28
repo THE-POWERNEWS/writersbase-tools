@@ -20,7 +20,7 @@ jobs:
         with:
           # ⚠ .rubocop.yml の TargetRubyVersion と揃えること（docs/CLAUDE.md）。
           # 配る既定は 3.4 だが、ここを上げるときは両方を同時に上げる。
-          ruby-version: 3.3.10
+          ruby-version: '3.3'
       - name: apt install
         run: |
           sudo apt update
