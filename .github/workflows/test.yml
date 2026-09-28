@@ -10,6 +10,14 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # ⚠⚠ OS 標準の Ruby で動かすので、実機の system ruby の系列を全部並べる。
+        # 3.3 = Ubuntu、3.4 = FreeBSD（pkg。chubo2 の ruby.system.version）。
+        # 実機の版と食い違うと、CI が緑のまま実機で落ちる（2026-07-18 に pkg から
+        # ruby33 が消え、FreeBSD 機の自動ダンプが 2 か月止まった）。
+        ruby: ['3.3', '3.4']
     steps:
       - uses: actions/checkout@v5
         with:
@@ -18,9 +26,9 @@ jobs:
           persist-credentials: false
       - uses: ruby/setup-ruby@v1
         with:
-          # ⚠ .rubocop.yml の TargetRubyVersion と揃えること（docs/CLAUDE.md）。
-          # 配る既定は 3.4 だが、ここを上げるときは両方を同時に上げる。
-          ruby-version: '3.3'
+          # ⚠ matrix の最小を .rubocop.yml の TargetRubyVersion と揃えること
+          # （docs/CLAUDE.md）。最小を上げるときは両方を同時に上げる。
+          ruby-version: ${{ matrix.ruby }}
       - name: apt install
         run: |
           sudo apt update
