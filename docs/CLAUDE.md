@@ -76,6 +76,21 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ **`--keep-tags` はカンマ区切りの 1 引数**（`--keep-tags=a,b`）。pooza/mastodon の tootctl は `type: :string` で受けて本体が `split(',')` する。⚠ Codex は「Thor の配列オプションなので分割されない」と P1 を付けたが**誤り**（#167 で根拠を返して指摘なし扱い）。差分しか見ないので、再レビューしても同じことを言う
 - ⚠ `mastodon_statuses_remove` は**実際に投稿を消す**ので、実機確認は chubo2#261 の段取りと合わせる
 
+#### リリース前レビュー: 2026-10-02（1.9.0）
+
+⚠ **`main`（`d0befe4`）の `app/lib` 配下 35 ファイルと `bin/` を単一セッションで全部読んだ。**v1.8.0 から **6 コミット**（`--no-merges`・うち docs / CI / バンプが 4）。**赤 0・黄 0・緑 4。**新しい破壊的操作は `mastodon_statuses_remove`（`statuses remove --days 90`）だけで、**node yaml の weekly に名前を書くまで走らない**。既定値の変更は無い（`reboot_required` の `stale_days: 42` は据え置き）。Dependabot の open アラートは 0 件。
+
+- ⭕ **`reboot_required` は読むだけ**（`.pkgs`・dpkg の `.list`・カーネルの mtime）。読めないときは例外で `bin/wb` の集約点へ出る（`Dir.children` の `ENOENT` など）。⚠ 待ち始めが取れないときは稼働日数（上限）へ倒れるので、**黙って鳴らなくなる向きには倒れない**
+- ⭕ **`tootctl_env` は名前を検査し**（`[A-Za-z_][A-Za-z0-9_]*`）、値は `sudo_command` が `shellescape` する。`RAILS_ENV` は `/mastodon/rails_env` が勝つ。⚠ 口は `MastodonTootctl` の 5 道具すべてにあるが、既定は無しなので挙動は変わらない
+- ⭕ `statuses remove` が消すのは**リモートの投稿だけ**（tootctl の `NOT local`）。`--keep-tags` の指定が無くても `DEFAULT_TAG` は守られる（pooza/mastodon#977）
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- `MastodonStatusesRemoveToolTest#teardown` が `TestCase#teardown`（`config.reload`）を `super` せずに上書きし、足したキーを手で消している。次に触るときは `super` に寄せる
+- `tootctl_env` は値を `to_s` するだけなので、**スカラー前提**（配列やハッシュを書くと崩れた文字列が渡る）
+- ⚠ **初回の大掃除が着地していない機体の weekly に載せると、数時間走る**（千万件単位）。載せる順は chubo2#261 が「着地した機体から」と承知している
+- 持ち越し 2 件（`writers_base.rb` の `mask_urls_in` のコメント・`DumpRotation#delete_old_files` の `Logger#warn` のコメント）は今回も触っていない
+
 ### v1.8.0（2026-09-26 タグ）—— ✅ **2026-09-29 に chubo2 管理の 11 台へ配った**
 
 **最新タグは v1.8.0**（`7e9bd8a`／公開 2026-09-26）。マイルストーン `1.8.0` の 5 件（重み 7）。✅ **2026-09-29 に chubo2 が 11 台へ配った**（本番 7 台＝ shallu / zugoga / gomander / vulcan / deas / pirazal / pirazis と dev24〜27・pooza/chubo2#258 はクローズ・記録は chubo2 `1116991`）。⚠ vulcan は 09-26〜28 に v1.6.0 → v1.7.1 を経ている（chubo2 `d38b3ba`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177）。⚠ `bundle install` / `rake install` の流し直しは不要（zugoga の本番の gem の置き場で、v1.8.0 の lock に対して `bundle check` が通るのを確認した）。⚠ FreeBSD では再起動待ちが稼働 42 日を超えると、monit と `reboot_required` の 2 本のモニタが同時に `down` になる（⚠ **chubo-core 側は 2026-09-29 に「待ち始めから 14 日」へ変えた**＝ `fddff73`・chubo2#260。⚠⚠ **tools はまだ稼働日数で判定しているので、14 日では使えない** —— 追随は **#160**）
