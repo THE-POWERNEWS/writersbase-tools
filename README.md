@@ -46,6 +46,7 @@ rake uninstall  # cronスクリプトをアンインストール
 | mastodon_follow | 全ユーザーに指定アカウントを強制フォローさせます。 |
 | mastodon_maintenance | Mastodonのメンテナンスコマンドを実行します。 |
 | mastodon_media_cleanup | Mastodonの古いメディアファイルを削除します。 |
+| mastodon_statuses_remove | Mastodonの古いリモート投稿を削除します。 |
 | misskey_emoji_sync | 姉妹Misskeyサーバーからカスタム絵文字を取り込み、増えたぶんを告知します。 |
 | mysql_dump | MySQLのダンプファイルを作成します。 |
 | mysql_snapshot | MySQLのZFSスナップショットを作成・管理します。 |
@@ -275,6 +276,17 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 | rails_env | RAILS_ENV環境変数 | production |
 | dir | Mastodonインストールディレクトリ | /home/mastodon/repos/mastodon |
 
+tootctl を呼ぶ道具（`mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove` / `mastodon_follow` / `misskey_emoji_sync`）は、**道具ごとに** `env` で tootctl へ環境変数を渡せます（#162）。既定は無しです。
+
+```yaml
+mastodon_statuses_remove:
+  env:
+    DB_PORT: 5432
+```
+
+- ⚠ `RAILS_ENV` は上の `rails_env` が勝ちます
+- ⚠⚠ **値は `sudo -u <user> env K=V ...` の引数に載り、`ps` から読めます。**資格情報を置かないでください
+
 ### reboot_required
 
 | キー | 説明 | デフォルト |
@@ -318,7 +330,20 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, media remove --remote-headers, preview_cards remove -c 1] |
+| commands | 実行するtootctlサブコマンドの配列 | [media remove-orphans, media remove --remove-headers, preview_cards remove -c 1] |
+
+### mastodon_statuses_remove
+
+| キー | 説明 | デフォルト |
+| --- | --- | --- |
+| commands | 実行するtootctlサブコマンドの配列 | [statuses remove --days 90] |
+| env | tootctlへ渡す環境変数（上の「mastodon（共通設定）」） | 無し |
+
+古いリモート投稿を消します（#162）。受け持つのは**週 1 回の流入ぶん**で、weekly の periodic に載せる想定です。
+
+- ⚠⚠ **`statuses remove` は pgbouncer を通すと動きません**（一時テーブルと `CREATE INDEX CONCURRENTLY` を使うため）。挟んでいるノードは `env` に `DB_PORT` を書いて PostgreSQL へ直接つないでください
+- 残したいタグは `commands` を上書きして `--keep-tags=precure_fun,宮本佳那子` のように足します（日本語のタグ名も通ります）。⚠ 引数は**空白で区切る**ので、タグ名に空白は使えません
+- ⚠ `--compress-database` は付けないでください（長時間ロックを取ります）。孤児メディアもこの回で消すので `--skip-media-remove` も付けません
 
 ### misskey_emoji_sync
 

@@ -136,6 +136,14 @@ mastodon_media_cleanup:
     - media remove-orphans
     - media remove --remove-headers
     - preview_cards remove -c 1
+mastodon_statuses_remove:
+  # ⚠ `--compress-database` は付けない（長時間ロックを取る）。孤児メディアもこの回で消すので
+  # `--skip-media-remove` も付けない。残したいタグは `--keep-tags=a,b` をノード側で足す（#162）
+  commands:
+    - statuses remove --days 90
+  # ⚠ tootctl へ渡す環境変数（例: `DB_PORT: 5432`）。既定は無し。pgbouncer を挟んでいる
+  # ノードは PostgreSQL へ直接つなぐ必要がある（一時テーブルと CREATE INDEX CONCURRENTLY）。
+  # ⚠⚠ 値は `ps` から読めるので資格情報を置かないこと
 misskey_emoji_sync:
   origin: null
   webhook: null

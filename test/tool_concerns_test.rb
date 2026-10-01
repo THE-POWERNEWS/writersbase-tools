@@ -7,6 +7,7 @@ module WritersBase
       TootctlCommands => {
         'mastodon_maintenance' => [:exec],
         'mastodon_media_cleanup' => [:exec],
+        'mastodon_statuses_remove' => [:exec],
       },
       DumpRotation => {
         'mysql_dump' => [:exec, :dump, :delete_old_files, :finder, :dump_path],
