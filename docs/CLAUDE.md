@@ -61,9 +61,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### 1.9.0（開発中）
+### v1.9.0（2026-10-02 タグ）—— ⚠ **まだ 1 台にも配っていない**
 
-マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。`/package/version` は #164 でバンプ済み。
+**最新タグは v1.9.0**（`0c03924`／公開 2026-10-02）。マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。⚠⚠ **タグを打っただけで、本番・staging とも v1.8.0 のまま**。配る側の受け皿は **pooza/chubo2#264**。⚠ `bundle install` / `rake install` の流し直しは不要（Gem の版も periodic スクリプトの中身も変わらない・dev24 / dev27 の root の gem の置き場で `bundle check` が通った）。⚠ `stale_days: 14`（chubo2#260）と `mastodon_statuses_remove` の weekly（chubo2#261）は、配ったあとに利用側が node yaml へ書く
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
@@ -111,7 +111,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### v1.8.0（2026-09-26 タグ）—— ✅ **2026-09-29 に chubo2 管理の 11 台へ配った**
 
-**最新タグは v1.8.0**（`7e9bd8a`／公開 2026-09-26）。マイルストーン `1.8.0` の 5 件（重み 7）。✅ **2026-09-29 に chubo2 が 11 台へ配った**（本番 7 台＝ shallu / zugoga / gomander / vulcan / deas / pirazal / pirazis と dev24〜27・pooza/chubo2#258 はクローズ・記録は chubo2 `1116991`）。⚠ vulcan は 09-26〜28 に v1.6.0 → v1.7.1 を経ている（chubo2 `d38b3ba`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177）。⚠ `bundle install` / `rake install` の流し直しは不要（zugoga の本番の gem の置き場で、v1.8.0 の lock に対して `bundle check` が通るのを確認した）。⚠ FreeBSD では再起動待ちが稼働 42 日を超えると、monit と `reboot_required` の 2 本のモニタが同時に `down` になる（⚠ **chubo-core 側は 2026-09-29 に「待ち始めから 14 日」へ変えた**＝ `fddff73`・chubo2#260。⚠⚠ **tools はまだ稼働日数で判定しているので、14 日では使えない** —— 追随は **#160**）
+**当時の最新タグ**（`7e9bd8a`／公開 2026-09-26）。マイルストーン `1.8.0` の 5 件（重み 7）。✅ **2026-09-29 に chubo2 が 11 台へ配った**（本番 7 台＝ shallu / zugoga / gomander / vulcan / deas / pirazal / pirazis と dev24〜27・pooza/chubo2#258 はクローズ・記録は chubo2 `1116991`）。⚠ vulcan は 09-26〜28 に v1.6.0 → v1.7.1 を経ている（chubo2 `d38b3ba`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177）。⚠ `bundle install` / `rake install` の流し直しは不要（zugoga の本番の gem の置き場で、v1.8.0 の lock に対して `bundle check` が通るのを確認した）。⚠ FreeBSD では再起動待ちが稼働 42 日を超えると、monit と `reboot_required` の 2 本のモニタが同時に `down` になる（⚠ **chubo-core 側は 2026-09-29 に「待ち始めから 14 日」へ変えた**＝ `fddff73`・chubo2#260。⚠⚠ **tools はまだ稼働日数で判定しているので、14 日では使えない** —— 追随は **#160**）
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
