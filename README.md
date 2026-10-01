@@ -279,7 +279,7 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
-| stale_days | 再起動待ちのまま、稼働日数がこれ以上なら heartbeat を down にする | 42 |
+| stale_days | 再起動待ちになってからの日数がこれ以上なら heartbeat を down にする | 42 |
 
 再起動待ちは失敗ではないので、Sentry にも終了コードにも出ません。代わりに heartbeat を 3 段で送ります（#141）。
 
@@ -289,7 +289,12 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 | 要再起動（しきい値未満） | `up` / `OK 要再起動(...)` |
 | 要再起動（しきい値以上） | `down` / `要再起動(...)` |
 
-⚠ **日数は「待っている日数」ではなく稼働日数**です（いつ待ちに入ったかは分からないため）。chubo-core の monit と同じ近似・同じしきい値にしてあります。
+⚠ **日数は稼働日数ではなく「再起動待ちになってからの日数」**です（#160。`msg` には `待ちN日` と出ます）。chubo-core の monit と同じ測り方です。
+
+- Debian 系 … `/var/run/reboot-required.pkgs` に載っているパッケージについて、dpkg の `/var/lib/dpkg/info/<pkg>.list`（`<pkg>:<arch>.list` も）の mtime のうち、**起動より後で最も古いもの**を待ち始めにします。⚠ `/var/run/reboot-required` の mtime は更新のたびに touch し直されるので使いません
+- FreeBSD … 導入済みカーネル（`/boot/kernel/kernel`）の mtime
+- ⚠ 待ち始めが取れなければ**稼働日数に戻します**（待ち日数の上限なので、鳴りやすい側へ倒れます）。起動より前には遡りません
+- ⚠ 同じパッケージを起動後に 2 回上げると（`libc6` など／FreeBSD なら `freebsd-update install` を 2 回）、後の時刻になるので短めに出ます
 
 ### service_restart
 
