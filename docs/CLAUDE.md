@@ -20,7 +20,8 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### 固有の差分
 
-- `.rubocop.yml` は `inherit_gem` の上に **`TargetRubyVersion: 3.3`** だけを置く。⚠ **CI が ruby 3.3.10 で回る**ため（配る既定は 3.4）。CI の版を上げたらここも上げる
+- `.rubocop.yml` は `inherit_gem` の上に **`TargetRubyVersion: 3.3`** だけを置く。⚠ **CI の matrix の最小が 3.3**（Ubuntu の system ruby）のため（配る既定は 3.4）。matrix は実機の system ruby の系列を並べる（3.3 = Ubuntu、3.4 = FreeBSD）。⚠⚠ **実機の版と食い違うと CI が緑のまま実機で落ちる**（2026-07-18 に pkg から `ruby33` が消え、FreeBSD 機の自動ダンプが 2 か月止まった）。最小を上げたらここも上げる
+- ⚠⚠ **Ruby は pin しない（`.ruby-version` を置かない・rbenv を要求しない）。** 道具の性質上、**導入のコストを低く保つことを優先**する（2026-09-29 オーナー判断）。OS 標準の Ruby で動かなければそれは仕方がない、という割り切り。⚠ pin すれば pkg から系列が消える事故や、apt で 3.3 以上が入らない台（Ubuntu 24.04）は解消するが、**全ノードで rbenv のビルドとパッチ版の追従が要る**ようになり、上の優先と逆になる。**守りは CI の matrix を実機の系列に合わせることで取る**
 - `Gemfile` の `ginseng-style` は **SHA 固定**（`ed862dcf…` ＝ v1.1.12）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
 - CI は ginseng-style の composite action（`ruby-check`）を使う（#69）。⚠⚠ **参照の SHA は `Gemfile` の ginseng-style と同じものに揃える。**版を上げるときは 2 か所を同時に書き換える
 - ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v1.24.0'`・#82 で v1.23.7 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
