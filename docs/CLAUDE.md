@@ -91,6 +91,24 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ **初回の大掃除が着地していない機体の weekly に載せると、数時間走る**（千万件単位）。載せる順は chubo2#261 が「着地した機体から」と承知している
 - 持ち越し 2 件（`writers_base.rb` の `mask_urls_in` のコメント・`DumpRotation#delete_old_files` の `Logger#warn` のコメント）は今回も触っていない
 
+#### 実機確認: 2026-10-02（1.9.0・dev24 / dev27）
+
+⚠ **今回はステージングで確かめた**（dev24 ＝ FreeBSD 15・美食丼ステージング・pgbouncer あり／dev27 ＝ Ubuntu の LXC）。1.8.0 と同じく⚠⚠ **チェックアウトには触れず**、`main`（`5dea380`）を `/var/tmp` へ別に clone し、cron 相当（`sudo env -i ... LANG=C.UTF-8`）から回して、終わったら消した（両台とも `v1.8.0` のまま）。⚠ Gem の版は v1.8.0 から動いていないので、root の gem の置き場のまま `bundle check` が通った。
+
+| 道具 | Issue | 台 | 回し方 | 結果 |
+| --- | --- | --- | --- | --- |
+| `reboot_required` | #160 | dev24 / dev27 | `bin/wb` | ✅ exit 0（両台とも再起動待ちではない） |
+| `reboot_required` | #160 | dev24 | `ruby` で待ち状態を差し替え | ✅ カーネルの mtime（08-31）が起動（09-29）より前なので**起動時刻に揃い**、待ち 2 日。`stale_days` 14 で `up / OK 要再起動(…/待ち2日)`、0 で `down` |
+| `reboot_required` | #160 | dev27 | `ruby` で `.pkgs` を差し替え（`libc6` / `linux-base` / `base-files`） | ✅ `libc6:amd64.list` を拾い、どれも起動前なので `nil` → 稼働日数（3 日）へ戻る |
+| `mastodon_statuses_remove` | #162 | dev24 | `ruby` で `env/DB_PORT: 5432` と `--keep-tags` を与えて `body` | ✅ exit 0・`failure` 空・**0 件中 0 件**（dev24 にリモート投稿は無い）。`ANALYZE` と会話の掃除まで走った |
+| `mastodon_statuses_remove` | #162 | dev24 | 同じ経路で `rails runner` | ✅ **`inet_server_port()` が 5432**（`.env.production` は `DB_PORT=6432` ＝ pgbouncer）。⚠ 渡した環境変数が dotenv に上書きされないことの実測 |
+| `mastodon_statuses_remove` | #162 | dev24 | `--keep-tags=tag,美食丼` | ✅ tootctl が `Keeping statuses tagged with: tag, 美食丼` と出した（**日本語のタグ名が 2 段のシェルを通って届く**） |
+
+- ⚠ **最初は `--keep-tags=precure_fun,宮本佳那子` で回して `Keeping` の行が出なかった。**dev24 にその Tag 行が無く、`DEFAULT_TAG` も空のため（#977 の仕様どおり、無い名前は黙って無視される）。⚠⚠ **タグの綴りを間違えても tootctl は何も言わない**ので、node yaml に入れた直後は `Keeping` の行を見ること
+- ⚠ **「起動後に入ったパッケージのうち最も古いもの」を選ぶ経路は、実データでは通せていない**（staging 2 台とも起動後の更新が 0 件）。単体テストでだけ見ている。配ったあと、再起動待ちの台で `待ちN日` を chubo2 の `reboot-sweep` と突き合わせる
+- ⚠ **`DB_PORT` を付けない失敗側は回していない。**この版の tootctl は一時テーブルではなく**実テーブル `statuses_to_be_deleted`** を作って最後に消すので、途中で落とすと残りうる
+- ⚠ **実際に投稿が消える経路**は tools の変更の外（tootctl 側）で、#977 のときに dev24 で確かめてある（pooza/mastodon#978）
+
 ### v1.8.0（2026-09-26 タグ）—— ✅ **2026-09-29 に chubo2 管理の 11 台へ配った**
 
 **最新タグは v1.8.0**（`7e9bd8a`／公開 2026-09-26）。マイルストーン `1.8.0` の 5 件（重み 7）。✅ **2026-09-29 に chubo2 が 11 台へ配った**（本番 7 台＝ shallu / zugoga / gomander / vulcan / deas / pirazal / pirazis と dev24〜27・pooza/chubo2#258 はクローズ・記録は chubo2 `1116991`）。⚠ vulcan は 09-26〜28 に v1.6.0 → v1.7.1 を経ている（chubo2 `d38b3ba`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177）。⚠ `bundle install` / `rake install` の流し直しは不要（zugoga の本番の gem の置き場で、v1.8.0 の lock に対して `bundle check` が通るのを確認した）。⚠ FreeBSD では再起動待ちが稼働 42 日を超えると、monit と `reboot_required` の 2 本のモニタが同時に `down` になる（⚠ **chubo-core 側は 2026-09-29 に「待ち始めから 14 日」へ変えた**＝ `fddff73`・chubo2#260。⚠⚠ **tools はまだ稼働日数で判定しているので、14 日では使えない** —— 追随は **#160**）
