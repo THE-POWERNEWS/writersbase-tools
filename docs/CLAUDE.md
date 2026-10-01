@@ -61,6 +61,18 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
+### 1.9.0（開発中）
+
+マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。`/package/version` は #164 でバンプ済み。
+
+| Issue | 内容 | 状態 |
+| --- | --- | --- |
+| #164 | バンプ | ✅ #165 |
+| #160 | `reboot_required` を稼働日数ではなく「再起動待ちになってからの日数」で判定する（chubo2#260・しきい値 14 日で使うため） | ⏳ |
+| #162 | `mastodon_statuses_remove` を足し、tootctl へ渡す環境変数（`DB_PORT`）を設定で持てるようにする（chubo2#261） | ⏳ |
+
+- ⚠⚠ **#160 の待ち始めは chubo-core の monit・chubo2 の `reboot-sweep.rb` と同じ測り方**（Debian 系は `.pkgs` の dpkg の `.list` の mtime のうち起動後で最も古いもの・FreeBSD は `/boot/kernel/kernel` の mtime）。取れなければ稼働日数に戻す。⚠ `msg` は `稼働N日` → `待ちN日` に変わる。既定の `stale_days: 42` は変えない（利用側が 14 を入れる）
+
 ### v1.8.0（2026-09-26 タグ）—— ✅ **2026-09-29 に chubo2 管理の 11 台へ配った**
 
 **最新タグは v1.8.0**（`7e9bd8a`／公開 2026-09-26）。マイルストーン `1.8.0` の 5 件（重み 7）。✅ **2026-09-29 に chubo2 が 11 台へ配った**（本番 7 台＝ shallu / zugoga / gomander / vulcan / deas / pirazal / pirazis と dev24〜27・pooza/chubo2#258 はクローズ・記録は chubo2 `1116991`）。⚠ vulcan は 09-26〜28 に v1.6.0 → v1.7.1 を経ている（chubo2 `d38b3ba`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177）。⚠ `bundle install` / `rake install` の流し直しは不要（zugoga の本番の gem の置き場で、v1.8.0 の lock に対して `bundle check` が通るのを確認した）。⚠ FreeBSD では再起動待ちが稼働 42 日を超えると、monit と `reboot_required` の 2 本のモニタが同時に `down` になる（⚠ **chubo-core 側は 2026-09-29 に「待ち始めから 14 日」へ変えた**＝ `fddff73`・chubo2#260。⚠⚠ **tools はまだ稼働日数で判定しているので、14 日では使えない** —— 追随は **#160**）
@@ -75,7 +87,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #138 | WordPress の自動更新が当たっていないノードを検出する道具 | ✅ #155（`wordpress_outdated`） |
 
 - ⚠⚠ **#141 で「失敗ではないが要対応」を heartbeat へ伝える口（`Tool#alert` / `#status_message`）を足した。**`alert` が文字列を返すと `bin/wb` が `down` を送るが、**Sentry へは送らず終了コードも 0**。失敗の経路に混ぜると本物の失敗が埋もれるため。使っているのは `reboot_required` と `wordpress_outdated`
-- ⚠ **再起動待ちの日数は稼働日数で近似した**（Issue の提案した `/var/run/reboot-required` の mtime ではない）。あちらは更新のたびに `touch` し直されるので、**溜めているノードほど鳴らない**。chubo-core の monit と同じ近似・同じしきい値
+- ⚠ **再起動待ちの日数は稼働日数で近似した**（Issue の提案した `/var/run/reboot-required` の mtime ではない）。あちらは更新のたびに `touch` し直されるので、**溜めているノードほど鳴らない**。chubo-core の monit と同じ近似・同じしきい値 ⚠⚠ **1.9.0 で「待ち始めからの日数」へ変えた**（#160・下記）
 - ⚠ `wordpress_outdated` は**効くのが dev1 だけ**。✅ writersBASE 側にも **2026-09-29 に自前の Kuma（`uptime.writersbase.net`）の push モニタができた**（writersbase-env#137 / #182・`tools.heartbeat.base` で向け直す）。どの道具にモニタを付けるかは writersbase-env 側の判断
 
 #### リリース前レビュー: 2026-09-26（1.8.0）
