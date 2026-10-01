@@ -68,10 +68,13 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #164 | バンプ | ✅ #165 |
-| #160 | `reboot_required` を稼働日数ではなく「再起動待ちになってからの日数」で判定する（chubo2#260・しきい値 14 日で使うため） | ⏳ |
-| #162 | `mastodon_statuses_remove` を足し、tootctl へ渡す環境変数（`DB_PORT`）を設定で持てるようにする（chubo2#261） | ⏳ |
+| #160 | `reboot_required` を稼働日数ではなく「再起動待ちになってからの日数」で判定する（chubo2#260・しきい値 14 日で使うため） | ✅ #166 |
+| #162 | `mastodon_statuses_remove` を足し、tootctl へ渡す環境変数（`DB_PORT`）を設定で持てるようにする（chubo2#261） | ✅ #167 |
 
 - ⚠⚠ **#160 の待ち始めは chubo-core の monit・chubo2 の `reboot-sweep.rb` と同じ測り方**（Debian 系は `.pkgs` の dpkg の `.list` の mtime のうち起動後で最も古いもの・FreeBSD は `/boot/kernel/kernel` の mtime）。取れなければ稼働日数に戻す。⚠ `msg` は `稼働N日` → `待ちN日` に変わる。既定の `stale_days: 42` は変えない（利用側が 14 を入れる）
+- ⚠⚠ **#162 の `env` は `sudo -u <user> env K=V ...` の引数に載り、`ps` から読める。**資格情報を置かないこと。`RAILS_ENV` は `/mastodon/rails_env` が勝つ。口は `MastodonTootctl` 全体にあるが既定は無し
+- ⚠ **`--keep-tags` はカンマ区切りの 1 引数**（`--keep-tags=a,b`）。pooza/mastodon の tootctl は `type: :string` で受けて本体が `split(',')` する。⚠ Codex は「Thor の配列オプションなので分割されない」と P1 を付けたが**誤り**（#167 で根拠を返して指摘なし扱い）。差分しか見ないので、再レビューしても同じことを言う
+- ⚠ `mastodon_statuses_remove` は**実際に投稿を消す**ので、実機確認は chubo2#261 の段取りと合わせる
 
 ### v1.8.0（2026-09-26 タグ）—— ✅ **2026-09-29 に chubo2 管理の 11 台へ配った**
 
