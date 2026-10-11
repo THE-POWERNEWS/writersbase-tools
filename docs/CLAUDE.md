@@ -69,9 +69,15 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | --- | --- | --- |
 | #176 | バンプ | ✅ #178 |
 | #175 | tootctl の標準出力を縮めてログへ残す（pooza/chubo2#261 で「`Keeping` の行が periodic 経由だと残らない」と分かった） | ✅ #179 |
-| #174 | periodic が `bundle check` で落ちたとき、Kuma へ `down` を送ってから終わる（pooza/chubo2#240 の pdns ダンプ停止） | ⏳ |
+| #174 | periodic が `bundle check` で落ちたとき、Kuma へ `down` を送ってから終わる（pooza/chubo2#240 の pdns ダンプ停止） | ✅ #181（⚠ **配るには `rake install` の流し直しが要る**） |
 | #177 | ginseng-core を v1.24.0 → **v2.4.2**、ginseng-style を v1.1.12 → **v1.1.14** へ上げる | ✅ #180 |
 
+- 🔴 **1.10.0 は「配布物が変わる」リリース**（1.7.0 と同じ型）。配るときは **`bundle install`（#177）→ `rake install`（#174）** の両方が要る。⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ `bundle check` で落ちても `down` を送らない）。chubo2 は `chuboctl --recipes=writersbase_tools` が両方を兼ねる
+- ⚠⚠ **#174 の `down` は `bin/heartbeat_down.rb` が送る。bundler を通さない**（bundle が壊れているときに動く道具なので、`HeartbeatFallback` は stdlib だけ）。⚠ **設定の読み方は `Ginseng::Config#load` の写し**（置き場・拡張子・「ホスト名 > local > application」・shadow）で、本体とずれていないことは `HeartbeatFallbackTest` で見る。**ここに gem の require を足さないこと**
+  - ⚠⚠ **push URL は引数に載せていない**（#121）。スクリプトに書くのはツール名と文言だけで、URL は `ruby` が設定から読む。**`curl <URL>` に書き換えないこと**
+  - ⚠ **拾えるのは「`ruby` は動くが bundle が未充足」の止まり方だけ**（pooza/chubo2#240 の型）。**`ruby` 自体が起動しない止まり方（07-18 の `ruby33` 消失の型）は、従来どおり Kuma の interval 切れ待ち**
+  - ⚠ Kuma の msg は固定の `bundle check failed`。`bundle check` の出力そのものは periodic / cron のメールに出る（従来どおり）
+  - ⚠ 送れなくても終了コードは 1 のまま（`|| true`）。トークンを書いていないツールでは何も送らない
 - ⚠ **#175 でログに `実行完了` の行が増えた**（`TootctlCommands` を使う `mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove`）。`output` に tootctl の標準出力が載る。⚠ **進捗バーの行（`Progress: |===|`）は落とし、先頭 800 ＋ 末尾 1200 文字に縮める**（FreeBSD の syslogd の 8,087 バイトに収める。失敗時の 200 ＋ 700 は Sentry の 1,024 文字に合わせた値で、そのまま使うと `removed N out of M statuses` が省略に落ちた）
 - ⚠ `output` の先頭には Mastodon の `[dotenv] Loaded .env.production` の行が毎回載る（tootctl が標準出力へ出している）。害は無いので落としていない
 - ⚠⚠ **#177 で Gem の版が動いたので、1.10.0 を配るときは `bundle install` が要る**（ginseng-core v2.4.2 と、その依存で新しく入る `resolv` 0.8.1）。⚠ `Gemfile.lock` は `bundle update --conservative` で上げたので、**動いたのは ginseng-* 2 本・rubocop 系・`resolv` だけ**（Dependabot の PR #172 が連れてきた json 3.0 / facets 4.0 は入れていない）
@@ -104,6 +110,19 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | `mastodon_maintenance`（`commands` を `version` へ差し替え） | dev24 | ✅ `sudo -u mastodon` ＋ `bash -lc` の経路が通り、`output` に `4.7.3` |
 
 - ⚠ **ダンプ・スナップショット・rclone の経路は回していない。**`CommandLine` と `HTTP` を通る代表として上の 2 本を選んだ。リリース前の実機確認で改めて見る
+
+#### 実機確認: 2026-10-11（#174・dev24 / dev27）
+
+`/var/tmp` の別 clone で、**生成された periodic スクリプトをそのまま**（`cd` の行だけ差し替え）cron 相当の `sudo env -i` から回した。bundle は `BUNDLE_PATH` を空の置き場へ向けて壊した。⚠⚠ **Kuma の実モニタは鳴らしていない** —— clone の `config/<ホスト名>.yaml` で `heartbeat.base` だけを手元（`127.0.0.1`）の受け口へ向け、**トークンは実機の `local.yaml` のまま**読ませた（ホスト名の yaml は local より強い）。
+
+| 見たこと | 台 | 結果 |
+| --- | --- | --- |
+| `bundle check` で落ちる → `down` が届く | dev24（system ruby 3.4.9）/ dev27（3.3.8） | ✅ 受け口に `GET /api/push/<トークン>?status=down&msg=bundle+check+failed`。スクリプトは **exit 1 のまま**・stderr の文言も従来どおり |
+| トークンの無いツール | 両台 | ✅ 何も送らず exit 0 |
+| system ruby から Kuma への HTTPS | 両台 | ✅ 無効なトークンで叩いて 404 が返る（TLS まで通る） |
+
+- ⚠ **pooza/chubo2#240 の壊れ方そのもの（OS の更新で root の gem の native 拡張が外れる）は再現していない。**「`bundle check` が非ゼロ」という入口が同じ、というところまで。⚠ あの状態でも stdlib の `yaml`（psych）と `net/http`（openssl）は Ruby 本体と一緒に入れ替わるので動くはずだが、**実測はしていない**。次に 14.5 の台を上げるときに見られる
+- ⚠ **実際の Kuma のモニタが `down` になるところは見ていない**（上の受け口まで）。送る形は `Heartbeat#down` と同じ `status` / `msg`
 
 ### v1.9.0（2026-10-02 タグ）—— ✅ **2026-10-02 に chubo2 管理の 11 台へ配った**
 
@@ -378,7 +397,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-10-11 まで新規は 1 件も無い**（v1.9.0 を配ってからの 9 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
 
-- 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）。⏳ **`bundle check` で落ちたときに Kuma へ `down` を送る件は #174**（⚠ `ruby` 自体が起動しない止まり方は、それでも interval 切れ待ち）
+- 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）。✅ **1.10.0（#174）で、`bundle check` で落ちたときに Kuma へ `down` を送るようにした**（⚠ 配って `rake install` を流し直すまでは効かない。⚠ `ruby` 自体が起動しない止まり方は、それでも interval 切れ待ち）
 
 - ✅ **`mysql_dump` が `sh: bash: not found`**（`WRITERSBASE-TOOLS-8`・2 件／**pirazis・`release` 1.7.1・2026-09-26 08:28 JST**）。chubo2#256 で管理に載せた直後の手動実行で踏んだもの。`Tool#pipefail_args`（#62）は **`bash -o pipefail` に依存**しており、FreeBSD の base に bash は無い。✅ **chubo-core が FreeBSD の依存に `bash` を足して解消**（`068d2d9`）し、2 台とも当日のダンプが完走している。⚠ **Sentry の `-8` は未 resolve のまま**。⚠ 道具の側は**落ちるべきところで落ちている**（pdns のダンプを「成功」と記録していない）
 

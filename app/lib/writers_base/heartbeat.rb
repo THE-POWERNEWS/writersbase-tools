@@ -93,11 +93,11 @@ module WritersBase
     end
 
     def base
-      return @config.lookup('/heartbeat/base', 'https://uptime.b-shock.org/api/push')
+      return @config.lookup('/heartbeat/base', HeartbeatFallback::DEFAULT_BASE)
     end
 
     def timeout
-      return @config.lookup('/heartbeat/timeout', 20)
+      return @config.lookup('/heartbeat/timeout', HeartbeatFallback::DEFAULT_TIMEOUT)
     end
 
     def token
