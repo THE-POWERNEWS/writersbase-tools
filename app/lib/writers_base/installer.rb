@@ -64,6 +64,13 @@ module WritersBase
     # 足りなければ**明確なメッセージで落として cron に報せる**。
     #
     # ⚠ `bin/wb` が最後の行なので、終了コードはそのまま periodic / cron へ伝わる。
+    #
+    # 🔴 **ここで落ちると `bin/wb` まで届かないので、Sentry にもログにも何も出ない。**
+    # Kuma が赤くなるのは interval 切れを待ってから（daily は 32 時間）で、pooza/chubo2#240 では
+    # pdns の日次ダンプが 4 日止まった。落ちる前に `down` を送っておく（#174）。
+    # ⚠⚠ **`curl <push URL>` と書かないこと。**push URL は資格情報で、引数に載せると `ps` から
+    # 読める（#121）。bundler を通さない `bin/heartbeat_down.rb` が設定から読んで送る。
+    # ⚠ 送れなくても終了コードは変えない（`|| true`）。`set -e` が効いているので外さないこと。
     def contents(tool)
       return [
         '#!/bin/sh',
@@ -81,6 +88,7 @@ module WritersBase
         'if ! bundle_check=$(bundle check 2>&1); then',
         '  echo "$bundle_check" >&2',
         "  echo '#{Package.name}のbundleが未充足です。構成管理を流して入れ直してください。' >&2",
+        "  ruby bin/heartbeat_down.rb #{tool} 'bundle check failed' >&2 || true",
         '  exit 1',
         'fi',
         "bin/wb #{tool}",

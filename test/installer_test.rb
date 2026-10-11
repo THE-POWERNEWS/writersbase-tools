@@ -34,6 +34,15 @@ module WritersBase
       assert_match(%r{^cd '/.+'$}, contents)
     end
 
+    # 🔴 bundle check で落ちると bin/wb まで届かず、Sentry にもログにも出ない。
+    # 落ちる前に Kuma へ down を送る（#174）。⚠ push URL を引数に載せない（#121）
+    def test_contents_reports_bundle_failure
+      contents = @installer.contents('postgresql_dump')
+
+      assert_match(%r{^  ruby bin/heartbeat_down\.rb postgresql_dump '.+' >&2 \|\| true\n  exit 1$}, contents)
+      assert_not_match(%r{curl|https?://|api/push}, contents)
+    end
+
     # ⚠ チェックアウトへ .bundle/config を書きに行かせない（#68）
     def test_contents_does_not_write_bundle_config
       contents = @installer.contents('postgresql_dump')
