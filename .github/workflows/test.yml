@@ -35,7 +35,7 @@ jobs:
           sudo apt install libsqlite3-dev
       # ⚠ 手順の正本は composite action 側。参照は SHA で固定し、Gemfile の
       # ginseng-style と同じ版に揃える（#70 と同じ理由 ＝ タグは付け替えられる）。
-      - uses: pooza/ginseng-style/.github/actions/ruby-check@ed862dcf9550d704ee670f65a30a333a694b883a # v1.1.12
+      - uses: pooza/ginseng-style/.github/actions/ruby-check@2818c5618476302e4a10454f1b621502a053f492 # v1.1.14
         with:
           # ⚠⚠ CI で bundle update すると、Gemfile.lock が CI の結果を縛らなくなる。
           # こちらが 1 行も変えていない日に、依存の新版で赤くなる。依存の更新は

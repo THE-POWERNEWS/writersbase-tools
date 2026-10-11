@@ -22,9 +22,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 - `.rubocop.yml` は `inherit_gem` の上に **`TargetRubyVersion: 3.3`** だけを置く。⚠ **CI の matrix の最小が 3.3**（Ubuntu の system ruby）のため（配る既定は 3.4）。matrix は実機の system ruby の系列を並べる（3.3 = Ubuntu、3.4 = FreeBSD）。⚠⚠ **実機の版と食い違うと CI が緑のまま実機で落ちる**（2026-07-18 に pkg から `ruby33` が消え、FreeBSD 機の自動ダンプが 2 か月止まった）。最小を上げたらここも上げる
 - ⚠⚠ **Ruby は pin しない（`.ruby-version` を置かない・rbenv を要求しない）。** 道具の性質上、**導入のコストを低く保つことを優先**する（2026-09-29 オーナー判断）。OS 標準の Ruby で動かなければそれは仕方がない、という割り切り。⚠ pin すれば pkg から系列が消える事故や、apt で 3.3 以上が入らない台（Ubuntu 24.04）は解消するが、**全ノードで rbenv のビルドとパッチ版の追従が要る**ようになり、上の優先と逆になる。**守りは CI の matrix を実機の系列に合わせることで取る**
-- `Gemfile` の `ginseng-style` は **SHA 固定**（`ed862dcf…` ＝ v1.1.12）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
+- `Gemfile` の `ginseng-style` は **SHA 固定**（`2818c561…` ＝ v1.1.14・#177 で v1.1.12 から上げた）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
 - CI は ginseng-style の composite action（`ruby-check`）を使う（#69）。⚠⚠ **参照の SHA は `Gemfile` の ginseng-style と同じものに揃える。**版を上げるときは 2 か所を同時に書き換える
-- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v1.24.0'`・#82 で v1.23.7 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
+- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v2.4.2'`・#177 で v1.24.0 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
 - ⚠⚠ **同じ「固定」でも ginseng-style は SHA、ginseng-core は tag。矛盾ではない。**ginseng-style は **CI で実行されるコード**（composite action。`release-tag` は呼び出し側の `contents: write` を受け取る）なので、**付け替え可能なタグ自体が脅威**になる（pooza/ginseng-style#75）。ginseng-core は**実行時の依存**で、要件は「いつ版が動くかを人が決めること」だけなので tag で足りる（#103 も「`tag:`（または SHA）」と書いている）。⚠ **どちらかに揃えようとして倒さないこと**
 
 ### 保留中の依存の更新
@@ -70,10 +70,17 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #176 | バンプ | ✅ #178 |
 | #175 | tootctl の標準出力を縮めてログへ残す（pooza/chubo2#261 で「`Keeping` の行が periodic 経由だと残らない」と分かった） | ✅ #179 |
 | #174 | periodic が `bundle check` で落ちたとき、Kuma へ `down` を送ってから終わる（pooza/chubo2#240 の pdns ダンプ停止） | ⏳ |
-| #177 | ginseng-core / ginseng-style のピンを現行版へ上げる（#139 の判断込み） | ⏳ |
+| #177 | ginseng-core を v1.24.0 → **v2.4.2**、ginseng-style を v1.1.12 → **v1.1.14** へ上げる | ✅ #180 |
 
 - ⚠ **#175 でログに `実行完了` の行が増えた**（`TootctlCommands` を使う `mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove`）。`output` に tootctl の標準出力が載る。⚠ **進捗バーの行（`Progress: |===|`）は落とし、先頭 800 ＋ 末尾 1200 文字に縮める**（FreeBSD の syslogd の 8,087 バイトに収める。失敗時の 200 ＋ 700 は Sentry の 1,024 文字に合わせた値で、そのまま使うと `removed N out of M statuses` が省略に落ちた）
 - ⚠ `output` の先頭には Mastodon の `[dotenv] Loaded .env.production` の行が毎回載る（tootctl が標準出力へ出している）。害は無いので落としていない
+- ⚠⚠ **#177 で Gem の版が動いたので、1.10.0 を配るときは `bundle install` が要る**（ginseng-core v2.4.2 と、その依存で新しく入る `resolv` 0.8.1）。⚠ `Gemfile.lock` は `bundle update --conservative` で上げたので、**動いたのは ginseng-* 2 本・rubocop 系・`resolv` だけ**（Dependabot の PR #172 が連れてきた json 3.0 / facets 4.0 は入れていない）
+- ⭕ **ginseng-core v2.0.0 〜 v2.4.2 の「利用側で変わること」は、どれも tools に届かない**（2026-10-11 にリリースノートと突き合わせた）
+  - v2.0.0 / v2.4.1 / v2.4.2 のリダイレクト拒否は `Slack` / `LineService` と `guard_redirects!` を挿した HTTP の話。tools は `WritersBase::HTTP < Ginseng::HTTP` を素で使い、`guard_redirects!` も `host_validator` も呼んでいない
+  - v2.2.0 / v2.3.0 は `Daemon`（tools は常駐しない）。v2.1.0 の `PublicHost` は使っていない
+  - v2.4.0 の `CommandLine#exec(timeout:)` は**締切つきの呼び出しだけ**が変わる。tools は `timeout:` を 1 か所も渡していない（`Heartbeat` の `timeout` は HTTP のもの）
+  - ⚠ **ログの見え方は変わる**（v2.4.1 / v2.4.2）: クエリの `signature` / `sig` / `hm` / `jwt` / `authorization` などの値が `[FILTERED]` になる。tools が叩く URL（Kuma の push・WordPress の更新 API・webhook）にこの名前のクエリは無い
+  - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないこと（#85 の名前衝突の型）は、上げたあとの実物で確かめた（上書きは `TestCase#teardown` だけ）
 - ⚠ **`mastodon_follow` / `misskey_emoji_sync` は対象外**（`TootctlCommands` を使っていない。後者は必要な行を自前で拾っている）
 
 #### 実機確認: 2026-10-11（#175・dev24）
@@ -86,6 +93,17 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | `mastodon_maintenance` | `commands` を `version` へ差し替え | ✅ `output` に `4.7.3` |
 
 - ⚠ **実際に消す件数が多い回（進捗バーが長い・`media remove` の出力）は見ていない。**dev24 にリモート投稿が無いため。縮め方は単体テストでだけ見ている
+
+#### 実機確認: 2026-10-11（#177・dev24 / dev27）
+
+`/var/tmp` の別 clone に **`BUNDLE_PATH` で gem を別に入れて**（root の gem の置き場には触れない）、cron 相当の `sudo env -i` から回し、終わったら消した。両台とも `bundle install` → `bundle check` が通る。
+
+| 道具 | 台 | 結果 |
+| --- | --- | --- |
+| `reboot_required` | dev24（FreeBSD 15.1）/ dev27（Ubuntu） | ✅ exit 0・**Kuma へ `up` が 200**（`url:` は `[FILTERED]`） |
+| `mastodon_maintenance`（`commands` を `version` へ差し替え） | dev24 | ✅ `sudo -u mastodon` ＋ `bash -lc` の経路が通り、`output` に `4.7.3` |
+
+- ⚠ **ダンプ・スナップショット・rclone の経路は回していない。**`CommandLine` と `HTTP` を通る代表として上の 2 本を選んだ。リリース前の実機確認で改めて見る
 
 ### v1.9.0（2026-10-02 タグ）—— ✅ **2026-10-02 に chubo2 管理の 11 台へ配った**
 
@@ -213,11 +231,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #82 | `CommandLine#log_exec` の上書きを本体へ寄せる | ✅ **ginseng-core を v1.24.0 へ上げて上書きを外した**（下記） |
 
 - ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
-  - ⏳ **ginseng-core は v1.25.0 が出ているが、先送りにした**（2026-09-25 判断・#139）。中身は `Daemon` の pid ファイル（#643）と ginseng-style の追随だけで、**tools は常駐しないので影響しない**。次に版を上げる用事ができたときに一緒に上げる
-  - ⏳ **v1.25.1（2026-09-26）も同じ扱い。**中身は「429 に `Retry-After` が無ければ `X-RateLimit-Reset` を読む」だけ（Mastodon 向け）。tools の HTTP は `misskey_emoji_sync` の webhook（⚠ **Misskey は `Retry-After` を付けるので対象外**）と Kuma の push だけなので、影響しない
-  - ⏳ **v2.0.0（2026-09-28）はメジャー**だが、破壊的変更 3 つ（`Ginseng::Slack` / `LineService` がリダイレクトを追わない・`host_validator` の経路が `follow_redirects` を尊重する・`Daemon#save_config`）は**どれも tools に届かない**（2026-10-02 に確認）。tools の HTTP は `WritersBase::HTTP < Ginseng::HTTP` を素で使い、Slack / LineService / `host_validator` / `Daemon` を使っていない。⚠ Dependabot の PR は **#159（v1.25.0）が 2026-10-04 に閉じ、#172（v2.0.0）へ差し替わった**（open・CI は緑）。⚠ #172 は `Gemfile.lock` で **json 3.0 / facets 4.0（どちらもメジャー）**も連れてくる。⚠⚠ **上流はすでに v2.4.2**（2026-10-11 時点）で、**v2.1〜v2.4 の中身は tools の側からまだ読んでいない**。上げるなら #172 をそのまま通さず、行き先の版を決めてから（#139）
+  - ✅ **v1.25.0 〜 v2.4.2 は先送りにしてきたが、1.10.0（#177）でまとめて v2.4.2 へ上げた**（下の 1.10.0 の節）
   - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、⚠ **tools で `secrets:` を渡している道具はいま 0 本**（唯一だった `misskey_emoji_sync` も #127 で `--webhook` を引数から外した。口は `Tool#execute` / `tootctl_command` に残してある）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
-- ⏳ **ginseng-style は v1.1.14 まで出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 2 版遅れ。先送り**（2026-09-25・#139／2026-10-11 に再確認）。gem として効く中身は rubocop 1.91.0（v1.1.13・新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ）と rubocop-minitest 0.41.0（v1.1.14）への追随だけで、残りは docs とプラグインの雛形。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
+- ✅ **ginseng-style も 1.10.0（#177）で v1.1.14 へ上げた**（v1.1.12 から 2 版。gem として効く中身は rubocop 1.91.0 と rubocop-minitest 0.41.0 への追随だけで、**新しく掛かった指摘は 0 件**）。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
 
 #### リリース前レビュー: 2026-09-25（1.7.1）
 
