@@ -27,7 +27,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v2.4.2'`・#177 で v1.24.0 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
 - ⚠⚠ **同じ「固定」でも ginseng-style は SHA、ginseng-core は tag。矛盾ではない。**ginseng-style は **CI で実行されるコード**（composite action。`release-tag` は呼び出し側の `contents: write` を受け取る）なので、**付け替え可能なタグ自体が脅威**になる（pooza/ginseng-style#75）。ginseng-core は**実行時の依存**で、要件は「いつ版が動くかを人が決めること」だけなので tag で足りる（#103 も「`tag:`（または SHA）」と書いている）。⚠ **どちらかに揃えようとして倒さないこと**
 
-- ⚠ **`ginseng-*` は Dependabot の version update から外してある**（`.github/dependabot.yml` の `ignore`・#139・2026-10-11 オーナー判断）。固定した版をいつ・どこまで上げるかは人が決めていて、Dependabot の PR はその判断を持てなかった（#159 → #172 は上流が v2.4.2 のときに v2.0.0 止まりで、json 3.0 / facets 4.0 を連れてきた。SHA 固定の ginseng-style には PR が 1 本も来ていない）。⚠⚠ **ずれに気づく経路はセッション同期だけになった** —— 手順 6 のスクリプトを毎回回すこと。⚠ 止め方は `ignore`（`allow` で絞ると security update まで止まる）
+- ⚠ **`ginseng-*` は Dependabot の version update から外してある**（`.github/dependabot.yml` の `ignore`・#139・2026-10-11 オーナー判断）。固定した版をいつ・どこまで上げるかは人が決めていて、Dependabot の PR はその判断を持てなかった（#159 → #172 は上流が v2.4.2 のときに v2.0.0 止まりで、json 3.0 / facets 4.0 を連れてきた。SHA 固定の ginseng-style には PR が 1 本も来ていない）。⚠⚠ **ずれに気づく経路はセッション同期だけになった** —— 手順 6 のスクリプトを毎回回すこと。⚠ 止め方は `ignore`（`allow` で絞ると security update まで止まる）。⚠⚠ **`update-types` に `version-update:*` の 3 種を並べてある。省かないこと** —— 名前だけの `ignore` は **security update にも効く**（#182 で Codex が指摘・GitHub のドキュメントで確認）
 
 ### 保留中の依存の更新
 
