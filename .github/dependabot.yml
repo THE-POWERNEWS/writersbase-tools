@@ -8,6 +8,13 @@ updates:
       time: '03:00'
       timezone: Asia/Tokyo
     open-pull-requests-limit: 10
+    # ⚠ ginseng-* は version update から外す（#139）。固定した版をいつ・どこまで上げるかは
+    # 人が決めていて、Dependabot の PR はその判断を持てない（遅れる・無関係なメジャー更新を
+    # 連れてくる・SHA 固定の ginseng-style はそもそも追えない）。ずれはセッション同期で拾う
+    # （docs/CLAUDE.md の「進捗の同期手順」6）。
+    # ⚠⚠ 止め方は ignore。allow で絞ると security update まで止まるので使わない。
+    ignore:
+      - dependency-name: 'ginseng-*'
     groups:
       minor-and-patch:
         update-types:

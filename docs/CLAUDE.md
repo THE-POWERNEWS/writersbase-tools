@@ -27,6 +27,8 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v2.4.2'`・#177 で v1.24.0 から上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
 - ⚠⚠ **同じ「固定」でも ginseng-style は SHA、ginseng-core は tag。矛盾ではない。**ginseng-style は **CI で実行されるコード**（composite action。`release-tag` は呼び出し側の `contents: write` を受け取る）なので、**付け替え可能なタグ自体が脅威**になる（pooza/ginseng-style#75）。ginseng-core は**実行時の依存**で、要件は「いつ版が動くかを人が決めること」だけなので tag で足りる（#103 も「`tag:`（または SHA）」と書いている）。⚠ **どちらかに揃えようとして倒さないこと**
 
+- ⚠ **`ginseng-*` は Dependabot の version update から外してある**（`.github/dependabot.yml` の `ignore`・#139・2026-10-11 オーナー判断）。固定した版をいつ・どこまで上げるかは人が決めていて、Dependabot の PR はその判断を持てなかった（#159 → #172 は上流が v2.4.2 のときに v2.0.0 止まりで、json 3.0 / facets 4.0 を連れてきた。SHA 固定の ginseng-style には PR が 1 本も来ていない）。⚠⚠ **ずれに気づく経路はセッション同期だけになった** —— 手順 6 のスクリプトを毎回回すこと。⚠ 止め方は `ignore`（`allow` で絞ると security update まで止まる）
+
 ### 保留中の依存の更新
 
 - ⏳ **`sentry-ruby` 7.x（PR #171 ＝ 7.1.0）は意図的に保留**。⚠ 元の PR #93（7.0.0）は **2026-10-04 に Dependabot が自分で閉じて #171 へ差し替えた**（判断を変えたわけではない。#171 の CI は 3.3 / 3.4 とも緑だが、下の確認は CI では取れない）。tools が触る API（`Sentry.init` / `capture_exception` / `before_send` / `close`）は無傷だが、7.0.0 で **logs / metrics が既定で有効**になり（`enable_logs` / `enable_metrics` は撤去）、`send_default_pii` が deprecated（`data_collection` へ）。⚠⚠ **1.6.0 は「失敗が Sentry に出るようになる」リリースなので、送信経路の挙動が黙って変わるのは最も避けたい**。dev1 で例外を 1 件飛ばし `env` 付きで着弾するのを確認してからマージする。**閉じないこと**（⚠ Dependabot が新しい版で差し替えるのは構わない。番号が変わったらここを直す）
@@ -71,6 +73,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #175 | tootctl の標準出力を縮めてログへ残す（pooza/chubo2#261 で「`Keeping` の行が periodic 経由だと残らない」と分かった） | ✅ #179 |
 | #174 | periodic が `bundle check` で落ちたとき、Kuma へ `down` を送ってから終わる（pooza/chubo2#240 の pdns ダンプ停止） | ✅ #181（⚠ **配るには `rake install` の流し直しが要る**） |
 | #177 | ginseng-core を v1.24.0 → **v2.4.2**、ginseng-style を v1.1.12 → **v1.1.14** へ上げる | ✅ #180 |
+| #139 | ginseng-* を Dependabot の version update から外す | ✅ #182 |
 
 - 🔴 **1.10.0 は「配布物が変わる」リリース**（1.7.0 と同じ型）。配るときは **`bundle install`（#177）→ `rake install`（#174）** の両方が要る。⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ `bundle check` で落ちても `down` を送らない）。chubo2 は `chuboctl --recipes=writersbase_tools` が両方を兼ねる
 - ⚠⚠ **#174 の `down` は `bin/heartbeat_down.rb` が送る。bundler を通さない**（bundle が壊れているときに動く道具なので、`HeartbeatFallback` は stdlib だけ）。⚠ **設定の読み方は `Ginseng::Config#load` の写し**（置き場・拡張子・「ホスト名 > local > application」・shadow）で、本体とずれていないことは `HeartbeatFallbackTest` で見る。**ここに gem の require を足さないこと**
@@ -503,6 +506,15 @@ PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開い
    - THE-POWERNEWS/writersbase-env … `config/platform/ubuntu.yaml` の `tools` と、#137（tools を最新版へ上げる）の進捗
    - pooza/ginseng-style … ⚠ **専任セッションの持ち物なので棚卸ししない。**見るのは**こちらのピンのずれ**（`Gemfile` の参照が正本の現行版から何版遅れているか）だけ
    - ⚠⚠ **`ginseng-core` は git 参照なので、向こうが直しても `bundle update` するまで 1 バイトも届かない。**「Issue が close された」は取り込み済みを意味しない
+   - ⚠⚠ **ginseng-* のピンのずれは、ここでしか拾えない**（Dependabot から外してある・#139）。下を**毎回**回し、「ずれ」と出たら gem ごとに「すぐ／次のマイルストーン／見送り」を決めて Issue にする
+
+     ```sh
+     ruby -e 'File.read("Gemfile").scan(/gem .(ginseng-[\w-]+).,\s+github: \S+,\s+(tag|ref): .(\w[\w.]*)./) {|n, kind, pin|
+       tags = `git ls-remote --tags --sort=-v:refname https://github.com/pooza/#{n}.git "v*"`
+       latest = tags[%r{refs/tags/(v[\d.]+)$}, 1]
+       ok = kind == "tag" ? pin == latest : tags.match?(/^#{pin}\trefs\/tags\/#{Regexp.escape(latest)}(\^\{\})?$/)
+       puts "#{n}\t#{ok ? "最新 #{latest}" : "ずれ #{pin[0, 12]} -> #{latest}"}" }'
+     ```
 7. **マイルストーンとバージョン** — open Issue の状態と `/package/version`・最新タグのずれを確認する
 8. **`MEMORY.md` の更新** — 上記で検出した差分を反映する
 9. **報告** — 現在のブランチ・状態、各確認項目の結果をまとめて報告する
