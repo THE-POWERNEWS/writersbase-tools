@@ -134,6 +134,8 @@ heartbeat:
     google_drive_backup: yyyyyyyyyyyy
 ```
 
+⚠ periodic / cron のスクリプトが `bundle check` で落ちたとき（＝ `bin/wb` まで届かないとき）も、そのツールのモニタへ `down`（`bundle check failed`）を送ります（#174）。bundler を通さない `bin/heartbeat_down.rb` が同じ設定から読むので、**push URL はスクリプトにも引数にも載りません**。⚠ `ruby` 自体が起動しない場合は送れず、ハートビート切れで DOWN になります。
+
 🔴 **成功時も送ります。**push モニタは「ハートビートが途切れたら DOWN」という向きなので、
 成功を送らないと「走った」ことが伝わりません。⚠ **これは欠点ではなく利点で、
 「そもそも走らなかった」（宣言漏れ・ノード停止・cron の設置漏れ）も DOWN になります** ——

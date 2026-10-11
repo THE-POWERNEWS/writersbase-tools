@@ -54,12 +54,17 @@ export BUNDLE_SILENCE_ROOT_WARNING=1
 if ! bundle_check=$(bundle check 2>&1); then
   echo "$bundle_check" >&2
   echo 'writersbase-toolsのbundleが未充足です。構成管理を流して入れ直してください。' >&2
+  ruby bin/heartbeat_down.rb <ツール名> 'bundle check failed' >&2 || true   # 1.10.0 から（#174）
   exit 1
 fi
 bin/wb <ツール名>
 ```
 
 - ⚠⚠ **依存を入れるのは構成管理の仕事になった。**`git pull` しただけで `Gemfile` が動いたノードは、**次の cron で「未充足です」と言って exit 1** する。⚠ **`bundle install` を流すこと**（chubo-core / env の cookbook はどちらも流す）
+- 🔴 **1.10.0 でスクリプトの中身がもう一度変わった**（#174）。`bundle check` で落ちたとき、**Kuma の push モニタへ `down` を送ってから** exit 1 する。⚠ **`rake install` を流し直すまで古いスクリプトが残る**（＝ 落ちても `down` を送らず、Kuma が赤くなるのは interval 切れを待ってから）
+  - `bin/wb` まで届かない止まり方は Sentry にもログにも出ない。pooza/chubo2#240 では FreeBSD の 15.1 化で root の gem が外れ、pdns の日次ダンプが 4 日止まった
+  - ⚠⚠ **push URL は資格情報なので、スクリプトには書かない**（引数に載ると `ps` から読める・#121）。bundler を通さない `bin/heartbeat_down.rb` が `local.yaml` から読んで送る
+  - ⚠ **OS の Ruby を入れ替えたあとは、従来どおりレシピ（`bundle install`）を流して periodic を手で 1 回回すこと。**`down` が出るようになっても、直るわけではない
 - ⚠ **`bundle check` は原則ネットワークに出ない**（`Gemfile.lock` が解決済みのとき）。⚠⚠ **未充足のときだけ** rubygems.org へ問い合わせに行くことがある
 - ⚠ **`set -e` が付いた。**`cd` に失敗したら `bin/wb` を叩かずに落ちる（従来は**別のディレクトリの `bin/wb` を叩きうる**状態だった）
 - ⚠ `bundle config silence_root_warning true` をやめ、環境変数 `BUNDLE_SILENCE_ROOT_WARNING=1` にした。**チェックアウトへ `.bundle/config` を書きに行かない**ため
