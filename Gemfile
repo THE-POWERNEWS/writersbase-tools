@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 gem 'concurrent-ruby'
 gem 'fileutils'
-gem 'ginseng-core', github: 'pooza/ginseng-core', tag: 'v2.4.2', require: 'ginseng'
+gem 'ginseng-core', github: 'pooza/ginseng-core', tag: 'v2.2.0', require: 'ginseng'
 gem 'mysql2'
 gem 'optparse'
 gem 'parallel'
