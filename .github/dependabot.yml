@@ -8,6 +8,20 @@ updates:
       time: '03:00'
       timezone: Asia/Tokyo
     open-pull-requests-limit: 10
+    # ⚠ ginseng-* は version update から外す（#139）。固定した版をいつ・どこまで上げるかは
+    # 人が決めていて、Dependabot の PR はその判断を持てない（遅れる・無関係なメジャー更新を
+    # 連れてくる・SHA 固定の ginseng-style はそもそも追えない）。ずれはセッション同期で拾う
+    # （docs/CLAUDE.md の「進捗の同期手順」6）。
+    # ⚠⚠ 止め方は ignore。allow で絞ると security update まで止まるので使わない。
+    # ⚠⚠ **update-types を省かないこと。**名前だけの ignore は security update にも効く
+    # （GitHub のドキュメント: ignore は version updates と security updates の両方に掛かる）。
+    # `version-update:*` の 3 種を並べると、止まるのは version update だけになる。
+    ignore:
+      - dependency-name: 'ginseng-*'
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
     groups:
       minor-and-patch:
         update-types:
