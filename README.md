@@ -278,6 +278,8 @@ nginx が開いたままの `error.log` / `access.log` に当たると、nginx �
 
 tootctl を呼ぶ道具（`mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove` / `mastodon_follow` / `misskey_emoji_sync`）は、**道具ごとに** `env` で tootctl へ環境変数を渡せます（#162）。既定は無しです。
 
+`commands` を並べる道具（`mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove`）は、成功したコマンドごとに tootctl の標準出力をログの `実行完了` の行（`output`）へ残します（#175）。進捗バーの行は落とし、長いときは先頭と末尾だけにします。⚠ `statuses remove --keep-tags` は**綴りを間違えたタグを黙って無視する**ので、設定した直後はログの `Keeping statuses tagged with:` の行を確かめてください。
+
 ```yaml
 mastodon_statuses_remove:
   env:

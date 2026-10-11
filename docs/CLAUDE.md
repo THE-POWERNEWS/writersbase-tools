@@ -61,13 +61,39 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
+### 1.10.0（開発中・2026-10-11 着手）—— ⚠ **タグはまだ打っていない**
+
+`/package/version` は 1.10.0（#176 でバンプ）。マイルストーン `1.10.0`。⚠ **`1.9.1` ではなく `1.10.0`** なのは、#174 で periodic スクリプトの中身が変わる（配るときに `rake install` の流し直しが要る）ため。
+
+| Issue | 内容 | 状態 |
+| --- | --- | --- |
+| #176 | バンプ | ✅ #178 |
+| #175 | tootctl の標準出力を縮めてログへ残す（pooza/chubo2#261 で「`Keeping` の行が periodic 経由だと残らない」と分かった） | ✅ #179 |
+| #174 | periodic が `bundle check` で落ちたとき、Kuma へ `down` を送ってから終わる（pooza/chubo2#240 の pdns ダンプ停止） | ⏳ |
+| #177 | ginseng-core / ginseng-style のピンを現行版へ上げる（#139 の判断込み） | ⏳ |
+
+- ⚠ **#175 でログに `実行完了` の行が増えた**（`TootctlCommands` を使う `mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove`）。`output` に tootctl の標準出力が載る。⚠ **進捗バーの行（`Progress: |===|`）は落とし、先頭 800 ＋ 末尾 1200 文字に縮める**（FreeBSD の syslogd の 8,087 バイトに収める。失敗時の 200 ＋ 700 は Sentry の 1,024 文字に合わせた値で、そのまま使うと `removed N out of M statuses` が省略に落ちた）
+- ⚠ `output` の先頭には Mastodon の `[dotenv] Loaded .env.production` の行が毎回載る（tootctl が標準出力へ出している）。害は無いので落としていない
+- ⚠ **`mastodon_follow` / `misskey_emoji_sync` は対象外**（`TootctlCommands` を使っていない。後者は必要な行を自前で拾っている）
+
+#### 実機確認: 2026-10-11（#175・dev24）
+
+1.9.0 と同じ形（チェックアウトに触れず `/var/tmp` へ別 clone・cron 相当の `sudo env -i`・終わったら消す。dev24 は `v1.9.0` のまま）。
+
+| 道具 | 回し方 | 結果 |
+| --- | --- | --- |
+| `mastodon_statuses_remove` | `ruby` で `env/DB_PORT: 5432` と `--keep-tags=tag,美食丼` を与えて `exec` | ✅ `/var/log/writersbase-tools.log` に **`Keeping statuses tagged with: tag, 美食丼`** と **`removed 0 out of 0 statuses`** が残る。1 行 1,172 バイト |
+| `mastodon_maintenance` | `commands` を `version` へ差し替え | ✅ `output` に `4.7.3` |
+
+- ⚠ **実際に消す件数が多い回（進捗バーが長い・`media remove` の出力）は見ていない。**dev24 にリモート投稿が無いため。縮め方は単体テストでだけ見ている
+
 ### v1.9.0（2026-10-02 タグ）—— ✅ **2026-10-02 に chubo2 管理の 11 台へ配った**
 
 **最新タグは v1.9.0**（`0c03924`／公開 2026-10-02）。マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。✅ **2026-10-02 に chubo2 が 11 台へ配った**（本番 7 台と dev24〜27・11 台とも `bundle check` 通過・**pooza/chubo2#264 はクローズ**・記録は chubo2 `docs/infra-history.md`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177・どちらも open）。⚠ **版を上げるだけなら** `bundle install` / `rake install` の流し直しは不要（Gem の版も periodic スクリプトの中身も変わらない）。⚠⚠ **ただし periodic に道具を足したら `rake install` が要る**（`Installer` は導入時の一覧からスクリプトを作るので、node yaml に書いただけでは走らない・#170 で Codex が指摘。chubo2 は `chuboctl --recipes=writersbase_tools` がこれを兼ねる）
 
 - ✅ **`stale_days: 14`** は chubo2 が platform yaml（FreeBSD / Ubuntu）に置いて配った（chubo2#260・monit / `reboot-sweep` と同じ 14 日に揃った）。⚠ **「起動後に入った最も古いパッケージ」から待ち始めを取る経路は、まだ実データで通っていない**（配った時点で再起動待ちの台が無かった）。突き合わせは chubo2#260 に残っている（open）
 - ✅ **`mastodon_statuses_remove`** は zugoga（10-02）・shallu・gomander（10-05）の weekly に載った（**chubo2#261 は 2026-10-04 にクローズ**）。手で 1 回回して exit 0・3〜4 分
-- ⚠⚠ **periodic 経由だと `Keeping statuses tagged with: ...` の行はどこにも残らない**（道具が tootctl の標準出力をログへ出していない・chubo2#261 で実測）。下の実機確認の「node yaml に入れた直後は `Keeping` の行を見ること」は、**手で `bin/wb` を回したときにしか使えない**。chubo2 は「守るタグ付きの 90 日超リモート投稿の件数が減っていないこと」で確かめた。⏳ **出力をログへ残す件は #175**
+- ⚠⚠ **periodic 経由だと `Keeping statuses tagged with: ...` の行はどこにも残らない**（道具が tootctl の標準出力をログへ出していない・chubo2#261 で実測）。chubo2 は「守るタグ付きの 90 日超リモート投稿の件数が減っていないこと」で確かめた。✅ **1.10.0（#175）でログの `実行完了` の行に残るようにした**（⚠ 配るまでは v1.9.0 のまま ＝ 残らない）
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
@@ -108,7 +134,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | `mastodon_statuses_remove` | #162 | dev24 | 同じ経路で `rails runner` | ✅ **`inet_server_port()` が 5432**（`.env.production` は `DB_PORT=6432` ＝ pgbouncer）。⚠ 渡した環境変数が dotenv に上書きされないことの実測 |
 | `mastodon_statuses_remove` | #162 | dev24 | `--keep-tags=tag,美食丼` | ✅ tootctl が `Keeping statuses tagged with: tag, 美食丼` と出した（**日本語のタグ名が 2 段のシェルを通って届く**） |
 
-- ⚠ **最初は `--keep-tags=precure_fun,宮本佳那子` で回して `Keeping` の行が出なかった。**dev24 にその Tag 行が無く、`DEFAULT_TAG` も空のため（#977 の仕様どおり、無い名前は黙って無視される）。⚠⚠ **タグの綴りを間違えても tootctl は何も言わない**ので、node yaml に入れた直後は `Keeping` の行を見ること（⚠ **手で回したときだけ見える**。periodic 経由では残らない ＝ 上記）
+- ⚠ **最初は `--keep-tags=precure_fun,宮本佳那子` で回して `Keeping` の行が出なかった。**dev24 にその Tag 行が無く、`DEFAULT_TAG` も空のため（#977 の仕様どおり、無い名前は黙って無視される）。⚠⚠ **タグの綴りを間違えても tootctl は何も言わない**ので、node yaml に入れた直後は `Keeping` の行を見ること（⚠ **v1.9.0 では手で回したときだけ見える**。1.10.0 からは `/var/log/writersbase-tools.log` の `実行完了` の行に残る ＝ #175）
 - ⚠ **「起動後に入ったパッケージのうち最も古いもの」を選ぶ経路は、実データでは通せていない**（staging 2 台とも起動後の更新が 0 件）。単体テストでだけ見ている。配ったあと、再起動待ちの台で `待ちN日` を chubo2 の `reboot-sweep` と突き合わせる
 - ⚠ **`DB_PORT` を付けない失敗側は回していない。**この版の tootctl は一時テーブルではなく**実テーブル `statuses_to_be_deleted`** を作って最後に消すので、途中で落とすと残りうる
 - ⚠ **実際に投稿が消える経路**は tools の変更の外（tootctl 側）で、#977 のときに dev24 で確かめてある（pooza/mastodon#978）
