@@ -85,21 +85,23 @@ module WritersBase
         'Keeping statuses tagged with: precure_fun, 美食丼',
         '',
         "  0% |\r 50% |=====\r100% |==========",
+        'Progress: |==========================================|',
         "\e[32mDone after 1.5s, removed 10 out of 12 statuses.\e[0m",
       ].join("\n")
       summary = @tool.send(:output_summary, command_with(stdout))
 
       assert_includes(summary, 'Keeping statuses tagged with: precure_fun, 美食丼')
       assert_includes(summary, 'Done after 1.5s, removed 10 out of 12 statuses.')
-      assert_not_match(/\e|\r|\n\n/, summary)
+      assert_not_match(/\e|\r|\n\n|Progress:/, summary)
     end
 
-    # ⚠ 長い行は journald が捨て、FreeBSD の syslogd は切り詰める（#119）
+    # ⚠ 長い行は journald が捨て、FreeBSD の syslogd は 8,087 バイトで切り詰める（#119）。
+    # 全部が 3 バイト文字でも収まること
     def test_output_summary_is_abbreviated
-      stdout = ['Keeping statuses tagged with: tag', *Array.new(500) {|i| "progress #{i}"}, 'Done after 1s'].join("\n")
+      stdout = ['Keeping statuses tagged with: tag', *Array.new(500) {|i| "進捗 #{i}"}, 'Done after 1s'].join("\n")
       summary = @tool.send(:output_summary, command_with(stdout))
 
-      assert_operator(summary.length, :<, 1024)
+      assert_operator(summary.to_json.bytesize, :<, 7000)
       assert_includes(summary, 'Keeping statuses tagged with: tag')
       assert_includes(summary, 'Done after 1s')
     end
