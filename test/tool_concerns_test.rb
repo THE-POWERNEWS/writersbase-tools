@@ -5,9 +5,9 @@ module WritersBase
   class ToolConcernsTest < TestCase
     CONCERNS = {
       TootctlCommands => {
-        'mastodon_maintenance' => [:exec],
-        'mastodon_media_cleanup' => [:exec],
-        'mastodon_statuses_remove' => [:exec],
+        'mastodon_maintenance' => [:exec, :output_summary],
+        'mastodon_media_cleanup' => [:exec, :output_summary],
+        'mastodon_statuses_remove' => [:exec, :output_summary],
       },
       DumpRotation => {
         'mysql_dump' => [:exec, :dump, :delete_old_files, :finder, :dump_path],
