@@ -29,7 +29,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### 保留中の依存の更新
 
-- ⏳ **`sentry-ruby` 7.0.0（PR #93）は意図的に保留**。tools が触る API（`Sentry.init` / `capture_exception` / `before_send` / `close`）は無傷だが、7.0.0 で **logs / metrics が既定で有効**になり（`enable_logs` / `enable_metrics` は撤去）、`send_default_pii` が deprecated（`data_collection` へ）。⚠⚠ **1.6.0 は「失敗が Sentry に出るようになる」リリースなので、送信経路の挙動が黙って変わるのは最も避けたい**。dev1 で例外を 1 件飛ばし `env` 付きで着弾するのを確認してからマージする。**閉じないこと**
+- ⏳ **`sentry-ruby` 7.x（PR #171 ＝ 7.1.0）は意図的に保留**。⚠ 元の PR #93（7.0.0）は **2026-10-04 に Dependabot が自分で閉じて #171 へ差し替えた**（判断を変えたわけではない。#171 の CI は 3.3 / 3.4 とも緑だが、下の確認は CI では取れない）。tools が触る API（`Sentry.init` / `capture_exception` / `before_send` / `close`）は無傷だが、7.0.0 で **logs / metrics が既定で有効**になり（`enable_logs` / `enable_metrics` は撤去）、`send_default_pii` が deprecated（`data_collection` へ）。⚠⚠ **1.6.0 は「失敗が Sentry に出るようになる」リリースなので、送信経路の挙動が黙って変わるのは最も避けたい**。dev1 で例外を 1 件飛ばし `env` 付きで着弾するのを確認してからマージする。**閉じないこと**（⚠ Dependabot が新しい版で差し替えるのは構わない。番号が変わったらここを直す）
 
 ## ブランチ
 
@@ -61,9 +61,13 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### v1.9.0（2026-10-02 タグ）—— ⚠ **まだ 1 台にも配っていない**
+### v1.9.0（2026-10-02 タグ）—— ✅ **2026-10-02 に chubo2 管理の 11 台へ配った**
 
-**最新タグは v1.9.0**（`0c03924`／公開 2026-10-02）。マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。⚠⚠ **タグを打っただけで、本番・staging とも v1.8.0 のまま**。配る側の受け皿は **pooza/chubo2#264**。⚠ `bundle install` / `rake install` の流し直しは不要（Gem の版も periodic スクリプトの中身も変わらない・dev24 / dev27 の root の gem の置き場で `bundle check` が通った）。⚠ `stale_days: 14`（chubo2#260）と `mastodon_statuses_remove` の weekly（chubo2#261）は、配ったあとに利用側が node yaml へ書く
+**最新タグは v1.9.0**（`0c03924`／公開 2026-10-02）。マイルストーン `1.9.0`（重み 7）。⚠ **2 件とも chubo2 からの依頼**。✅ **2026-10-02 に chubo2 が 11 台へ配った**（本番 7 台と dev24〜27・11 台とも `bundle check` 通過・**pooza/chubo2#264 はクローズ**・記録は chubo2 `docs/infra-history.md`）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137 / #177・どちらも open）。⚠ **版を上げるだけなら** `bundle install` / `rake install` の流し直しは不要（Gem の版も periodic スクリプトの中身も変わらない）。⚠⚠ **ただし periodic に道具を足したら `rake install` が要る**（`Installer` は導入時の一覧からスクリプトを作るので、node yaml に書いただけでは走らない・#170 で Codex が指摘。chubo2 は `chuboctl --recipes=writersbase_tools` がこれを兼ねる）
+
+- ✅ **`stale_days: 14`** は chubo2 が platform yaml（FreeBSD / Ubuntu）に置いて配った（chubo2#260・monit / `reboot-sweep` と同じ 14 日に揃った）。⚠ **「起動後に入った最も古いパッケージ」から待ち始めを取る経路は、まだ実データで通っていない**（配った時点で再起動待ちの台が無かった）。突き合わせは chubo2#260 に残っている（open）
+- ✅ **`mastodon_statuses_remove`** は zugoga（10-02）・shallu・gomander（10-05）の weekly に載った（**chubo2#261 は 2026-10-04 にクローズ**）。手で 1 回回して exit 0・3〜4 分
+- ⚠⚠ **periodic 経由だと `Keeping statuses tagged with: ...` の行はどこにも残らない**（道具が tootctl の標準出力をログへ出していない・chubo2#261 で実測）。下の実機確認の「node yaml に入れた直後は `Keeping` の行を見ること」は、**手で `bin/wb` を回したときにしか使えない**。chubo2 は「守るタグ付きの 90 日超リモート投稿の件数が減っていないこと」で確かめた
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
@@ -104,7 +108,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | `mastodon_statuses_remove` | #162 | dev24 | 同じ経路で `rails runner` | ✅ **`inet_server_port()` が 5432**（`.env.production` は `DB_PORT=6432` ＝ pgbouncer）。⚠ 渡した環境変数が dotenv に上書きされないことの実測 |
 | `mastodon_statuses_remove` | #162 | dev24 | `--keep-tags=tag,美食丼` | ✅ tootctl が `Keeping statuses tagged with: tag, 美食丼` と出した（**日本語のタグ名が 2 段のシェルを通って届く**） |
 
-- ⚠ **最初は `--keep-tags=precure_fun,宮本佳那子` で回して `Keeping` の行が出なかった。**dev24 にその Tag 行が無く、`DEFAULT_TAG` も空のため（#977 の仕様どおり、無い名前は黙って無視される）。⚠⚠ **タグの綴りを間違えても tootctl は何も言わない**ので、node yaml に入れた直後は `Keeping` の行を見ること
+- ⚠ **最初は `--keep-tags=precure_fun,宮本佳那子` で回して `Keeping` の行が出なかった。**dev24 にその Tag 行が無く、`DEFAULT_TAG` も空のため（#977 の仕様どおり、無い名前は黙って無視される）。⚠⚠ **タグの綴りを間違えても tootctl は何も言わない**ので、node yaml に入れた直後は `Keeping` の行を見ること（⚠ **手で回したときだけ見える**。periodic 経由では残らない ＝ 上記）
 - ⚠ **「起動後に入ったパッケージのうち最も古いもの」を選ぶ経路は、実データでは通せていない**（staging 2 台とも起動後の更新が 0 件）。単体テストでだけ見ている。配ったあと、再起動待ちの台で `待ちN日` を chubo2 の `reboot-sweep` と突き合わせる
 - ⚠ **`DB_PORT` を付けない失敗側は回していない。**この版の tootctl は一時テーブルではなく**実テーブル `statuses_to_be_deleted`** を作って最後に消すので、途中で落とすと残りうる
 - ⚠ **実際に投稿が消える経路**は tools の変更の外（tootctl 側）で、#977 のときに dev24 で確かめてある（pooza/mastodon#978）
@@ -185,9 +189,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ✅ **#82 の上流が出た。**pooza/ginseng-core#645 は **2026-09-20 にマージ**され、**v1.24.0** に `CommandLine` の secrets（#642）として入っている。✅ **#82 で `Gemfile` を `tag: 'v1.24.0'` へ上げ、`WritersBase::CommandLine` から `secrets` / `masked` / `log_exec` / `FILTERED` の上書きを外した**（呼び出し側の `secrets=` は変えていない）。⚠⚠ **配るまでは本番に届かない**（git 参照・#70 と同じ経路）
   - ⏳ **ginseng-core は v1.25.0 が出ているが、先送りにした**（2026-09-25 判断・#139）。中身は `Daemon` の pid ファイル（#643）と ginseng-style の追随だけで、**tools は常駐しないので影響しない**。次に版を上げる用事ができたときに一緒に上げる
   - ⏳ **v1.25.1（2026-09-26）も同じ扱い。**中身は「429 に `Retry-After` が無ければ `X-RateLimit-Reset` を読む」だけ（Mastodon 向け）。tools の HTTP は `misskey_emoji_sync` の webhook（⚠ **Misskey は `Retry-After` を付けるので対象外**）と Kuma の push だけなので、影響しない
-  - ⏳ **v2.0.0（2026-09-28）はメジャー**だが、破壊的変更 3 つ（`Ginseng::Slack` / `LineService` がリダイレクトを追わない・`host_validator` の経路が `follow_redirects` を尊重する・`Daemon#save_config`）は**どれも tools に届かない**（2026-10-02 に確認）。tools の HTTP は `WritersBase::HTTP < Ginseng::HTTP` を素で使い、Slack / LineService / `host_validator` / `Daemon` を使っていない。⚠ Dependabot の PR #159（v1.25.0）は open のまま
+  - ⏳ **v2.0.0（2026-09-28）はメジャー**だが、破壊的変更 3 つ（`Ginseng::Slack` / `LineService` がリダイレクトを追わない・`host_validator` の経路が `follow_redirects` を尊重する・`Daemon#save_config`）は**どれも tools に届かない**（2026-10-02 に確認）。tools の HTTP は `WritersBase::HTTP < Ginseng::HTTP` を素で使い、Slack / LineService / `host_validator` / `Daemon` を使っていない。⚠ Dependabot の PR は **#159（v1.25.0）が 2026-10-04 に閉じ、#172（v2.0.0）へ差し替わった**（open・CI は緑）。⚠ #172 は `Gemfile.lock` で **json 3.0 / facets 4.0（どちらもメジャー）**も連れてくる。⚠⚠ **上流はすでに v2.4.2**（2026-10-11 時点）で、**v2.1〜v2.4 の中身は tools の側からまだ読んでいない**。上げるなら #172 をそのまま通さず、行き先の版を決めてから（#139）
   - ⚠ v1.24.0 は **`Daemon` まわりの security 修正**（pid ファイルの symlink / ハードリンク）も含むが、**tools は常駐しないので影響しない**。⚠ `masked_env`（#646）は**当初「dump 系の `MYSQL_PWD` / `PGPASSWORD` に効きうる」と見ていたが、効かない**。`masked_env` は **`secrets` が空なら `@env` をそのまま返し**、⚠ **tools で `secrets:` を渡している道具はいま 0 本**（唯一だった `misskey_emoji_sync` も #127 で `--webhook` を引数から外した。口は `Tool#execute` / `tootctl_command` に残してある）。⚠ パスワードはもともと `/logger/mask_fields` がキー名で落としている
-- ⏳ **ginseng-style は v1.1.13 が出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 1 版遅れ。先送り**（2026-09-25・#139）。中身は rubocop 1.91.0 への追随だけで、新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
+- ⏳ **ginseng-style は v1.1.14 まで出ていて、こちらのピン（`ed862dcf…` ＝ v1.1.12）は 2 版遅れ。先送り**（2026-09-25・#139／2026-10-11 に再確認）。gem として効く中身は rubocop 1.91.0（v1.1.13・新しく効く cop は `Lint/MisplacedMagicComment` の 1 つ）と rubocop-minitest 0.41.0（v1.1.14）への追随だけで、残りは docs とプラグインの雛形。⚠⚠ **上げるときは `Gemfile` と CI の composite action の SHA を同時に**書き換える
 
 #### リリース前レビュー: 2026-09-25（1.7.1）
 
@@ -320,7 +324,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### v1.6.0 は出荷済み（2026-09-08 タグ・#71）
 
-⚠ **当時の最新タグ**（`d3500df`／公開 2026-09-08）。⚠⚠ **いまの最新タグは v1.8.0**（上記）。⚠ **vulcan は 2026-09-28 までこの版で走っていた**（その後 v1.7.1 → 09-29 に v1.8.0）。v1.5.2（2026-04-12）から 48 コミットぶんで、マイルストーン `1.6.0` の 11 件・#37 Sentry 導入・misskey_emoji_sync 追加・#44 tootctl の login shell 経由をすべて含む。
+⚠ **当時の最新タグ**（`d3500df`／公開 2026-09-08）。⚠⚠ **いまの最新タグは v1.9.0**（上記）。⚠ **vulcan は 2026-09-28 までこの版で走っていた**（その後 v1.7.1 → 09-29 に v1.8.0）。v1.5.2（2026-04-12）から 48 コミットぶんで、マイルストーン `1.6.0` の 11 件・#37 Sentry 導入・misskey_emoji_sync 追加・#44 tootctl の login shell 経由をすべて含む。
 
 ⚠ **利用側への反映は先に済んでいる**（chubo2 `#214`・2026-09-04 に 9 台すべてを `d3500df` へ／記録は pooza/chubo2 `docs/infra-history.md`）。**タグはその状態を後から確定させたもの**なので、今回は「タグを打ったが 1 台にも届いていない」状態ではない。
 
@@ -328,9 +332,11 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。⚠ **v1.6.1 では滞留しなかった**（マイルストーン着手時にバンプ → 消化 → 即日タグ）。⚠⚠ **バンプとタグ打ちは 2026-09-18 に委譲された**（バンプは新マイルストーン着手時、タグはリリース手順を通してから）。
 
-### 反映後に見えた失敗（2026-10-02 時点・Sentry `writersbase-tools`）
+### 反映後に見えた失敗（2026-10-11 時点・Sentry `writersbase-tools`）
 
-⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。
+⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-10-11 まで新規は 1 件も無い**（v1.9.0 を配ってからの 9 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
+
+- 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）
 
 - ✅ **`mysql_dump` が `sh: bash: not found`**（`WRITERSBASE-TOOLS-8`・2 件／**pirazis・`release` 1.7.1・2026-09-26 08:28 JST**）。chubo2#256 で管理に載せた直後の手動実行で踏んだもの。`Tool#pipefail_args`（#62）は **`bash -o pipefail` に依存**しており、FreeBSD の base に bash は無い。✅ **chubo-core が FreeBSD の依存に `bash` を足して解消**（`068d2d9`）し、2 台とも当日のダンプが完走している。⚠ **Sentry の `-8` は未 resolve のまま**。⚠ 道具の側は**落ちるべきところで落ちている**（pdns のダンプを「成功」と記録していない）
 
@@ -346,7 +352,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠ **`mastodon_follow` が `account: info` で `No such account`**（`WRITERSBASE-TOOLS-3`・1 回・2026-09-04）。⚠ 2026-09-15 の棚卸しでは意図的な 3 件にも実害にも数えていなかった**取りこぼし**。実機の設定を見て、消えたアカウントなら node yaml から外す
 - ⚠ **`bin/wb <存在しない名前>` が `NameError: uninitialized constant WritersBase::ConfigTool` として Sentry に載る**（`WRITERSBASE-TOOLS-6`・1 回・2026-09-12）。`bin/wb.rb` の集約点がツールの失敗と打ち間違いを区別しないため。**害は無いがノイズになる**
 
-✅ **道具の側は #113 で Uptime Kuma の push へ送るようになり、2026-09-25 から実際に拾われ始めた。**chubo2#248 が（ノード × ツール）ごとに push モニタを作ってトークンを配り（`011a1a5`・interval は hourly 2h / daily 32h / weekly 8.5d・`maxretries 0`）、**FreeBSD 3 台の 26 本**から始めて、09-26 に deas / pirazal / pirazis にも付いた。✅ vulcan も 09-29 に v1.8.0 へ上がり、push の口はできた（モニタの有無は chubo2#248 の側）。⚠ chubo2#248 は open のまま。上の 🔴 も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。⚠ `-7` は **2 日間・本番 2 台でバックアップが取れていない**状態を誰も知らなかった。**monit 側にも同じ穴があった**（89% / 92% で鳴っていない・pooza/chubo2#242）。✅ **monit 側は 2026-09-18 に塞がった**（pooza/chubo2#244 ＝ alert を Uptime Kuma の push モニタへ繋いだ）。⚠ **利用側の受け皿は pooza/chubo2#248**（open・⚠ **chubo2#227 から「Ubuntu の `reboot_required` の出口」も引き継がれている**）。
+✅ **道具の側は #113 で Uptime Kuma の push へ送るようになり、2026-09-25 から実際に拾われ始めた。**chubo2#248 が（ノード × ツール）ごとに push モニタを作ってトークンを配り（`011a1a5`・interval は hourly 2h / daily 32h / weekly 8.5d・`maxretries 0`）、**FreeBSD 3 台の 26 本**から始めて、09-26 に deas / pirazal / pirazis にも付いた。✅ **2026-10-10 に vulcan と dev24〜27 にも 28 本が張られ、chubo2#248 はクローズした**（`wb …` のモニタは計 62 本。⚠ 閉じた時点で daily / weekly の 27 本は未着で、**届かなければ interval を過ぎた時点で Kuma が DOWN にする**、という閉じ方）。上の `-4` / `-7` も、ダッシュボードを開くまで誰も気づいていなかった。**「Sentry に出ている」は「気づかれている」ではない**。⚠ `-7` は **2 日間・本番 2 台でバックアップが取れていない**状態を誰も知らなかった。**monit 側にも同じ穴があった**（89% / 92% で鳴っていない・pooza/chubo2#242）。✅ **monit 側は 2026-09-18 に塞がった**（pooza/chubo2#244 ＝ alert を Uptime Kuma の push モニタへ繋いだ）。✅ **利用側の受け皿だった pooza/chubo2#248 は 2026-10-10 にクローズ**（chubo2#227 から引き継いだ「Ubuntu の `reboot_required` の出口」も、vulcan / dev27 のモニタで口ができた）。
 
 ⚠ **Sentry の件数をそのまま実行回数と読まない。**`-7` の 8 件は **2 台 × 2 日 × 1 日 2 回**だった。`periodic daily` が anacron と cron の両方から走っていて、**`daily` に並べた道具が 1 日 2 回実行されている**（pooza/chubo2#243）。⚠⚠ **起票時の前提は 2 つとも外れていた**（2026-09-18 に chubo2 側で実測）—— **「3 台」ではなく FreeBSD 10 台すべて**、**daily だけでなく weekly / monthly も二重**。✅ **anacron ごと外して解消済み**（chubo2 `8f3d37b`・**chubo2#243 は 2026-09-18 にクローズ**）。⚠ **解消は 09-18 以降の話**なので、それ以前の件数は依然 2 倍で読む。
 
