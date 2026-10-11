@@ -67,7 +67,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 - ✅ **`stale_days: 14`** は chubo2 が platform yaml（FreeBSD / Ubuntu）に置いて配った（chubo2#260・monit / `reboot-sweep` と同じ 14 日に揃った）。⚠ **「起動後に入った最も古いパッケージ」から待ち始めを取る経路は、まだ実データで通っていない**（配った時点で再起動待ちの台が無かった）。突き合わせは chubo2#260 に残っている（open）
 - ✅ **`mastodon_statuses_remove`** は zugoga（10-02）・shallu・gomander（10-05）の weekly に載った（**chubo2#261 は 2026-10-04 にクローズ**）。手で 1 回回して exit 0・3〜4 分
-- ⚠⚠ **periodic 経由だと `Keeping statuses tagged with: ...` の行はどこにも残らない**（道具が tootctl の標準出力をログへ出していない・chubo2#261 で実測）。下の実機確認の「node yaml に入れた直後は `Keeping` の行を見ること」は、**手で `bin/wb` を回したときにしか使えない**。chubo2 は「守るタグ付きの 90 日超リモート投稿の件数が減っていないこと」で確かめた
+- ⚠⚠ **periodic 経由だと `Keeping statuses tagged with: ...` の行はどこにも残らない**（道具が tootctl の標準出力をログへ出していない・chubo2#261 で実測）。下の実機確認の「node yaml に入れた直後は `Keeping` の行を見ること」は、**手で `bin/wb` を回したときにしか使えない**。chubo2 は「守るタグ付きの 90 日超リモート投稿の件数が減っていないこと」で確かめた。⏳ **出力をログへ残す件は #175**
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
@@ -336,7 +336,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-10-11 まで新規は 1 件も無い**（v1.9.0 を配ってからの 9 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
 
-- 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）
+- 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）。⏳ **`bundle check` で落ちたときに Kuma へ `down` を送る件は #174**（⚠ `ruby` 自体が起動しない止まり方は、それでも interval 切れ待ち）
 
 - ✅ **`mysql_dump` が `sh: bash: not found`**（`WRITERSBASE-TOOLS-8`・2 件／**pirazis・`release` 1.7.1・2026-09-26 08:28 JST**）。chubo2#256 で管理に載せた直後の手動実行で踏んだもの。`Tool#pipefail_args`（#62）は **`bash -o pipefail` に依存**しており、FreeBSD の base に bash は無い。✅ **chubo-core が FreeBSD の依存に `bash` を足して解消**（`068d2d9`）し、2 台とも当日のダンプが完走している。⚠ **Sentry の `-8` は未 resolve のまま**。⚠ 道具の側は**落ちるべきところで落ちている**（pdns のダンプを「成功」と記録していない）
 
