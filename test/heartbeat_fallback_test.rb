@@ -91,6 +91,18 @@ module WritersBase
       assert_match(/\Abundle check failed x/, URI.decode_www_form(uri.query).to_h['msg'])
     end
 
+    # ⚠ Net::HTTP#get は 4xx / 5xx でも例外にしない。届いていないのに成功にしない
+    def test_verify
+      fallback = HeartbeatFallback.new('postgresql_dump', dirs: @dirs)
+
+      assert_equal('200', fallback.verify('200'))
+      ['302', '404', '502'].each do |code|
+        error = assert_raise(HeartbeatFallback::ResponseError) {fallback.verify(code)}
+
+        assert_equal("HTTP #{code}", error.message)
+      end
+    end
+
     # ⚠⚠ bundle が壊れているときに動く道具。gem を require したら意味が無い
     def test_stdlib_only
       [

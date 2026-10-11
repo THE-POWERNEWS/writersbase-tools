@@ -32,6 +32,9 @@ module WritersBase
     PACKAGE_NAME = 'writersbase-tools'.freeze
     PERMITTED_YAML_CLASSES = [Date, Time, DateTime].freeze
 
+    # ⚠ 文言には状態コードしか入れない（呼び出し側がそのまま stderr へ出す）
+    class ResponseError < StandardError; end
+
     def initialize(tool, dirs: nil, hostname: Socket.gethostname)
       @tool = tool.to_s.tr('-', '_').downcase
       @dirs = dirs || default_dirs
@@ -46,9 +49,17 @@ module WritersBase
     def down(message)
       return nil if disable?
       uri = uri('down', message)
-      return Net::HTTP.start(uri.host, uri.port, **http_options(uri)) do |http|
+      code = Net::HTTP.start(uri.host, uri.port, **http_options(uri)) do |http|
         http.get(uri.request_uri).code
       end
+      return verify(code)
+    end
+
+    # ⚠ `Net::HTTP#get` は 4xx / 5xx / 3xx でも例外にしない。モニタが更新されていないのに
+    # 「送れた」ことにしない（トークンの打ち間違いは 404 で返る）。
+    def verify(code)
+      return code if code.to_s.match?(/\A2\d\d\z/)
+      raise ResponseError, "HTTP #{code}"
     end
 
     def uri(status, message)

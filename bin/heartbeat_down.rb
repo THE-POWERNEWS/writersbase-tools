@@ -11,6 +11,8 @@ begin
   raise ArgumentError, 'tool undefined' if tool.to_s.empty?
   WritersBase::HeartbeatFallback.new(tool).down(message)
 rescue StandardError, ScriptError => e
-  warn "ハートビート送信失敗 (#{e.class})"
+  # ⚠ ResponseError の文言は状態コードだけ。ほかは本文を出さない
+  detail = e.class.name.to_s.end_with?('::ResponseError') ? e.message : e.class
+  warn "ハートビート送信失敗 (#{detail})"
   exit 1
 end
