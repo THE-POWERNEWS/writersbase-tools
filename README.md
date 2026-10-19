@@ -385,8 +385,25 @@ mastodon_statuses_remove:
 | キー | 説明 | デフォルト |
 | --- | --- | --- |
 | dest | SSH転送先 (user@host:/path) | ⚠ **null（必須）** |
-| sources | バックアップ対象ディレクトリの配列 | [/etc, /usr/local/etc, ...] |
+| sources | バックアップ対象の配列。要素は文字列か `{src:, name:}`（下記） | [/etc, /usr/local/etc, ...] |
 | excludes | 除外パターンの配列 | [.git, .zfs, .cache, node_modules, vendor/bundle, tmp, \*.bak, \*.log, \*.swp, \*.tmp] |
+
+`sources` の要素は 2 通りに書けます（#188）。
+
+```yaml
+rsync_backup:
+  dest: rsync@seas.b-shock.local:~/backup/kues
+  sources:
+    - /etc                                   # → <dest>/etc（送り元の絶対パスがそのまま生える）
+    - {src: /usr/local/etc, name: local.etc} # → <dest>/local.etc
+    - {src: /var/movies, name: movies}       # → <dest>/movies
+```
+
+- `name` は `dest` の下の相対名です（`a/b` のような階層も可）。空・絶対パス・`.` / `..` の段・空の段（`a//b`・`movies/`）を含むものは設定エラーです。⚠ **使える文字は英数字と `.` `_` `-` だけです**（送り先は受け側のシェルを通るので、`*` `?` `[` は展開され、空白は分割されるため）
+- ⚠ 文字列の書き方でも、空の要素（YAML の `- ` だけの行）と `.` / `..` の段を含むパスは設定エラーです。送り元のパスがそのまま送り先の名前になるので、`/` や `dest` の外を指す送り先になりうるためです
+- 送り元は末尾に `/` を付けて**中身**を送ります。旧 ginseng の `rsync` のように「`dest` を書くなら `src` に末尾スラッシュ」を気にする必要はありません
+- ⚠ 旧 ginseng の `dest:` は `name:` に書き換えてください。知らないキーは設定エラーです（黙って `name` 無しの扱いにはしません）
+- ⚠⚠ **送り先が重なる設定は、1 件も送らずに設定エラーで落ちます**（同じ送り先が 2 回、または一方がもう一方の下）。`--delete` を使うので、親の側が子の側の中身を毎回消し、子の側が書き直す形になるためです
 
 ### wordpress_outdated
 
