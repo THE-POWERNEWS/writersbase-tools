@@ -74,7 +74,7 @@ module WritersBase
     # `dest` の下の相対名だけを許す（`dest` の外へ出る名前・空の段を含む名前は落とす）
     def valid_name?(name)
       return false if name.start_with?('/')
-      parts = name.split('/')
+      parts = name.split('/', -1)
       return parts.present? && !parts.intersect?(INVALID_NAME_PARTS)
     end
 
