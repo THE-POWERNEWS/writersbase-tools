@@ -58,17 +58,24 @@ module WritersBase
       result[:success].push(entry[:src])
     end
 
+    # ⚠⚠ **`to_s` で丸めないこと**（Codex P1）。YAML の空の要素（`- ` だけの行）が `''` になり、
+    # 送り元が `/`・送り先が `dest` の直下になって、`--delete` が受け側を丸ごと書き換える
     def entry(source)
-      return {src: source.to_s, name: source.to_s} unless source.is_a?(Hash)
+      return {src: valid_src(source), name: source} if source.is_a?(String)
+      raise config_error("invalid source: #{source.inspect}") unless source.is_a?(Hash)
       source = source.transform_keys(&:to_s)
       # ⚠ 旧 ginseng の `dest:` をそのまま写すと、黙って `name` 無しの扱いになる。綴りの誤りは落とす
       unknown = source.keys - ENTRY_KEYS
       raise config_error("unknown keys: #{unknown.join(', ')}") if unknown.present?
-      src = source['src'].to_s
-      raise config_error('src undefined') if src.empty?
+      src = valid_src(source['src'])
       name = source['name'].to_s
       raise config_error("invalid name: '#{name}' (#{src})") unless valid_name?(name)
       return {src:, name:}
+    end
+
+    def valid_src(src)
+      return src if src.is_a?(String) && src.strip.present?
+      raise config_error("invalid src: #{src.inspect}")
     end
 
     # `dest` の下の相対名だけを許す（`dest` の外へ出る名前・空の段を含む名前は落とす）

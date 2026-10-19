@@ -65,6 +65,15 @@ module WritersBase
       assert_raise(Ginseng::ConfigError) {@tool.entries}
     end
 
+    # ⚠⚠ 空の要素を `''` に丸めると、送り元が `/`・送り先が dest の直下になる（Codex P1）
+    def test_invalid_source
+      [nil, '', '  ', 123, ['/etc'], {'src' => nil, 'name' => 'x'}, {'src' => '', 'name' => 'x'}].each do |source|
+        config['/rsync_backup/sources'] = [source]
+
+        assert_raise(Ginseng::ConfigError, source.inspect) {@tool.entries}
+      end
+    end
+
     # ⚠ 旧 ginseng の `dest:` をそのまま写したものは黙って通さない
     def test_unknown_key
       config['/rsync_backup/sources'] = [{'src' => '/usr/local/etc/', 'dest' => 'local.etc'}]
