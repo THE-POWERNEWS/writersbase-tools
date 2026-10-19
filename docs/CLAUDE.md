@@ -65,7 +65,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### v1.10.0（2026-10-19 タグ）—— ⚠ **配るのはこれから**
 
-**最新タグは v1.10.0**（`ea89e49`／公開 2026-10-19）。⚠⚠ **1 台にも届いていない**（全台 v1.9.0 のまま・dev24 / dev27 で実測）。chubo2 管理の台は `chuboctl --recipes=writersbase_tools`（`bundle install` と `rake install` を兼ねる）・writersBASE 側は env のレシピ。⚠ **反映の受け皿（chubo2 の Issue）はまだ無い**
+**最新タグは v1.10.0**（`ea89e49`／公開 2026-10-19）。⚠⚠ **1 台にも届いていない**（全台 v1.9.0 のまま・dev24 / dev27 で実測）。chubo2 管理の台は `chuboctl --recipes=writersbase_tools`（`bundle install` と `rake install` を兼ねる）・writersBASE 側は env のレシピ。反映の受け皿は **pooza/chubo2#282**（2026-10-19 起票）
 
 `/package/version` は 1.10.0（#176 でバンプ）。マイルストーン `1.10.0`。⚠ **`1.9.1` ではなく `1.10.0`** なのは、#174 で periodic スクリプトの中身が変わる（配るときに `rake install` の流し直しが要る）ため。
 
