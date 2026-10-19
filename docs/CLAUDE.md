@@ -63,6 +63,16 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
+### 1.11.0（開発中・2026-10-19 着手）—— ⚠ **タグはまだ打っていない**
+
+`/package/version` は 1.11.0（#187 でバンプ）。マイルストーン `1.11.0`。
+
+| Issue | 内容 | 状態 |
+| --- | --- | --- |
+| #187 | バンプ | ⏳ |
+| #188 | `rsync_backup` で送り先の名前をエントリごとに付けられるようにする（旧 ginseng の `rsync` からの移行。kues ＝ #34・MINC ＝ pooza/chubo-minc#4 / #5） | ⏳ |
+| #185 | ginseng-core を v2.4.2 → v4.0.0 へ上げる | ⏳ |
+
 ### v1.10.0（2026-10-19 タグ）—— ⚠ **配るのはこれから**
 
 **最新タグは v1.10.0**（`ea89e49`／公開 2026-10-19）。⚠⚠ **1 台にも届いていない**（全台 v1.9.0 のまま・dev24 / dev27 で実測）。chubo2 管理の台は `chuboctl --recipes=writersbase_tools`（`bundle install` と `rake install` を兼ねる）・writersBASE 側は env のレシピ。反映の受け皿は **pooza/chubo2#282**（2026-10-19 起票）
