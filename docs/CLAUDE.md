@@ -83,7 +83,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
   - ⚠ 送れなくても終了コードは 1 のまま（`|| true`）。トークンを書いていないツールでは何も送らない
 - ⚠ **#175 でログに `実行完了` の行が増えた**（`TootctlCommands` を使う `mastodon_maintenance` / `mastodon_media_cleanup` / `mastodon_statuses_remove`）。`output` に tootctl の標準出力が載る。⚠ **進捗バーの行（`Progress: |===|`）は落とし、先頭 800 ＋ 末尾 1200 文字に縮める**（FreeBSD の syslogd の 8,087 バイトに収める。失敗時の 200 ＋ 700 は Sentry の 1,024 文字に合わせた値で、そのまま使うと `removed N out of M statuses` が省略に落ちた）
 - ⚠ `output` の先頭には Mastodon の `[dotenv] Loaded .env.production` の行が毎回載る（tootctl が標準出力へ出している）。害は無いので落としていない
-- ⚠⚠ **#177 で Gem の版が動いたので、1.10.0 を配るときは `bundle install` が要る**（ginseng-core v2.4.2 と、その依存で新しく入る `resolv` 0.8.1）。⚠ `Gemfile.lock` は `bundle update --conservative` で上げたので、**動いたのは ginseng-* 2 本・rubocop 系・`resolv` だけ**（Dependabot の PR #172 が連れてきた json 3.0 / facets 4.0 は入れていない）
+- ⚠⚠ **#177 で Gem の版が動いたので、1.10.0 を配るときは `bundle install` が要る**（ginseng-core v2.4.2 と、その依存で新しく入る `resolv` 0.8.1）。⚠ `Gemfile.lock` は `bundle update --conservative` で上げたので、**動いたのは ginseng-* 2 本・rubocop 系・`resolv` だけ**（Dependabot の PR #172 が連れてきた json 3.0 / facets 4.0 は入れていない）。⚠ その後 **#183（`parallel` 2.3.0・`pg` 1.7.0）も入った**（2026-10-19）。#177 の実機確認より後に動いた版なので、リリース前の実機確認は #183 込みの `main` で回すこと
+- ⏳ **ginseng-core は上流が v3.0.0（10-15）・v4.0.0（10-18）と 2 つ major を出した**（2026-10-19 の同期で検出）。⚠ **1.10.0 には入れない**（レビューと実機確認を v2.4.2 で済ませているため）。受け皿は **#185**（次のマイルストーン）
+- ⚠ 2026-10-19 に**別のセッションが 1.10.0 のリリース前レビューの記録を足して、すぐ取り下げた**（`c801909` → `ea89e49`）。⚠ **タグは打たれていない**（最新タグは v1.9.0 のまま）。レビューは改めてこちらで回す
 - ⭕ **ginseng-core v2.0.0 〜 v2.4.2 の「利用側で変わること」は、どれも tools に届かない**（2026-10-11 にリリースノートと突き合わせた）
   - v2.0.0 / v2.4.1 / v2.4.2 のリダイレクト拒否は `Slack` / `LineService` と `guard_redirects!` を挿した HTTP の話。tools は `WritersBase::HTTP < Ginseng::HTTP` を素で使い、`guard_redirects!` も `host_validator` も呼んでいない
   - v2.2.0 / v2.3.0 は `Daemon`（tools は常駐しない）。v2.1.0 の `PublicHost` は使っていない
@@ -396,11 +398,12 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。⚠ **v1.6.1 では滞留しなかった**（マイルストーン着手時にバンプ → 消化 → 即日タグ）。⚠⚠ **バンプとタグ打ちは 2026-09-18 に委譲された**（バンプは新マイルストーン着手時、タグはリリース手順を通してから）。
 
-### 反映後に見えた失敗（2026-10-11 時点・Sentry `writersbase-tools`）
+### 反映後に見えた失敗（2026-10-19 時点・Sentry `writersbase-tools`）
 
-⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-10-11 まで新規は 1 件も無い**（v1.9.0 を配ってからの 9 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
+⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-10-19 まで新規は 1 件も無い**（v1.9.0 を配ってからの 17 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
 
 - 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）。✅ **1.10.0（#174）で、`bundle check` で落ちたときに Kuma へ `down` を送るようにした**（⚠ 配って `rake install` を流し直すまでは効かない。⚠ `ruby` 自体が起動しない止まり方は、それでも interval 切れ待ち）
+- 🔴 **gomander / zugoga の hourly（`mastodon_follow` / `postgresql_snapshot`）が 2026-10-18 に約 5 時間止まった**（chubo2#277・記録は chubo2 `docs/infra-history.md`）。rbenv の Ruby を base の OpenSSL へ移す作業で ports の openssl を消したら、**root の pkg Ruby の `mysql2.so` が ports の `libssl.so.12` にリンクしていて読めなくなった**（エラーは「ginseng を読めない」と出るが実体は mysql2）。`gem pristine mysql2` で直り、同じ状態の dev24〜26 も同時に直した。拾ったのは Kuma の interval 切れ（hourly 2h）。⚠⚠ **#174 の `down` はこの型を拾えない見込み** —— `bundle check` は gem が揃っているかを見るだけで native 拡張を読まないので通り、落ちるのは `bin/wb` の `Bundler.require`（Sentry の初期化より前）。⚠ 判定は chubo2 の手順どおり **`sudo ruby -rmysql2 -e 1` のように実際に読ませる**
 
 - ✅ **`mysql_dump` が `sh: bash: not found`**（`WRITERSBASE-TOOLS-8`・2 件／**pirazis・`release` 1.7.1・2026-09-26 08:28 JST**）。chubo2#256 で管理に載せた直後の手動実行で踏んだもの。`Tool#pipefail_args`（#62）は **`bash -o pipefail` に依存**しており、FreeBSD の base に bash は無い。✅ **chubo-core が FreeBSD の依存に `bash` を足して解消**（`068d2d9`）し、2 台とも当日のダンプが完走している。⚠ **Sentry の `-8` は未 resolve のまま**。⚠ 道具の側は**落ちるべきところで落ちている**（pdns のダンプを「成功」と記録していない）
 
