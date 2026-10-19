@@ -3,6 +3,7 @@ module WritersBase
     ENTRY_KEYS = ['src', 'name'].freeze
     DOT_PARTS = ['.', '..'].freeze
     INVALID_NAME_PARTS = ['', *DOT_PARTS].freeze
+    NAME_PART_PATTERN = /\A[A-Za-z0-9._-]+\z/
 
     def exec(args = {})
       result = {success: [], failure: []}
@@ -88,11 +89,14 @@ module WritersBase
       raise config_error("invalid src: #{src.inspect}")
     end
 
-    # `dest` の下の相対名だけを許す（`dest` の外へ出る名前・空の段を含む名前は落とす）
+    # `dest` の下の相対名だけを許す（`dest` の外へ出る名前・空の段を含む名前は落とす）。
+    # ⚠⚠ **使える文字は英数字と `.` `_` `-` だけ**（Codex P2）。送り先は受け側のシェルを通るので、
+    # `*` `?` `[` は展開され、空白は分割される。検査した名前と違う場所へ `--delete` が掛かる
     def valid_name?(name)
       return false if name.start_with?('/')
       parts = name.split('/', -1)
-      return parts.present? && !parts.intersect?(INVALID_NAME_PARTS)
+      return false if parts.empty? || parts.intersect?(INVALID_NAME_PARTS)
+      return parts.all? {|part| NAME_PART_PATTERN.match?(part)}
     end
 
     def config_error(message)

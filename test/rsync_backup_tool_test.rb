@@ -52,7 +52,7 @@ module WritersBase
     end
 
     def test_invalid_name
-      ['', '/movies', '../movies', 'a/../b', 'a//b', '.', 'movies/', 'movies//'].each do |name|
+      ['', '/movies', '../movies', 'a/../b', 'a//b', '.', 'movies/', 'movies//', 'snapshots/*', 'mov?es', '[ab]', 'my movies', "a\nb", 'ムービー'].each do |name|
         config['/rsync_backup/sources'] = [{'src' => '/var/movies', 'name' => name}]
 
         assert_raise(Ginseng::ConfigError, name) {@tool.entries}
