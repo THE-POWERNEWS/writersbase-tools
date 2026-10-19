@@ -67,7 +67,11 @@ module WritersBase
 
     # ⚠⚠ 空の要素を `''` に丸めると、送り元が `/`・送り先が dest の直下になる（Codex P1）
     def test_invalid_source
-      [nil, '', '  ', 123, ['/etc'], {'src' => nil, 'name' => 'x'}, {'src' => '', 'name' => 'x'}].each do |source|
+      [
+        nil, '', '  ', 123, ['/etc'], {'src' => nil, 'name' => 'x'}, {'src' => '', 'name' => 'x'},
+        # ⚠ 文字列は送り元がそのまま送り先の名前になる。`..` は dest の外へ出る（Codex P1）
+        '/srv/../etc', '/../etc', '/etc/.'
+      ].each do |source|
         config['/rsync_backup/sources'] = [source]
 
         assert_raise(Ginseng::ConfigError, source.inspect) {@tool.entries}

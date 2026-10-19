@@ -1,7 +1,8 @@
 module WritersBase
   class RsyncBackupTool < Tool
     ENTRY_KEYS = ['src', 'name'].freeze
-    INVALID_NAME_PARTS = ['', '.', '..'].freeze
+    DOT_PARTS = ['.', '..'].freeze
+    INVALID_NAME_PARTS = ['', *DOT_PARTS].freeze
 
     def exec(args = {})
       result = {success: [], failure: []}
@@ -61,7 +62,7 @@ module WritersBase
     # ⚠⚠ **`to_s` で丸めないこと**（Codex P1）。YAML の空の要素（`- ` だけの行）が `''` になり、
     # 送り元が `/`・送り先が `dest` の直下になって、`--delete` が受け側を丸ごと書き換える
     def entry(source)
-      return {src: valid_src(source), name: source} if source.is_a?(String)
+      return legacy_entry(source) if source.is_a?(String)
       raise config_error("invalid source: #{source.inspect}") unless source.is_a?(Hash)
       source = source.transform_keys(&:to_s)
       # ⚠ 旧 ginseng の `dest:` をそのまま写すと、黙って `name` 無しの扱いになる。綴りの誤りは落とす
@@ -71,6 +72,15 @@ module WritersBase
       name = source['name'].to_s
       raise config_error("invalid name: '#{name}' (#{src})") unless valid_name?(name)
       return {src:, name:}
+    end
+
+    # ⚠ 文字列は送り元のパスがそのまま送り先の名前になるので、`.` / `..` の段を許さない
+    # （Codex P1）。`/srv/../etc` は受け側で `<dest>/etc` に解決され、重なりの検査をすり抜ける。
+    # `..` は `dest` の外へ出る送り先にもなる
+    def legacy_entry(source)
+      src = valid_src(source)
+      raise config_error("invalid src: '#{src}'") if src.split('/').intersect?(DOT_PARTS)
+      return {src:, name: src}
     end
 
     def valid_src(src)
