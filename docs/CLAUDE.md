@@ -63,7 +63,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### 1.10.0（開発中・2026-10-11 着手）—— ⚠ **タグはまだ打っていない**
+### v1.10.0（2026-10-19 タグ）—— ⚠ **配るのはこれから**（chubo2 管理の台は `chuboctl --recipes=writersbase_tools`・writersBASE 側は env のレシピ）
 
 `/package/version` は 1.10.0（#176 でバンプ）。マイルストーン `1.10.0`。⚠ **`1.9.1` ではなく `1.10.0`** なのは、#174 で periodic スクリプトの中身が変わる（配るときに `rake install` の流し直しが要る）ため。
 
@@ -91,6 +91,19 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
   - ⚠ **ログの見え方は変わる**（v2.4.1 / v2.4.2）: クエリの `signature` / `sig` / `hm` / `jwt` / `authorization` などの値が `[FILTERED]` になる。tools が叩く URL（Kuma の push・WordPress の更新 API・webhook）にこの名前のクエリは無い
   - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないこと（#85 の名前衝突の型）は、上げたあとの実物で確かめた（上書きは `TestCase#teardown` だけ）
 - ⚠ **`mastodon_follow` / `misskey_emoji_sync` は対象外**（`TootctlCommands` を使っていない。後者は必要な行を自前で拾っている）
+
+#### リリース前レビュー: 2026-10-19（1.10.0）
+
+⚠ **v1.9.0 からのコードの差分（`app` / `bin` / `config` / `Gemfile` / CI）を単一セッションで全部読んだ。**200 行ほどで、中身は #174 の `HeartbeatFallback` と periodic スクリプトの 1 行・#175 の `output_summary`・#177 の版の固定。**赤 0・黄 0・緑 2。**新しい破壊的操作は無い。既定値の変更は無い（`Heartbeat` の既定値を `HeartbeatFallback` の定数へ寄せただけで、値は同じ）。Dependabot の open アラートは 0 件。手元で `rake lint`（0 件）・`rake test`（158 件・失敗 0・omission 2）。
+
+- ⭕ **`HeartbeatFallback` の YAML の読み方は ginseng-core v2.4.2 の `Config#load` と同じ**（`YAML.load_file(..., permitted_classes: [Date, Time, DateTime])`・エイリアスは双方とも不許可）
+- ⭕ push URL は引数にも出力にも載らない（periodic スクリプトに書くのはツール名と固定の文言だけ・失敗時は例外のクラス名か状態コードだけ）
+- ⭕ periodic スクリプトの `ruby` は `bin/wb` の `#!/usr/bin/env ruby` と同じ PATH から引かれる（`bundle` と同じ ruby に当たる）
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- `output_summary` は成功のたびにログへ最大 2,000 文字を足す。`mastodon_maintenance` を daily で回す台ではログが太る（syslog の回転に任せている）
+- `heartbeat_down.rb` は `ArgumentError`（ツール名なし）も `ハートビート送信失敗 (ArgumentError)` と出す。呼ぶのは生成したスクリプトだけなので実害は無い
 
 #### 実機確認: 2026-10-11（#175・dev24）
 
