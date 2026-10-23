@@ -570,17 +570,22 @@ PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開い
    - ⚠⚠ **Ruby 本体の更新も、ここでしか拾えない**（Ruby を pin していないので Dependabot は何も言わない・#192）。CI の matrix の系列ごとに、上流の最新パッチと **OS が配る版**（FreeBSD は ports の `main` と当期の quarterly・Ubuntu は実機の系列 `resolute` の公開日）を並べる。下を**毎回**回す
      - ⚠ **ports に入っても pkg が届くのはビルドの後**（quarterly は数日遅れる）。実機の版は `ruby -v` で見る
      - ⚠ **Ubuntu は版番号を上げずにパッチを当てる**（`3.3.8-2ubuntu3.1` のまま CVE が直ることがある）。だから公開日で見て、「上流より前」なら未取り込み、後なら changelog で CVE を確かめる
+     - ⚠⚠ **まず上流の修正がこの系列にバックポートされたかを見る。**「この系列に無い」と出たら、OS が取り込む元がそもそも無い（4.0 系だけの修正か、系列が EOL）。⚠ Ubuntu は EOL 後も自前でパッチを当てうるが、FreeBSD の ports は系列ごと消える（2026-07-18 の `ruby33` 消失）。EOL の予定日が近づいたら、CI の matrix と chubo2 の `ruby.system.version` の引き上げを利用側と話す
      - 上流の修正がセキュリティなら、受け皿の Issue（#192 の形）を立てて、OS 側が取り込むまで開けておく。⚠ **リポジトリ側の作業は通常無い**（CI の matrix は浮動指定）
 
      ```sh
      ruby -rjson -ropen-uri -ryaml -e '
        get = ->(u) { URI.open(u, &:read) }
        rel = YAML.safe_load(get.("https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/releases.yml"), permitted_classes: [Date])
+       br = YAML.safe_load(get.("https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/branches.yml"), permitted_classes: [Date])
+       newest = rel.select { |r| r["version"].to_s.match?(/\A\d+\.\d+\.\d+\z/) }.max_by { |r| r["date"] }
        ports = ["main", "#{Date.today.year}Q#{(Date.today.month + 2) / 3}"].to_h { |b|
          [b, get.("https://raw.githubusercontent.com/freebsd/freebsd-ports/#{b}/Mk/Uses/ruby.mk").scan(/^RUBY_DISTVERSION=\s+(\S+)/).flatten] }
        File.read(".github/workflows/test.yml")[/ruby: \[(.*)\]/, 1].scan(/[\d.]+/).each { |s|
          up = rel.select { |r| r["version"].to_s.match?(/\A#{Regexp.escape(s)}\.\d+\z/) }.max_by { |r| Gem::Version.new(r["version"].to_s) }
-         line = "ruby #{s}\t上流 #{up["version"]}（#{up["date"]}）"
+         b = br.find { |x| x["name"].to_s == s }
+         line = "ruby #{s}\t#{b["status"]}（EOL #{b["eol_date"] || b["expected_eol_date"] || "未定"}）\t上流 #{up["version"]}（#{up["date"]}）"
+         line << "\t⚠ #{newest["version"]}（#{newest["date"]}）がこの系列に無い" if up["date"] < newest["date"]
          ports.each { |b, vs| v = vs.find { |x| x.start_with?("#{s}.") } and line << "\tports/#{b} #{v}#{" ずれ" if v != up["version"].to_s}" }
          es = JSON.parse(get.("https://api.launchpad.net/1.0/ubuntu/+archive/primary?ws.op=getPublishedSources&source_name=ruby#{s}&exact_match=true&status=Published&distro_series=https://api.launchpad.net/1.0/ubuntu/resolute"))["entries"]
          e = es.max_by { |x| x["date_published"] } and line << "\tresolute #{e["source_package_version"]}（#{Date.parse(e["date_published"])}#{" 上流より前" if Date.parse(e["date_published"]) < up["date"]}）"
