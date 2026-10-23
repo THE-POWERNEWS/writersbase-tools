@@ -74,6 +74,8 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #185 | ginseng-core を v2.4.2 → v4.0.0 へ上げる | ✅ #191 |
 
 - ⚠ **#188 は受けられる形を用意するだけ。**kues と MINC の機を移すかどうかは利用側（chubo2#211 / chubo-minc#4・#5）が決める。⚠ 文字列の書き方で通っていた設定は、下の 2 つに当たらない限りそのまま通る（shallu / zugoga の node yaml は当たらないことを 2026-10-19 に確かめた）
+  - ⭕ **kues は 2026-10-23 に Ubuntu 26.04 へ上がり、system の Ruby が 3.3 になった**（chubo2#265・`5eccd44`）。tools が動く系列（CI の matrix の最小 3.3）に入ったので、Ruby の側では移す妨げが無くなった
+- ⏳ **#192（Ruby 3.3.13 / 3.4.12・Onigmo の CVE）はマイルストーンの外**で、OS が取り込むのを待っている。⚠ 2026-10-24 時点で **ports は `main` / `2026Q4` とも 3.3.12 / 3.4.9、Ubuntu resolute の `ruby3.3` は 07-06 の `3.3.8-2ubuntu3.1` のまま**（同期手順 6 の Ruby の段で見る）。⚠ tools の `app/` に外部入力からパターンを組む箇所は無い
 - ⚠⚠ #188 から次は**設定エラー**になる（1 件も送らずに落ちる）。どれも `--delete` で受け側を壊しうる形
   - 送り先が重なる `sources`（同じ送り先が 2 回・一方がもう一方の下）
   - 空の要素（YAML の `- ` だけの行。以前は `File.join(path, nil)` で落ちていたが、`to_s` で丸めると送り元 `/`・送り先 `dest` の直下になる）、`.` / `..` の段を含むパス
@@ -564,6 +566,30 @@ PR に `@codex review` と書くとレビューが返る。⚠⚠ **PR を開い
        latest = tags[%r{refs/tags/(v[\d.]+)$}, 1]
        ok = kind == "tag" ? pin == latest : tags.match?(/^#{pin}\trefs\/tags\/#{Regexp.escape(latest)}(\^\{\})?$/)
        puts "#{n}\t#{ok ? "最新 #{latest}" : "ずれ #{pin[0, 12]} -> #{latest}"}" }'
+     ```
+   - ⚠⚠ **Ruby 本体の更新も、ここでしか拾えない**（Ruby を pin していないので Dependabot は何も言わない・#192）。CI の matrix の系列ごとに、上流の最新パッチと **OS が配る版**（FreeBSD は ports の `main` と当期の quarterly・Ubuntu は実機の系列 `resolute` の公開日）を並べる。下を**毎回**回す
+     - ⚠ **ports に入っても pkg が届くのはビルドの後**（quarterly は数日遅れる）。実機の版は `ruby -v` で見る
+     - ⚠ **Ubuntu は版番号を上げずにパッチを当てる**（`3.3.8-2ubuntu3.1` のまま CVE が直ることがある）。だから公開日で見て、「上流より前」なら未取り込み、後なら changelog で CVE を確かめる
+     - ⚠⚠ **まず上流の修正がこの系列にバックポートされたかを見る。**「この系列に無い」と出たら、OS が取り込む元がそもそも無い（4.0 系だけの修正か、系列が EOL）。⚠ Ubuntu は EOL 後も自前でパッチを当てうるが、FreeBSD の ports は系列ごと消える（2026-07-18 の `ruby33` 消失）。EOL の予定日が近づいたら、CI の matrix と chubo2 の `ruby.system.version` の引き上げを利用側と話す
+     - 上流の修正がセキュリティなら、受け皿の Issue（#192 の形）を立てて、OS 側が取り込むまで開けておく。⚠ **リポジトリ側の作業は通常無い**（CI の matrix は浮動指定）
+
+     ```sh
+     ruby -rjson -ropen-uri -ryaml -e '
+       get = ->(u) { URI.open(u, &:read) }
+       rel = YAML.safe_load(get.("https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/releases.yml"), permitted_classes: [Date])
+       br = YAML.safe_load(get.("https://raw.githubusercontent.com/ruby/www.ruby-lang.org/master/_data/branches.yml"), permitted_classes: [Date])
+       newest = rel.select { |r| r["version"].to_s.match?(/\A\d+\.\d+\.\d+\z/) }.max_by { |r| r["date"] }
+       ports = ["main", "#{Date.today.year}Q#{(Date.today.month + 2) / 3}"].to_h { |b|
+         [b, get.("https://raw.githubusercontent.com/freebsd/freebsd-ports/#{b}/Mk/Uses/ruby.mk").scan(/^RUBY_DISTVERSION=\s+(\S+)/).flatten] }
+       File.read(".github/workflows/test.yml")[/ruby: \[(.*)\]/, 1].scan(/[\d.]+/).each { |s|
+         up = rel.select { |r| r["version"].to_s.match?(/\A#{Regexp.escape(s)}\.\d+\z/) }.max_by { |r| Gem::Version.new(r["version"].to_s) }
+         b = br.find { |x| x["name"].to_s == s }
+         line = "ruby #{s}\t#{b["status"]}（EOL #{b["eol_date"] || b["expected_eol_date"] || "未定"}）\t上流 #{up["version"]}（#{up["date"]}）"
+         line << "\t⚠ #{newest["version"]}（#{newest["date"]}）がこの系列に無い" if up["date"] < newest["date"]
+         ports.each { |b, vs| v = vs.find { |x| x.start_with?("#{s}.") } and line << "\tports/#{b} #{v}#{" ずれ" if v != up["version"].to_s}" }
+         es = JSON.parse(get.("https://api.launchpad.net/1.0/ubuntu/+archive/primary?ws.op=getPublishedSources&source_name=ruby#{s}&exact_match=true&status=Published&distro_series=https://api.launchpad.net/1.0/ubuntu/resolute"))["entries"]
+         e = es.max_by { |x| x["date_published"] } and line << "\tresolute #{e["source_package_version"]}（#{Date.parse(e["date_published"])}#{" 上流より前" if Date.parse(e["date_published"]) < up["date"]}）"
+         puts line }'
      ```
 7. **マイルストーンとバージョン** — open Issue の状態と `/package/version`・最新タグのずれを確認する
 8. **`MEMORY.md` の更新** — 上記で検出した差分を反映する
