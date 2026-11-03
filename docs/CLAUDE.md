@@ -74,14 +74,15 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | --- | --- | --- |
 | #201 | バンプ | ✅ #202 |
 | #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
-| #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ PR |
-| #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ⏳ |
+| #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ #204 |
+| #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ✅ PR |
 
 - ⚠ **#199 で `Gemfile.lock` が動いたのは ginseng-core の 1 行だけ**（`bundle update --conservative`）。配るときは `bundle install` が要る。`rake install` の流し直しは不要
 - ⭕ **v4.1.0 〜 v5.0.0 の「利用側で変わること」は、ログの見え方を除いて tools に届かない**（突き合わせは #199）。v5.0.0 の破壊的変更は `RedirectGuard` を挿した口だけで、tools は `guard_redirects!` を使っていない
   - ⚠ **ログの見え方は変わる**: v4.4.0 から、URL でない文字列の `key=value` / `key: value` も伏せる（`password: required` → `password: [FILTERED]`）。ツールの失敗の文面（`error:` に載る外部コマンドの出力）の一部が伏せられうる
   - ⚠ v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。tools が TLS で話す相手（Kuma・WordPress の更新 API・webhook）は該当しない見込みだが、リリース前の実機確認で `reboot_required` の push と `wordpress_outdated` を通すこと
   - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないことは、上げたあとの実物で確かめた（上書きは `TestCase.load` / `names` / `dir` だけ ＝ #195 で消す写し）
+- ✅ **#195 で `TestCase.load` / `names` / `dir` の写しを消した。**⚠ **読めなかったテストファイルは失敗として数えられる**ようになった（以前は `- case:` の 1 行だけで緑。未定義の定数を踏むファイルを 1 本置いて、`LoadError1Test` の失敗になることを確かめた）。`ENV['TEST']` の値は `Package.full_name` から `Package.name` に変わるが、tools は `.present?` しか見ていない。⚠ 意図して飛ばすファイルが要るときは `skip_case?` を上書きする（`rescue` へ落とさない）
 
 ### v1.11.0（2026-10-24 タグ）—— ✅ **2026-10-25 に chubo2 管理の 12 台へ配った**
 
