@@ -68,14 +68,15 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### 1.12.0（開発中・2026-11-03 着手）—— ⚠ **タグはまだ打っていない**
 
-`/package/version` は 1.12.0（#201 でバンプ）。マイルストーン `1.12.0`（4 件・重み 4）。⚠ 依頼の無い時期に、依存の追随をまとめて済ませる回。
+`/package/version` は 1.12.0（#201 でバンプ）。マイルストーン `1.12.0`（5 件・重み 5）。⚠ 依頼の無い時期に、依存の追随をまとめて済ませる回。
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #201 | バンプ | ✅ #202 |
 | #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
 | #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ #204 |
-| #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ✅ PR |
+| #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ✅ #205 |
+| #206 | crass を 1.0.8 へ上げる（GHSA-pq4g-8rxf-4g29・リリース前のセキュリティ確認で検出） | ✅ PR |
 
 - ⚠ **#199 で `Gemfile.lock` が動いたのは ginseng-core の 1 行だけ**（`bundle update --conservative`）。配るときは `bundle install` が要る。`rake install` の流し直しは不要
 - ⭕ **v4.1.0 〜 v5.0.0 の「利用側で変わること」は、ログの見え方を除いて tools に届かない**（突き合わせは #199）。v5.0.0 の破壊的変更は `RedirectGuard` を挿した口だけで、tools は `guard_redirects!` を使っていない
@@ -83,6 +84,24 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
   - ⚠ v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。tools が TLS で話す相手（Kuma・WordPress の更新 API・webhook）は該当しない見込みだが、リリース前の実機確認で `reboot_required` の push と `wordpress_outdated` を通すこと
   - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないことは、上げたあとの実物で確かめた（上書きは `TestCase.load` / `names` / `dir` だけ ＝ #195 で消す写し）
 - ✅ **#195 で `TestCase.load` / `names` / `dir` の写しを消した。**⚠ **読めなかったテストファイルは失敗として数えられる**ようになった（以前は `- case:` の 1 行だけで緑。未定義の定数を踏むファイルを 1 本置いて、`LoadError1Test` の失敗になることを確かめた）。`ENV['TEST']` の値は `Package.full_name` から `Package.name` に変わるが、tools は `.present?` しか見ていない。⚠ 意図して飛ばすファイルが要るときは `skip_case?` を上書きする（`rescue` へ落とさない）
+
+#### リリース前レビュー: 2026-11-03（1.12.0）
+
+⚠ **v1.11.0 から `main`（`9dc0fdf`）までのコードの差分（`app` / `bin` / `config` / `Gemfile` / `Gemfile.lock` / `.github`）を単一セッションで全部読み、ginseng-core v4.0.0 → v5.0.0 の `lib/` の差分（10 ファイル・約 490 行）も読んだ。**tools 側は 5 ファイル・約 50 行（実体は #195 の削除と #198 の設定）。**赤 0・黄 1・緑 3。**既定値の変更は無い。`main` の CI は緑。⚠ Dependabot の open アラートが 1 件（crass・#206）あり、このリリースで上げた。
+
+| | Issue | 観点 |
+| --- | --- | --- |
+| 🟡 黄 | [#207](https://github.com/THE-POWERNEWS/writersbase-tools/issues/207) Sentry へ送る前の伏せ方を `Masking#mask` に寄せる | セキュリティ |
+
+- **#207** … v4.4.0 から `Logger` は文字列の中の `key: value` も伏せるが、`scrub_sentry_text` は `mask_urls_in` しか通さないので、**`token: abc` がログでは伏せられ Sentry では素通り**する（実物で確認）。⚠ v4.0.0 のときから Sentry 側の伏せ方は変わっていない（退行ではない）ので送る
+- ⭕ **`CommandLine` の子プロセスの環境は同等。**v5.0.0 は `Bundler.with_unbundled_env`（プロセスの `ENV` を差し替える）をやめ、`Bundler.unbundled_env` ＋ `child_env` を `unsetenv_others: true` で渡す。どちらも元は bundler 起動時の環境で、⚠ **tools は起動後に `ENV` を足して子へ渡していない**（`ENV['BUNDLE_GEMFILE']` は `BUNDLE_*` なのでどちらでも剥がれる）。dump の `MYSQL_PWD` / `PGPASSWORD`・tootctl の `env` は従来どおり `env=` で渡る
+- ⭕ `webhook_masked?` は v5.0.0 でもモロヘイヤの webhook のパスを伏せる（`MisskeyEmojiSyncToolTest`）。v4.2.0 の `mask_url_host_paths` は Slack / Discord のホストだけ
+
+**緑（起票せず・次に触るときの申し送り）**
+
+- v5.0.0 の `sudo` の経路は、`env` の値を `sudo` 自身の環境にも載せる（以前は `sudo` の引数だけ）。`sudo` が環境を捨てるので子には効かず、`ps` から読めるのは従来どおり引数のほう
+- `writers_base.rb` の `mask_urls_in` のコメント（1.7.1 から持ち越し）は #207 で消す
+- v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。下の実機確認で、Kuma（b-shock・writersBASE）と WordPress の更新 API への TLS を通す
 
 ### v1.11.0（2026-10-24 タグ）—— ✅ **2026-10-25 に chubo2 管理の 12 台へ配った**
 
