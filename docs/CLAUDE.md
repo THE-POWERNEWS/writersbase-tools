@@ -66,14 +66,16 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### 1.12.0（開発中・2026-11-03 着手）—— ⚠ **タグはまだ打っていない**
+### v1.12.0（2026-11-03 タグ）—— ⚠ **配るのはこれから**
+
+**最新タグは v1.12.0**（`566f7d7`／公開 2026-11-03）。⚠⚠ **1 台にも届いていない**（dev24 / dev27 は v1.11.0 のまま・2026-11-03 実測）。反映の受け皿は **pooza/chubo2#295**。⚠ 配るときは **`bundle install` が要る**（ginseng-core v5.0.0・crass 1.0.8）。`rake install` の流し直しは不要。⚠ **#198 は開けたまま**（次の Dependabot の週次実行＝ 11-09 03:00 JST で ginseng-* の PR が来ないことを見てから閉じる）
 
 `/package/version` は 1.12.0（#201 でバンプ）。マイルストーン `1.12.0`（5 件・重み 5）。⚠ 依頼の無い時期に、依存の追随をまとめて済ませる回。
 
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #201 | バンプ | ✅ #202 |
-| #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
+| #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⏳ Issue は次の週次実行を見てから閉じる） |
 | #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ #204 |
 | #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ✅ #205 |
 | #206 | crass を 1.0.8 へ上げる（GHSA-pq4g-8rxf-4g29・リリース前のセキュリティ確認で検出） | ✅ #208 |
@@ -122,7 +124,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### v1.11.0（2026-10-24 タグ）—— ✅ **2026-10-25 に chubo2 管理の 12 台へ配った**
 
-**最新タグは v1.11.0**（公開 2026-10-24）。✅ **2026-10-25 に chubo2 が 12 台（本番 7 台・dev24〜27・noah）を v1.9.0 から v1.11.0 へ上げた**（v1.10.0 を飛ばした・`bundle install` と `rake install` は `chuboctl --recipes=writersbase_tools` で兼ねた・12 台とも `bundle check` 通過・`reboot_required` を宣言した 10 台で periodic を `env -i` で回して exit 0）。**pooza/chubo2#282 はクローズ**・記録は chubo2 `f20728a` と `docs/infra-history.md`。⚠ `--keep-tags` の行（#175）が weekly のログに残るかは、chubo2 側が zugoga の次の weekly で見る。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137・open。版は未確認）
+**当時の最新タグ**（公開 2026-10-24）。✅ **2026-10-25 に chubo2 が 12 台（本番 7 台・dev24〜27・noah）を v1.9.0 から v1.11.0 へ上げた**（v1.10.0 を飛ばした・`bundle install` と `rake install` は `chuboctl --recipes=writersbase_tools` で兼ねた・12 台とも `bundle check` 通過・`reboot_required` を宣言した 10 台で periodic を `env -i` で回して exit 0）。**pooza/chubo2#282 はクローズ**・記録は chubo2 `f20728a` と `docs/infra-history.md`。⚠ `--keep-tags` の行（#175）が weekly のログに残るかは、chubo2 側が zugoga の次の weekly で見る。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137・open。版は未確認）
 
 `/package/version` は 1.11.0（#187 でバンプ）。マイルストーン `1.11.0`（3 件）。
 
@@ -524,7 +526,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ### v1.6.0 は出荷済み（2026-09-08 タグ・#71）
 
-⚠ **当時の最新タグ**（`d3500df`／公開 2026-09-08）。⚠⚠ **いまの最新タグは v1.11.0**（上記）。⚠ **vulcan は 2026-09-28 までこの版で走っていた**（その後 v1.7.1 → 09-29 に v1.8.0）。v1.5.2（2026-04-12）から 48 コミットぶんで、マイルストーン `1.6.0` の 11 件・#37 Sentry 導入・misskey_emoji_sync 追加・#44 tootctl の login shell 経由をすべて含む。
+⚠ **当時の最新タグ**（`d3500df`／公開 2026-09-08）。⚠⚠ **いまの最新タグは v1.12.0**（上記）。⚠ **vulcan は 2026-09-28 までこの版で走っていた**（その後 v1.7.1 → 09-29 に v1.8.0）。v1.5.2（2026-04-12）から 48 コミットぶんで、マイルストーン `1.6.0` の 11 件・#37 Sentry 導入・misskey_emoji_sync 追加・#44 tootctl の login shell 経由をすべて含む。
 
 ⚠ **利用側への反映は先に済んでいる**（chubo2 `#214`・2026-09-04 に 9 台すべてを `d3500df` へ／記録は pooza/chubo2 `docs/infra-history.md`）。**タグはその状態を後から確定させたもの**なので、今回は「タグを打ったが 1 台にも届いていない」状態ではない。
 
