@@ -76,7 +76,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
 | #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ #204 |
 | #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ✅ #205 |
-| #206 | crass を 1.0.8 へ上げる（GHSA-pq4g-8rxf-4g29・リリース前のセキュリティ確認で検出） | ✅ PR |
+| #206 | crass を 1.0.8 へ上げる（GHSA-pq4g-8rxf-4g29・リリース前のセキュリティ確認で検出） | ✅ #208 |
 
 - ⚠ **#199 で `Gemfile.lock` が動いたのは ginseng-core の 1 行だけ**（`bundle update --conservative`）。配るときは `bundle install` が要る。`rake install` の流し直しは不要
 - ⭕ **v4.1.0 〜 v5.0.0 の「利用側で変わること」は、ログの見え方を除いて tools に届かない**（突き合わせは #199）。v5.0.0 の破壊的変更は `RedirectGuard` を挿した口だけで、tools は `guard_redirects!` を使っていない
@@ -102,6 +102,23 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - v5.0.0 の `sudo` の経路は、`env` の値を `sudo` 自身の環境にも載せる（以前は `sudo` の引数だけ）。`sudo` が環境を捨てるので子には効かず、`ps` から読めるのは従来どおり引数のほう
 - `writers_base.rb` の `mask_urls_in` のコメント（1.7.1 から持ち越し）は #207 で消す
 - v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。下の実機確認で、Kuma（b-shock・writersBASE）と WordPress の更新 API への TLS を通す
+
+#### 実機確認: 2026-11-03（1.12.0・dev24 / dev27）
+
+`main`（`181c44c`）を `git archive` で `/var/tmp` へ展開し、`BUNDLE_PATH` で gem を別の置き場へ入れ、cron 相当の `sudo env -i ... LANG=C.UTF-8` から回して、終わったら消した（両台とも `v1.11.0` のまま）。設定は実機の `local.yaml`、差し替えは展開先の `config/<ホスト名>.yaml` だけ。
+
+| 見たこと | 台 | 結果 |
+| --- | --- | --- |
+| `bundle install` → `bundle check` | dev24（FreeBSD 15.1・ruby 3.4.9）/ dev27（Ubuntu・3.3.8） | ✅ ginseng-core 5.0.0・crass 1.0.8・`pg` 1.7.0（libpq 18.6）・`mysql2` 0.5.7 |
+| `rake test`（system Ruby で） | 両台 | ✅ 170 件・失敗 0・omission 2（#195 の後の core の `load` が system Ruby でも通る） |
+| `bin/wb reboot_required` | 両台 | ✅ exit 0・**b-shock の Kuma へ `up` が 200**（`url:` は `[FILTERED]`） |
+| `CommandLine` の子の環境（v5.0.0 の `unsetenv_others`） | 両台 | ✅ `env=` の値は届き、`BUNDLE_*` / `GEM_*` / `RUBYOPT` / `RBENV_*` は 0 件。`user: nobody`（`sudo` の経路）でも `env=` が届く。非ゼロ終了は例外 |
+| 同梱の CA で TLS（v4.1.0 で eMudhra 3 本が外れた） | 両台 | ✅ `uptime.writersbase.net` は無効なトークンで 404（TLS は通る）・`api.wordpress.org` は 200 |
+| `wordpress_outdated`（仮の 7.0.3） | 両台 | ✅ `導入 7.0.3 / 最新 7.0.8` を `alert` に出し、`failed?` は偽（Kuma へは送っていない） |
+| `mastodon_maintenance`（`commands` を `version` へ） | dev24 | ✅ `{success: ["version"], failure: []}`（`sudo -u mastodon` ＋ `bash -lc` の経路） |
+
+- ⚠ 最初の回は、仮の `version.php` を `<?php $wp_version = ...` と 1 行で書いたため、`$wp_version を読めません` の例外になった（`VERSION_PATTERN` は行頭を見る）。**読めなければ黙らず例外にする設計どおり**で、仮のファイルを直して回し直した
+- ⚠ **Sentry へ送る経路（#207）と、ダンプ・スナップショット・rclone は回していない**（`CommandLine` は上の `env` の確認で代えた）
 
 ### v1.11.0（2026-10-24 タグ）—— ✅ **2026-10-25 に chubo2 管理の 12 台へ配った**
 
