@@ -24,7 +24,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 - ⚠⚠ **Ruby は pin しない（`.ruby-version` を置かない・rbenv を要求しない）。** 道具の性質上、**導入のコストを低く保つことを優先**する（2026-09-29 オーナー判断）。OS 標準の Ruby で動かなければそれは仕方がない、という割り切り。⚠ pin すれば pkg から系列が消える事故や、apt で 3.3 以上が入らない台（Ubuntu 24.04）は解消するが、**全ノードで rbenv のビルドとパッチ版の追従が要る**ようになり、上の優先と逆になる。**守りは CI の matrix を実機の系列に合わせることで取る**
 - `Gemfile` の `ginseng-style` は **SHA 固定**（`2818c561…` ＝ v1.1.14・#177 で v1.1.12 から上げた）。⚠ **タグは付け替えられるので `tag:` へ戻さない**（pooza/ginseng-style#75・#70）
 - CI は ginseng-style の composite action（`ruby-check`）を使う（#69）。⚠⚠ **参照の SHA は `Gemfile` の ginseng-style と同じものに揃える。**版を上げるときは 2 か所を同時に書き換える
-- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v4.0.0'`・#177 で v1.24.0 → v2.4.2、#185 で v4.0.0 へ上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
+- ⚠ `ginseng-core` は `Gemfile` で **タグ固定**（`tag: 'v5.0.0'`・#177 で v1.24.0 → v2.4.2、#185 で v4.0.0、#199 で v5.0.0 へ上げた）。導入は #94 ＝ pooza/ginseng-style#103 のロールアウトで、⚠ **移行時は revision が 1 ビットも動いていない**（`b6e736d` は v1.23.7 のタグそのもので、`Gemfile.lock` の差分は `tag:` の 1 行だけ）。狙いは**破綻の受け皿を、無関係な `bundle update` から版を上げる PR の CI へ移すこと**
 - ⚠⚠ **同じ「固定」でも ginseng-style は SHA、ginseng-core は tag。矛盾ではない。**ginseng-style は **CI で実行されるコード**（composite action。`release-tag` は呼び出し側の `contents: write` を受け取る）なので、**付け替え可能なタグ自体が脅威**になる（pooza/ginseng-style#75）。ginseng-core は**実行時の依存**で、要件は「いつ版が動くかを人が決めること」だけなので tag で足りる（#103 も「`tag:`（または SHA）」と書いている）。⚠ **どちらかに揃えようとして倒さないこと**
 
 - ⚠ **`ginseng-*` は Dependabot の version update から外してある**（`.github/dependabot.yml` の `ignore`・#139・2026-10-11 オーナー判断）。固定した版をいつ・どこまで上げるかは人が決めていて、Dependabot の PR はその判断を持てなかった（#159 → #172 は上流が v2.4.2 のときに v2.0.0 止まりで、json 3.0 / facets 4.0 を連れてきた。SHA 固定の ginseng-style には PR が 1 本も来ていない）。⚠⚠ **ずれに気づく経路はセッション同期だけになった** —— 手順 6 のスクリプトを毎回回すこと。⚠ 止め方は `ignore`（`allow` で絞ると security update まで止まる）。⚠⚠ **`ignore` は名前だけ（`update-types` を付けない）**（#198・2026-11-03 オーナー判断）
@@ -73,9 +73,15 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 | Issue | 内容 | 状態 |
 | --- | --- | --- |
 | #201 | バンプ | ✅ #202 |
-| #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ PR（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
-| #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ⏳ |
+| #198 | Dependabot の `ginseng-*` の `ignore` が効いていない（#197 が来た）。名前だけの `ignore` に戻す（2026-11-03 オーナー判断） | ✅ #203（⚠ 次の週次実行で PR が来ないことを見てから閉じる） |
+| #199 | ginseng-core を v4.0.0 → v5.0.0 へ上げる | ✅ PR |
 | #195 | `WritersBase::TestCase` の `load` の写しを消す（ginseng-core v4.3.0 から） | ⏳ |
+
+- ⚠ **#199 で `Gemfile.lock` が動いたのは ginseng-core の 1 行だけ**（`bundle update --conservative`）。配るときは `bundle install` が要る。`rake install` の流し直しは不要
+- ⭕ **v4.1.0 〜 v5.0.0 の「利用側で変わること」は、ログの見え方を除いて tools に届かない**（突き合わせは #199）。v5.0.0 の破壊的変更は `RedirectGuard` を挿した口だけで、tools は `guard_redirects!` を使っていない
+  - ⚠ **ログの見え方は変わる**: v4.4.0 から、URL でない文字列の `key=value` / `key: value` も伏せる（`password: required` → `password: [FILTERED]`）。ツールの失敗の文面（`error:` に載る外部コマンドの出力）の一部が伏せられうる
+  - ⚠ v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。tools が TLS で話す相手（Kuma・WordPress の更新 API・webhook）は該当しない見込みだが、リリース前の実機確認で `reboot_required` の push と `wordpress_outdated` を通すこと
+  - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないことは、上げたあとの実物で確かめた（上書きは `TestCase.load` / `names` / `dir` だけ ＝ #195 で消す写し）
 
 ### v1.11.0（2026-10-24 タグ）—— ✅ **2026-10-25 に chubo2 管理の 12 台へ配った**
 
