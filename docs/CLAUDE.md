@@ -66,9 +66,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 7. `gh release create vX.Y.Z --target main --title "X.Y.Z"` でタグとリリースノートを作る
 8. **リリース後**: 利用側へ反映する。⚠ **タグを打っただけでは 1 台にも届かない** — [deployment.md](deployment.md) の 2 経路を回し、pooza/chubo2 の `docs/infra-history.md` に反映を記録する
 
-### v1.12.0（2026-11-03 タグ）—— ⚠ **配るのはこれから**
+### v1.12.0（2026-11-03 タグ）—— ✅ **2026-11-07 に chubo2 管理の 12 台へ配った**
 
-**最新タグは v1.12.0**（`566f7d7`／公開 2026-11-03）。⚠⚠ **1 台にも届いていない**（dev24 / dev27 は v1.11.0 のまま・2026-11-03 実測）。反映の受け皿は **pooza/chubo2#295**。⚠ 配るときは **`bundle install` が要る**（ginseng-core v5.0.0・crass 1.0.8）。`rake install` の流し直しは不要。⚠ **#198 は開けたまま**（次の Dependabot の週次実行＝ 11-09 03:00 JST で ginseng-* の PR が来ないことを見てから閉じる）
+**最新タグは v1.12.0**（`566f7d7`／公開 2026-11-03）。✅ **2026-11-07 に chubo2 が 12 台（本番 7 台・dev24〜27・noah）を v1.11.0 から上げた**（`chuboctl --recipes=writersbase_tools`・12 台とも `git describe --tags` が v1.12.0・`bundle check` 通過）。**pooza/chubo2#295 はクローズ**・記録は chubo2 `e997924` と `docs/infra-history.md`。⚠ shallu / zugoga の `bundle check` に出る `missing extensions` の警告は FreeBSD 14 の頃の古い gem（nokogiri 1.19.2 など）で、この版とは無関係（chubo2 の見立て）。⚠ **writersBASE 側のノードは別経路**（THE-POWERNEWS/writersbase-env#137・open）。⚠ **#198 は開けたまま**（次の Dependabot の週次実行＝ 11-09 03:00 JST で ginseng-* の PR が来ないことを見てから閉じる）
 
 `/package/version` は 1.12.0（#201 でバンプ）。マイルストーン `1.12.0`（5 件・重み 5）。⚠ 依頼の無い時期に、依存の追随をまとめて済ませる回。
 
@@ -86,6 +86,8 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
   - ⚠ v4.1.0 で CA バンドルから eMudhra の 3 本が外れた。tools が TLS で話す相手（Kuma・WordPress の更新 API・webhook）は該当しない見込みだが、リリース前の実機確認で `reboot_required` の push と `wordpress_outdated` を通すこと
   - ⚠ `WritersBase` の 8 クラスが上流のメソッドを上書きしていないことは、上げたあとの実物で確かめた（上書きは `TestCase.load` / `names` / `dir` だけ ＝ #195 で消す写し）
 - ✅ **#195 で `TestCase.load` / `names` / `dir` の写しを消した。**⚠ **読めなかったテストファイルは失敗として数えられる**ようになった（以前は `- case:` の 1 行だけで緑。未定義の定数を踏むファイルを 1 本置いて、`LoadError1Test` の失敗になることを確かめた）。`ENV['TEST']` の値は `Package.full_name` から `Package.name` に変わるが、tools は `.present?` しか見ていない。⚠ 意図して飛ばすファイルが要るときは `skip_case?` を上書きする（`rescue` へ落とさない）
+
+- ⏳ **2026-11-07 の同期で、ginseng-core が v5.1.0 / v6.0.0（⚠ 破壊的変更・既定の HTTP の経路もリダイレクトを自前で追う）、ginseng-style が v1.1.15 を出していた。**受け皿は **#213**（次のマイルストーン）。tools が `Ginseng::HTTP` で話す 3 つの相手（Kuma の push・WordPress の更新 API・webhook）は cookie にもリダイレクトにも頼らない見込みなので、すぐには上げない
 
 #### リリース前レビュー: 2026-11-03（1.12.0）
 
@@ -136,7 +138,7 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 - ⚠ **#188 は受けられる形を用意するだけ。**kues と MINC の機を移すかどうかは利用側（chubo2#211 / chubo-minc#4・#5）が決める。⚠ 文字列の書き方で通っていた設定は、下の 2 つに当たらない限りそのまま通る（shallu / zugoga の node yaml は当たらないことを 2026-10-19 に確かめた）
   - ⭕ **kues は 2026-10-23 に Ubuntu 26.04 へ上がり、system の Ruby が 3.3 になった**（chubo2#265・`5eccd44`）。tools が動く系列（CI の matrix の最小 3.3）に入ったので、Ruby の側では移す妨げが無くなった
-- ⏳ **#192（Ruby 3.3.13 / 3.4.12・Onigmo の CVE）はマイルストーンの外**で、OS が取り込むのを待っている。⚠ 2026-11-03 時点でも **ports は `main` / `2026Q4` とも 3.3.12 / 3.4.9、Ubuntu resolute の `ruby3.3` は 07-06 の `3.3.8-2ubuntu3.1` のまま**（同期手順 6 の Ruby の段で見る）。⚠ tools の `app/` に外部入力からパターンを組む箇所は無い
+- ⏳ **#192（Ruby 3.3.13 / 3.4.12・Onigmo の CVE）はマイルストーンの外**で、OS が取り込むのを待っている。⚠ 2026-11-07 時点でも **ports は `main` / `2026Q4` とも 3.3.12 / 3.4.9、Ubuntu resolute の `ruby3.3` は 07-06 の `3.3.8-2ubuntu3.1` のまま**（同期手順 6 の Ruby の段で見る）。⚠ tools の `app/` に外部入力からパターンを組む箇所は無い
 - ⚠⚠ #188 から次は**設定エラー**になる（1 件も送らずに落ちる）。どれも `--delete` で受け側を壊しうる形
   - 送り先が重なる `sources`（同じ送り先が 2 回・一方がもう一方の下）
   - 空の要素（YAML の `- ` だけの行。以前は `File.join(path, nil)` で落ちていたが、`to_s` で丸めると送り元 `/`・送り先 `dest` の直下になる）、`.` / `..` の段を含むパス
@@ -534,9 +536,9 @@ VPS 上で定期実行する保守バッチの受け皿。**2026-09-02 に独立
 
 ⚠⚠ **手でタグを打つ運用は滞留する**（pooza/ginseng-style は 4 gem に計 8 版ぶんの滞留を実測している）。⚠ ただし ginseng-style の `release-tag` composite action は**配布物（gem）を持つリポジトリ向け**で、そのままは載らない。**「version とタグのずれを検査して知らせる」部分だけを採るのが現実的**。⚠ **v1.6.1 では滞留しなかった**（マイルストーン着手時にバンプ → 消化 → 即日タグ）。⚠⚠ **バンプとタグ打ちは 2026-09-18 に委譲された**（バンプは新マイルストーン着手時、タグはリリース手順を通してから）。
 
-### 反映後に見えた失敗（2026-11-03 時点・Sentry `writersbase-tools`）
+### 反映後に見えた失敗（2026-11-07 時点・Sentry `writersbase-tools`）
 
-⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-11-03 まで新規は 1 件も無い**（v1.9.0 を配ってからの 1 か月・v1.11.0 を配ってからの 9 日間を含む）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
+⚠ **1.6.0 が見せてくれたもの。**Sentry に出ているのは計 8 件。うち 3 件（`-1` / `-2` / `-5`）は疎通確認のために意図的に投げたもので、**実害があるのは次の 4 件**。⚠ **未解決は 7 件**（`-7` だけ 2026-09-18 に resolved）。✅ **2026-09-26（`-8`）を最後に、2026-11-07 まで新規は 1 件も無い**（v1.9.0 を配ってからの 1 か月・v1.11.0 を配ってからの 2 週間を含む。⚠ v1.12.0 は 11-07 朝に配ったばかり）。⚠ **ただし下の「道具が 1 行も走らない止まり方」は Sentry に出ない**。
 
 - 🔴 **FreeBSD を 15.1 へ上げた DNS 機 2 台（pirazal / pirazis）で、pdns の日次ダンプが 2026-10-04 から 4 日止まった**（chubo2#240・記録は chubo2 `docs/infra-history.md` の 2026-10-08）。`pkg-static upgrade -f` で ruby が `amd64-freebsd15` 向けに入れ替わって **root の gem（native 拡張）が外れ**、periodic スクリプトが先頭の `bundle check` で exit 1 になった。⚠ **#68 の設計どおりの落ち方**（黙って `bundle install` しない）で、⚠⚠ **Ruby が起動しないので Sentry にも `writersbase-tools.log` にも何も出ない**。拾ったのは **Kuma の push モニタ**（interval 32 時間なので検知まで 1 日半）。07-18 の `ruby33` 消失（deas / pirazal / pirazis）と同じ型。⚠ **残りの 14.5 の台（deas / zugoga / shallu ほか）でも同じことが起きる** —— chubo2 は手順に「レシピを流して periodic を手で 1 回回す」を足した（`docs/infra-common.md`）。✅ **1.10.0（#174）で、`bundle check` で落ちたときに Kuma へ `down` を送るようにした**（⚠ 配って `rake install` を流し直すまでは効かない。⚠ `ruby` 自体が起動しない止まり方は、それでも interval 切れ待ち）
 - 🔴 **gomander / zugoga の hourly（`mastodon_follow` / `postgresql_snapshot`）が 2026-10-18 に約 5 時間止まった**（chubo2#277・記録は chubo2 `docs/infra-history.md`）。rbenv の Ruby を base の OpenSSL へ移す作業で ports の openssl を消したら、**root の pkg Ruby の `mysql2.so` が ports の `libssl.so.12` にリンクしていて読めなくなった**（エラーは「ginseng を読めない」と出るが実体は mysql2）。`gem pristine mysql2` で直り、同じ状態の dev24〜26 も同時に直した。拾ったのは Kuma の interval 切れ（hourly 2h）。⚠⚠ **#174 の `down` はこの型を拾えない見込み** —— `bundle check` は gem が揃っているかを見るだけで native 拡張を読まないので通り、落ちるのは `bin/wb` の `Bundler.require`（Sentry の初期化より前）。⚠ 判定は chubo2 の手順どおり **`sudo ruby -rmysql2 -e 1` のように実際に読ませる**
