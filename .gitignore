@@ -10,4 +10,6 @@ dist
 .ruby-version
 .vscode
 
-.claude/
+# ⚠ 手元の設定（settings.local.json など）は外し、スキルだけ追跡する（#215）
+.claude/*
+!.claude/skills/
