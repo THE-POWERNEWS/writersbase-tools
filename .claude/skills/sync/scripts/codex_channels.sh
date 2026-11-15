@@ -3,7 +3,8 @@
 # Codex の結果は 4 経路（review・インライン・PR 本体のコメント・PR へのリアクション）で来るので全部読む。
 # ⚠ bot だけを見ない。他リポジトリのセッションが pooza として申し送りを置くことがあるので、人のコメントも出す。
 # 使い方: codex_channels.sh <PR番号>...   引数なしなら直近にマージされた 5 本
-set -eu
+# ⚠ pipefail が無いと、gh が落ちても後ろの jq が空の入力を [] として成功させ、確認していないのに 0 で終わる
+set -euo pipefail
 r=repos/THE-POWERNEWS/writersbase-tools
 bot='chatgpt-codex-connector[bot]'
 prs=("$@")
