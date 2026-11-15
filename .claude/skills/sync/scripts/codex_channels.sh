@@ -19,7 +19,11 @@ if [ "${#prs[@]}" -eq 0 ]; then
 fi
 for n in "${prs[@]}"; do
   echo "=== #$n"
-  gh api --paginate "$r/pulls/$n/reviews" --jq ".[]|\"review \(.user.login) \(.state) \(.submitted_at) \(.commit_id[0:7])\""
+  # review のサマリ。人の本文は全文で出す（申し送りがインラインでなくサマリに書かれることがある）。bot の本文は行コメントと重なるので出さない
+  gh api --paginate "$r/pulls/$n/reviews" | jq -rs --arg bot "$bot" '
+    add // [] | .[]
+    | "review \(.user.login) \(.state) \(.submitted_at) \(.commit_id[0:7])",
+      (if .user.login != $bot and ((.body // "") != "") then .body | gsub("(?m)^"; "  | ") else empty end)'
   # ⚠ 全ページを 1 本の配列にまとめてから読む（ページをまたいだ返信を「無」と読まないため）
   gh api --paginate "$r/pulls/$n/comments?per_page=100" | jq -rs --arg bot "$bot" '
     add // [] | . as $all
